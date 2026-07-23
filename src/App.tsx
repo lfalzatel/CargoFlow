@@ -9,6 +9,8 @@ import Profile from './components/Profile';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import SplashScreen from './components/SplashScreen';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './config/firebase';
 import { motion, AnimatePresence } from 'motion/react';
 
 const INITIAL_TRIPS: Trip[] = [
@@ -101,6 +103,21 @@ export default function App() {
       setIsSplashActive(false);
     }, 2600);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Listen for active Firebase Auth session so session NEVER closes unexpectedly
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(prev => ({
+          ...prev,
+          name: firebaseUser.displayName || prev.name,
+          email: firebaseUser.email || prev.email,
+          photoURL: firebaseUser.photoURL || prev.photoURL,
+        }));
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
   // Helper to trigger splash during async actions

@@ -289,8 +289,8 @@ export default function Header({
               {/* User Profile Avatar from Google/Registration */}
               {renderAvatar(user.photoURL, user.name, "w-8 h-8 text-xs")}
 
-              {/* Name & Role Badge */}
-              <div className="flex flex-col text-left hidden sm:flex">
+              {/* Name & Role Badge (Visible on all screens) */}
+              <div className="flex flex-col text-left min-w-0 max-w-[90px] sm:max-w-none">
                 <span className="text-xs font-bold text-on-surface leading-tight">
                   {getFirstName(user.name)}
                 </span>

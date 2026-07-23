@@ -307,61 +307,145 @@ export default function Home({ user, onCreateShipment, onNavigateToView, onLogou
         )}
       </AnimatePresence>
 
-      {/* Floating Search Card / Client Action Header */}
+      {/* Floating Header Card - Custom for Role */}
       <div className="absolute top-20 left-4 right-4 z-20">
-        <button
-          onClick={() => setShowShipmentModal(true)}
-          className="w-full bg-white rounded-2xl shadow-[0px_8px_30px_rgba(0,0,0,0.12)] flex items-center justify-between p-4 cursor-pointer hover:bg-white/95 transition-all border-2 border-emerald-500/30 group active:scale-[0.99]"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 font-bold shadow-sm">
-              <Truck size={22} fill="currentColor" />
-            </div>
-            <div className="flex flex-col text-left truncate">
-              <span className="text-xs font-black text-emerald-700 uppercase tracking-widest">
-                {user.role === 'cliente' ? 'PANEL CLIENTE • CREAR FLETE' : 'PANEL CONDUCTOR'}
-              </span>
-              <span className="text-sm font-extrabold text-on-surface truncate">
-                {user.role === 'cliente' ? '¿A dónde enviamos tu carga hoy?' : 'Buscar cargas disponibles cerca'}
+        {user.role === 'conductor' ? (
+          /* DRIVER TOP CARD */
+          <div className="w-full bg-gradient-to-r from-slate-900 via-slate-800 to-[#0A1220] text-white rounded-2xl p-4 shadow-[0px_10px_35px_rgba(0,0,0,0.3)] border border-slate-700/60 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-black tracking-widest text-emerald-400 uppercase">
+                  MODO CONDUCTOR • DISPONIBLE
+                </span>
+              </div>
+              <span className="text-[11px] font-extrabold bg-emerald-950 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full">
+                Placa: {user.plateNumber || 'WYZ-789'}
               </span>
             </div>
+
+            <div className="grid grid-cols-3 gap-2 bg-white/5 p-2 rounded-xl border border-white/10 text-center">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block uppercase">Ganancias Hoy</span>
+                <span className="text-xs font-black text-emerald-400">$1.250.000</span>
+              </div>
+              <div className="border-x border-white/10">
+                <span className="text-[10px] text-slate-400 font-bold block uppercase">Calificación</span>
+                <span className="text-xs font-black text-amber-400">★ 4.9</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block uppercase">Entregas</span>
+                <span className="text-xs font-black text-blue-400">12 Viajes</span>
+              </div>
+            </div>
           </div>
-          <div className="p-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs shadow-md flex-shrink-0 group-hover:bg-emerald-700">
-            Solicitar Flete
-          </div>
-        </button>
+        ) : (
+          /* CLIENT TOP CARD */
+          <button
+            onClick={() => setShowShipmentModal(true)}
+            className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white rounded-2xl shadow-[0px_10px_35px_rgba(16,185,129,0.3)] flex items-center justify-between p-4 cursor-pointer hover:opacity-95 transition-all border border-emerald-400/40 group active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center flex-shrink-0 font-bold shadow-inner">
+                <Truck size={22} fill="currentColor" />
+              </div>
+              <div className="flex flex-col text-left truncate">
+                <span className="text-[11px] font-black text-emerald-200 uppercase tracking-widest">
+                  PANEL CLIENTE • CREAR FLETE
+                </span>
+                <span className="text-sm font-extrabold text-white truncate">
+                  ¿A dónde enviamos tu carga hoy?
+                </span>
+              </div>
+            </div>
+            <div className="p-2.5 bg-white text-emerald-700 rounded-xl font-black text-xs shadow-md flex-shrink-0 group-hover:bg-slate-100">
+              Solicitar Flete
+            </div>
+          </button>
+        )}
       </div>
 
-      {/* Bottom Floating Content (Frequent Route) */}
+      {/* Bottom Floating Content - Custom for Role */}
       <div className="absolute bottom-20 left-4 right-4 z-20">
-        <div className="bg-white rounded-2xl shadow-[0px_8px_30px_rgba(0,0,0,0.06)] p-5 border border-surface-container">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-extrabold text-on-surface-variant uppercase tracking-widest">
-              Ruta Frecuente
-            </span>
-            <History className="text-outline" size={16} />
-          </div>
-
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex flex-col items-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-outline" />
-              <div className="w-0.5 h-7 bg-outline-variant my-1" />
-              <div className="w-2.5 h-2.5 rounded-full bg-primary-container" />
+        {user.role === 'conductor' ? (
+          /* DRIVER BOTTOM CARD: OFERTA DE CARGA DISPONIBLE */
+          <div className="bg-white rounded-2xl shadow-[0px_12px_40px_rgba(0,0,0,0.15)] p-5 border border-surface-container">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                OFERTA DE CARGA DISPONIBLE
+              </span>
+              <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                $1.250.000 COP
+              </span>
             </div>
-            <div className="flex flex-col justify-between h-14">
-              <span className="text-base text-on-surface font-extrabold leading-tight">Bogotá, D.C.</span>
-              <span className="text-base text-on-surface font-extrabold leading-tight">Medellín, ANT</span>
+
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex flex-col items-center">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <div className="w-0.5 h-7 bg-slate-300 my-1" />
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+              </div>
+              <div className="flex flex-col justify-between h-14">
+                <span className="text-sm text-on-surface font-extrabold leading-tight">Bogotá, D.C. (Fontibón)</span>
+                <span className="text-sm text-on-surface font-extrabold leading-tight">Medellín, ANT (Guayabal)</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                alert('¡Has tomado la oferta de carga! Iniciando ruta hacia Bogotá...');
+                onNavigateToView('activity');
+              }}
+              className="w-full h-[50px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+            >
+              <Truck size={18} fill="currentColor" />
+              Aceptar Carga & Tomar Flete
+            </button>
+          </div>
+        ) : (
+          /* CLIENT BOTTOM CARD: RASTREO DE ENVÍO EN CURSO */
+          <div className="bg-white rounded-2xl shadow-[0px_12px_40px_rgba(0,0,0,0.12)] p-5 border border-surface-container">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-black text-primary-container uppercase tracking-widest flex items-center gap-1.5">
+                <History className="text-primary-container" size={16} />
+                MI ENVÍO EN CURSO (#CF-8842)
+              </span>
+              <span className="text-[10px] font-black uppercase text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                ● EN CAMINO
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex flex-col items-center">
+                <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                <div className="w-0.5 h-7 bg-slate-300 my-1" />
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+              </div>
+              <div className="flex flex-col justify-between h-14">
+                <span className="text-sm text-on-surface font-extrabold leading-tight">Origen: Bogotá, D.C.</span>
+                <span className="text-sm text-on-surface font-extrabold leading-tight">Destino: Medellín, ANT</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleQuickReorder}
+                className="h-[46px] rounded-xl border-2 border-primary-container text-primary-container hover:bg-blue-50 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <RefreshCw size={15} />
+                Reordenar
+              </button>
+              <button
+                onClick={() => onNavigateToView('chat')}
+                className="h-[46px] rounded-xl bg-primary-container text-white hover:bg-primary font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-colors cursor-pointer"
+              >
+                <Truck size={15} fill="currentColor" />
+                Contactar Conductor
+              </button>
             </div>
           </div>
-
-          <button
-            onClick={handleQuickReorder}
-            className="w-full h-[52px] rounded-xl border-2 border-primary-container text-primary-container hover:bg-primary-container hover:text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors active:scale-[0.98] cursor-pointer"
-          >
-            <RefreshCw size={16} />
-            Reordenar Envío
-          </button>
-        </div>
+        )}
       </div>
 
       {/* CREATE SHIPMENT MODAL / VIEW */}
