@@ -8,6 +8,7 @@ export interface UserProfile {
   isVerified: boolean;
   rating: number;
   balance: number; // in COP
+  photoURL?: string;
   plateNumber?: string;
   vehicleType?: 'furgon' | 'sencillo';
   documentsUploaded?: {

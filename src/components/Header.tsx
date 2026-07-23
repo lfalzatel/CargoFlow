@@ -9,12 +9,10 @@ import {
   Settings, 
   Plus, 
   LogOut, 
-  MessageSquare,
   Sun,
   Moon,
   Monitor,
   Check,
-  X,
   Truck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -37,6 +35,10 @@ export default function Header({ user, onNavigateToView, onLogout, unreadCount =
 
   const menuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  // Dynamic user avatar (Google profile photo if logged in with Google, or fallback)
+  const defaultAvatar = "https://lh3.googleusercontent.com/aida-public/AB6AXuAaVqRCs3Sd6gJvISf50cSCmx0gy6bYEvm1R0IzY4p64VNvfe1-3MIdU67GvSNK95J1--2vNcWvxnrIq8iCD-iHT1D8hQ7XtZaehyM01PAqzIOpnvfjJaYX0RRdOKnv96PNPbSoA0WCXp4x_h7jmJ4ihCCgJ8Z8drczuCJb_JVBDIY5LL_WCnZNTNXviCXjNodS3ym6pf7GR5ZWc7nUdVM8cc7a6Zs2qvDNwDS_1XEoVjtbFFt-4bF8";
+  const userAvatar = user.photoURL || defaultAvatar;
 
   // Capture PWA install prompt event
   useEffect(() => {
@@ -223,7 +225,7 @@ export default function Header({ user, onNavigateToView, onLogout, unreadCount =
           </AnimatePresence>
         </div>
 
-        {/* Profile Capsule Button (User Avatar + Name + Role Badge + Chevron) */}
+        {/* Profile Capsule Button (Google Avatar + Name + Role Badge + Chevron) */}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => {
@@ -236,9 +238,9 @@ export default function Header({ user, onNavigateToView, onLogout, unreadCount =
                 : 'bg-surface-container-low border-surface-container hover:bg-surface-container'
             }`}
           >
-            {/* User Avatar */}
+            {/* User Profile Avatar from Google/Registration */}
             <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaVqRCs3Sd6gJvISf50cSCmx0gy6bYEvm1R0IzY4p64VNvfe1-3MIdU67GvSNK95J1--2vNcWvxnrIq8iCD-iHT1D8hQ7XtZaehyM01PAqzIOpnvfjJaYX0RRdOKnv96PNPbSoA0WCXp4x_h7jmJ4ihCCgJ8Z8drczuCJb_JVBDIY5LL_WCnZNTNXviCXjNodS3ym6pf7GR5ZWc7nUdVM8cc7a6Zs2qvDNwDS_1XEoVjtbFFt-4bF8"
+              src={userAvatar}
               alt={user.name || 'Usuario'}
               className="w-8 h-8 rounded-full object-cover border border-white shadow-xs"
             />
@@ -261,7 +263,7 @@ export default function Header({ user, onNavigateToView, onLogout, unreadCount =
             )}
           </button>
 
-          {/* Profile Dropdown Menu (Exact Match to Reference Design) */}
+          {/* Profile Dropdown Menu */}
           <AnimatePresence>
             {isMenuOpen && (
               <motion.div
@@ -271,16 +273,16 @@ export default function Header({ user, onNavigateToView, onLogout, unreadCount =
                 transition={{ duration: 0.15 }}
                 className="absolute right-0 mt-3 w-80 sm:w-84 bg-white rounded-3xl shadow-[0px_16px_50px_rgba(0,0,0,0.15)] border border-surface-container overflow-hidden z-50"
               >
-                {/* Header User Card */}
+                {/* Header User Card (Google Photo & Registration Email) */}
                 <div className="p-5 bg-gradient-to-br from-emerald-50/60 via-blue-50/40 to-white border-b border-surface-container flex items-center gap-3.5">
                   <img
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaVqRCs3Sd6gJvISf50cSCmx0gy6bYEvm1R0IzY4p64VNvfe1-3MIdU67GvSNK95J1--2vNcWvxnrIq8iCD-iHT1D8hQ7XtZaehyM01PAqzIOpnvfjJaYX0RRdOKnv96PNPbSoA0WCXp4x_h7jmJ4ihCCgJ8Z8drczuCJb_JVBDIY5LL_WCnZNTNXviCXjNodS3ym6pf7GR5ZWc7nUdVM8cc7a6Zs2qvDNwDS_1XEoVjtbFFt-4bF8"
+                    src={userAvatar}
                     alt={user.name}
                     className="w-14 h-14 rounded-full object-cover border-2 border-emerald-400 shadow-md flex-shrink-0"
                   />
                   <div className="flex flex-col min-w-0">
                     <h3 className="font-extrabold text-sm text-on-surface truncate">{user.name || 'Luis Fernando Alzate'}</h3>
-                    <p className="text-xs text-on-surface-variant truncate mt-0.5">{user.email || 'lfalzatel@gmail.com'}</p>
+                    <p className="text-xs text-on-surface-variant truncate mt-0.5 font-medium">{user.email || 'lfalzatel@gmail.com'}</p>
                     <span className="mt-1.5 text-[10px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full w-fit">
                       {user.role === 'conductor' ? 'CONDUCTOR' : 'CLIENTE'}
                     </span>
@@ -414,13 +416,13 @@ export default function Header({ user, onNavigateToView, onLogout, unreadCount =
                 </div>
 
                 {/* OTRAS CUENTAS Section */}
-                <div className="p-3 bg-surface-container-lowest border-b border-surface-container">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-outline px-2 block mb-2">
+                <div className="p-3 bg-surface-container-lowest flex flex-col gap-1">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-outline px-2 block mb-1">
                     OTRAS CUENTAS
                   </span>
 
                   {/* Linked Account */}
-                  <div className="flex items-center gap-3 p-2 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer mb-1">
+                  <div className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer">
                     <img
                       src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80"
                       alt="Otras Cuentas"
@@ -438,27 +440,27 @@ export default function Header({ user, onNavigateToView, onLogout, unreadCount =
                       setIsMenuOpen(false);
                       onLogout();
                     }}
-                    className="w-full flex items-center gap-3 p-2 rounded-2xl hover:bg-surface-container-low text-on-surface transition-colors"
+                    className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-surface-container-low text-on-surface transition-colors"
                   >
                     <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-outline">
                       <Plus size={18} />
                     </div>
                     <span className="text-xs font-bold">Añadir Cuenta</span>
                   </button>
-                </div>
 
-                {/* Footer: Cerrar sesión */}
-                <div className="p-3 bg-rose-50/30">
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      onLogout();
-                    }}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-rose-100/60 text-rose-600 transition-colors font-bold text-xs"
-                  >
-                    <LogOut size={18} />
-                    <span>Cerrar sesión</span>
-                  </button>
+                  {/* Cerrar Sesión directly inside/under OTRAS CUENTAS */}
+                  <div className="pt-2 mt-1 border-t border-surface-container">
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        onLogout();
+                      }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-rose-50 text-rose-600 transition-colors font-bold text-xs"
+                    >
+                      <LogOut size={18} />
+                      <span>Cerrar sesión</span>
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             )}

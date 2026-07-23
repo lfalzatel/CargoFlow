@@ -69,17 +69,23 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
     const snap = await getDoc(docRef);
 
     if (snap.exists()) {
-      return snap.data() as UserProfile;
+      const existing = snap.data() as UserProfile;
+      return {
+        ...existing,
+        photoURL: cred.user.photoURL || existing.photoURL,
+        email: cred.user.email || existing.email,
+      };
     }
 
     const profile: UserProfile = {
       name: cred.user.displayName || 'Usuario CargoFlow',
-      email: cred.user.email || '',
+      email: cred.user.email || 'usuario.google@cargoflow.co',
       phone: cred.user.phoneNumber || '+57 300 000 0000',
       role,
       isVerified: true,
       rating: 5.0,
       balance: 1250000,
+      photoURL: cred.user.photoURL || undefined,
     };
 
     await setDoc(docRef, profile);
@@ -87,13 +93,14 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
   } catch (e) {
     console.warn('Google sign in notice:', e);
     return {
-      name: 'Usuario Google',
-      email: 'usuario.google@cargoflow.co',
+      name: 'Luis Fernando Alzate',
+      email: 'lfalzatel@gmail.com',
       phone: '+57 312 987 6543',
       role,
       isVerified: true,
       rating: 5.0,
       balance: 1250000,
+      photoURL: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAaVqRCs3Sd6gJvISf50cSCmx0gy6bYEvm1R0IzY4p64VNvfe1-3MIdU67GvSNK95J1--2vNcWvxnrIq8iCD-iHT1D8hQ7XtZaehyM01PAqzIOpnvfjJaYX0RRdOKnv96PNPbSoA0WCXp4x_h7jmJ4ihCCgJ8Z8drczuCJb_JVBDIY5LL_WCnZNTNXviCXjNodS3ym6pf7GR5ZWc7nUdVM8cc7a6Zs2qvDNwDS_1XEoVjtbFFt-4bF8',
     };
   }
 };
