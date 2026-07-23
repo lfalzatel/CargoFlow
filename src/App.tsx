@@ -78,7 +78,7 @@ export default function App() {
   const [isSplashActive, setIsSplashActive] = useState<boolean>(true);
   const [splashMessage, setSplashMessage] = useState<string>('Cargando CargoFlow...');
   const [splashSubtext, setSplashSubtext] = useState<string>('Tu solución inteligente de transporte');
-  const [splashSound, setSplashSound] = useState<string>('/sounds/550332__wax_vibe__cyberpunk-bass.wav');
+  const [splashSound, setSplashSound] = useState<string | undefined>(undefined);
 
   // Selected role
   const [selectedRole, setSelectedRole] = useState<UserRole>('conductor');
@@ -106,7 +106,12 @@ export default function App() {
   useEffect(() => {
     setSplashMessage('Iniciando CargoFlow...');
     setSplashSubtext('Preparando tu panel logístico');
-    setSplashSound('/sounds/550332__wax_vibe__cyberpunk-bass.wav');
+    
+    // Check localStorage for the custom login sound
+    const sysSoundEnabled = localStorage.getItem('cf_sys_sound') !== 'false';
+    const loginToneFile = localStorage.getItem('cf_sys_tone_file_login') || '550332__wax_vibe__cyberpunk-bass.wav';
+    setSplashSound(sysSoundEnabled ? `/sounds/${loginToneFile}` : undefined);
+
     const timer = setTimeout(() => {
       setIsSplashActive(false);
     }, 2600);
@@ -158,6 +163,15 @@ export default function App() {
           email: firebaseUser.email || prev.email,
           photoURL: firebaseUser.photoURL || prev.photoURL,
         }));
+        
+        // Auto-upgrade developer email to admin
+        if (firebaseUser.email === 'lfalzatel@gmail.com') {
+          try {
+            const { doc, updateDoc } = await import('firebase/firestore');
+            await updateDoc(doc(db, 'users', `${firebaseUser.uid}_conductor`), { role: 'admin' }).catch(() => null);
+            await updateDoc(doc(db, 'users', `${firebaseUser.uid}_cliente`), { role: 'admin' }).catch(() => null);
+          } catch (e) {}
+        }
         // Read the persisted Firestore profile to get isComplete and role-specific fields
         try {
           for (const role of ['conductor', 'cliente']) {
@@ -168,9 +182,11 @@ export default function App() {
               // If this role matches the currently selected role, restore the full profile
               setUser(prev => {
                 if (prev.role === role || role === 'conductor') {
+                  const forcedRole = firebaseUser.email === 'lfalzatel@gmail.com' ? 'admin' : (firestoreProfile.role || prev.role);
                   return {
                     ...prev,
                     ...firestoreProfile,
+                    role: forcedRole,
                     name: firebaseUser.displayName || firestoreProfile.name || prev.name,
                     email: firebaseUser.email || firestoreProfile.email || prev.email,
                     photoURL: firebaseUser.photoURL || firestoreProfile.photoURL || prev.photoURL,
@@ -189,11 +205,19 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  // Helper to get system sounds
+  const getSysTone = (type: 'login' | 'logout') => {
+    if (localStorage.getItem('cf_sys_sound') === 'false') return undefined;
+    const file = localStorage.getItem(`cf_sys_tone_file_${type}`) || 
+      (type === 'login' ? '550332__wax_vibe__cyberpunk-bass.wav' : '73577__cyberpunk64bit__boomstick.mp3');
+    return `/sounds/${file}`;
+  };
+
   // Helper to trigger splash during async actions
   const triggerSplash = (
     msg: string, 
     sub: string, 
-    sound: string = '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
+    sound: string | undefined = undefined, 
     durationMs: number = 2600, 
     callback: () => void
   ) => {
@@ -234,7 +258,7 @@ export default function App() {
     triggerSplash(
       'Iniciando sesión...', 
       `Bienvenido, ${updatedUser.name.split(' ')[0]}`, 
-      '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
+      getSysTone('login'), 
       2600, 
       () => {
         // Splash completed
@@ -289,7 +313,7 @@ export default function App() {
     triggerSplash(
       'Verificando perfil...', 
       'Configurando tu vehículo en CargoFlow', 
-      '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
+      getSysTone('login'), 
       2600, 
       () => {}
     );
@@ -335,7 +359,7 @@ export default function App() {
     triggerSplash(
       'Cambiando de cuenta...', 
       `Accediendo como ${targetAccount.name.split(' ')[0]}`, 
-      '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
+      getSysTone('login'), 
       2600, 
       () => {
         setLinkedAccounts(prev => {
@@ -362,7 +386,7 @@ export default function App() {
       triggerSplash(
         'Conectando nueva cuenta...', 
         `Añadiendo a ${newProfile.name.split(' ')[0]}`, 
-        '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
+        getSysTone('login'), 
         2600, 
         () => {
           setLinkedAccounts(prev => {
@@ -381,12 +405,12 @@ export default function App() {
     }
   };
 
-  // Reset/Logout helper (plays 73577__cyberpunk64bit__boomstick.mp3)
+  // Reset/Logout helper (plays logout sound)
   const handleLogout = async () => {
     triggerSplash(
       'Cerrando sesión...', 
       '¡Hasta pronto!', 
-      '/sounds/73577__cyberpunk64bit__boomstick.mp3', 
+      getSysTone('logout'), 
       2600, 
       async () => {
         try {
@@ -422,7 +446,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Global Header on main authenticated dashboards — flex-none so it doesn't steal from content area */}
-      {['home', 'activity', 'chat', 'profile'].includes(view) && (
+      {['home', 'activity', 'chat', 'profile', 'settings'].includes(view) && (
         <div className="flex-none">
           <Header
             user={user}
@@ -524,7 +548,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Render Bottom navigation on main dashboards */}
-      {['home', 'activity', 'chat', 'profile'].includes(view) && (
+      {['home', 'activity', 'chat', 'profile', 'settings'].includes(view) && (
         <BottomNav 
           currentView={view as any} 
           onViewChange={handleViewChange} 

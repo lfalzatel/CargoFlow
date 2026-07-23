@@ -14,7 +14,10 @@ import {
   Monitor,
   Check,
   Truck,
-  X
+  X,
+  Layers,
+  Terminal,
+  Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
@@ -44,7 +47,22 @@ export default function Header({
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showSplashModal, setShowSplashModal] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [activeTheme, setActiveTheme] = useState<'dia' | 'cyber' | 'kilo'>('dia');
+  const [activeTheme, setActiveTheme] = useState<string>('dia');
+  const [quickThemes, setQuickThemes] = useState<string[]>(['dia', 'cyber', 'kilo']);
+
+  useEffect(() => {
+    const handleStorage = () => {
+      try {
+        const stored = localStorage.getItem('cf_theme_quick_list');
+        if (stored) {
+          setQuickThemes(JSON.parse(stored));
+        }
+      } catch (e) {}
+    };
+    handleStorage();
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
   const [pwaInstallPrompt, setPwaInstallPrompt] = useState<any>(null);
   const [installSuccess, setInstallSuccess] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -170,7 +188,7 @@ export default function Header({
               setIsMenuOpen(false);
               setIsNotificationsOpen(false);
             }}
-            className="fixed inset-0 bg-transparent backdrop-blur-[2px] z-[90]"
+            className="fixed inset-0 bg-transparent backdrop-blur-[0px] z-[90]"
           />
         )}
       </AnimatePresence>
@@ -218,7 +236,9 @@ export default function Header({
                     body:  'Tienes 2 ofertas de carga disponibles cerca de tu ubicación.',
                     tag:   'cargoflow-flete',
                     url:   '/activity',
-                    sound: '/sounds/550332__wax_vibe__cyberpunk-bass.wav',
+                    sound: localStorage.getItem('cf_notif_sound') !== 'false' 
+                      ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}` 
+                      : undefined,
                   });
                   // Demo scheduled push: fires 15s after closing app
                   scheduleNotification(
@@ -317,7 +337,7 @@ export default function Header({
                   {getFirstName(user.name)}
                 </span>
                 <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-tight text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded-full w-fit truncate">
-                  {user.role === 'conductor' ? 'CONDUCTOR' : 'CLIENTE'}
+                  {user.role.toUpperCase()}
                 </span>
               </div>
 
@@ -343,7 +363,7 @@ export default function Header({
                     <p className="text-sm font-semibold truncate text-slate-800">{user.name || 'Usuario CargoFlow'}</p>
                     <p className="text-xs truncate text-slate-500">{user.email || 'usuario@cargoflow.co'}</p>
                     <span className="inline-block mt-1 text-[9px] px-2 py-0.5 uppercase tracking-widest font-bold rounded-full bg-[var(--accent-glow)] border border-[var(--accent)] text-[var(--accent)]">
-                      {user.role === 'conductor' ? 'CONDUCTOR' : 'CLIENTE'}
+                      {user.role.toUpperCase()}
                     </span>
                   </div>
                 </div>
@@ -351,39 +371,29 @@ export default function Header({
                 {/* Theme Selector Segmented Control */}
                 <div className="p-1.5 border-b border-surface-container">
                   <div className="flex items-center justify-between gap-1 p-1 bg-[var(--glass)] border border-[var(--glass-border)] rounded-xl">
-                    <button
-                      onClick={() => setActiveTheme('dia')}
-                      className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg transition-all font-bold ${
-                        activeTheme === 'dia'
-                          ? 'bg-[var(--accent)] text-black shadow-sm font-bold'
-                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)]'
-                      }`}
-                    >
-                      <Sun size={16} className="mb-1" />
-                      <span className="text-[9px] font-semibold">Día</span>
-                    </button>
-                    <button
-                      onClick={() => setActiveTheme('cyber')}
-                      className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg transition-all font-bold ${
-                        activeTheme === 'cyber'
-                          ? 'bg-[var(--accent)] text-black shadow-sm font-bold'
-                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)]'
-                      }`}
-                    >
-                      <Monitor size={16} className="mb-1" />
-                      <span className="text-[9px] font-semibold">Cyber</span>
-                    </button>
-                    <button
-                      onClick={() => setActiveTheme('kilo')}
-                      className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg transition-all font-bold ${
-                        activeTheme === 'kilo'
-                          ? 'bg-[var(--accent)] text-black shadow-sm font-bold'
-                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)]'
-                      }`}
-                    >
-                      <Moon size={16} className="mb-1" />
-                      <span className="text-[9px] font-semibold">Kilo</span>
-                    </button>
+                    {quickThemes.map(themeId => {
+                      let Icon = Sun;
+                      let label = 'Día';
+                      if (themeId === 'original') { Icon = Moon; label = 'Noche'; }
+                      if (themeId === 'glass') { Icon = Layers; label = 'Glass'; }
+                      if (themeId === 'cyber') { Icon = Terminal; label = 'Cyber'; }
+                      if (themeId === 'kilo') { Icon = Zap; label = 'Kilo'; }
+
+                      return (
+                        <button
+                          key={themeId}
+                          onClick={() => setActiveTheme(themeId)}
+                          className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg transition-all font-bold ${
+                            activeTheme === themeId
+                              ? 'bg-[var(--accent)] text-black shadow-sm'
+                              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)]'
+                          }`}
+                        >
+                          <Icon size={16} className="mb-1" />
+                          <span className="text-[9px] font-semibold">{label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

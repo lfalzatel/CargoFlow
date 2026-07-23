@@ -20,7 +20,7 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess }: Log
     try {
       const userProfile = await loginWithGoogle(selectedRole);
       setIsLoading(false);
-      onLoginSuccess({ ...userProfile, role: selectedRole });
+      onLoginSuccess({ ...userProfile, role: userProfile.role === 'admin' ? 'admin' : selectedRole });
     } catch (e: any) {
       setIsLoading(false);
       if (e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request') {

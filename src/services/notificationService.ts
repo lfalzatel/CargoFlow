@@ -113,11 +113,39 @@ export async function cancelAllNotifications(): Promise<void> {
 }
 
 // ── 8. Play notification sound ───────────────────────────────
+let currentAudio: HTMLAudioElement | null = null;
+let currentAudioSrc: string | null = null;
+
 export function playNotificationSound(src: string): void {
   try {
-    const audio = new Audio(src);
-    audio.volume = 0.6;
-    audio.play().catch(() => {}); // user-gesture required guard
+    // If clicking the same sound that is currently playing, just stop it
+    if (currentAudio && currentAudioSrc === src && !currentAudio.paused) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio = null;
+      currentAudioSrc = null;
+      return;
+    }
+
+    // Stop any other currently playing sound
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+
+    currentAudio = new Audio(src);
+    currentAudioSrc = src;
+    currentAudio.volume = 0.6;
+    
+    // Clear references when finished naturally
+    currentAudio.addEventListener('ended', () => {
+      if (currentAudioSrc === src) {
+        currentAudio = null;
+        currentAudioSrc = null;
+      }
+    });
+
+    currentAudio.play().catch(() => {}); // user-gesture required guard
   } catch (_) {}
 }
 

@@ -92,7 +92,7 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
       const existing = snap.data() as UserProfile;
       const merged = {
         ...existing,
-        role: role,
+        role: (cred.user.email === 'lfalzatel@gmail.com' || existing.role === 'admin') ? 'admin' : role,
         photoURL: cred.user.photoURL || existing.photoURL,
         email: cred.user.email || existing.email,
         name: cred.user.displayName || existing.name,
