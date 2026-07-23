@@ -358,7 +358,7 @@ export default function Home({ user, onCreateShipment, onNavigateToView, onLogou
                 </span>
               </div>
             </div>
-            <div className="p-2.5 bg-white text-emerald-700 rounded-xl font-black text-xs shadow-md flex-shrink-0 group-hover:bg-slate-100">
+            <div className="p-2.5 bg-white text-emerald-700 rounded-xl font-black text-xs shadow-md flex-shrink-0 group-hover:bg-slate-100 anim-float-bounce">
               Solicitar Flete
             </div>
           </button>
