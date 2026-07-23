@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Truck } from 'lucide-react';
+import { Eye, EyeOff, Truck, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { loginWithGoogle, loginWithEmail } from '../services/authService';
+import { UserRole } from '../types';
 
 interface LoginProps {
-  onLoginSuccess: (email: string) => void;
+  currentRole?: UserRole;
+  onLoginSuccess: (email: string, role: UserRole) => void;
   onNavigateToRegister: () => void;
   onGoogleLoginSuccess?: (profile: any) => void;
 }
 
-export default function Login({ onLoginSuccess, onNavigateToRegister, onGoogleLoginSuccess }: LoginProps) {
+export default function Login({ currentRole = 'conductor', onLoginSuccess, onNavigateToRegister, onGoogleLoginSuccess }: LoginProps) {
+  const [selectedRole, setSelectedRole] = useState<UserRole>(currentRole);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,24 +24,24 @@ export default function Login({ onLoginSuccess, onNavigateToRegister, onGoogleLo
       setIsLoading(true);
       await loginWithEmail(email, password);
       setIsLoading(false);
-      onLoginSuccess(email);
+      onLoginSuccess(email, selectedRole);
     }
   };
 
   const handleGoogleClick = async () => {
     setIsLoading(true);
     try {
-      const userProfile = await loginWithGoogle('conductor');
+      const userProfile = await loginWithGoogle(selectedRole);
       setIsLoading(false);
       if (onGoogleLoginSuccess) {
-        onGoogleLoginSuccess(userProfile);
+        onGoogleLoginSuccess({ ...userProfile, role: selectedRole });
       } else {
-        onLoginSuccess(userProfile.email || 'usuario.google@cargoflow.co');
+        onLoginSuccess(userProfile.email || 'usuario.google@cargoflow.co', selectedRole);
       }
     } catch (e) {
       console.warn('Google login popup error:', e);
       setIsLoading(false);
-      onLoginSuccess('usuario.google@cargoflow.co');
+      onLoginSuccess('usuario.google@cargoflow.co', selectedRole);
     }
   };
 
@@ -46,13 +49,13 @@ export default function Login({ onLoginSuccess, onNavigateToRegister, onGoogleLo
     <div className="min-h-screen bg-background flex flex-col antialiased">
       <main className="flex-1 flex flex-col justify-center px-6 md:max-w-md md:mx-auto w-full py-12">
         {/* Logo Header */}
-        <header className="flex flex-col items-center mb-8 w-full">
+        <header className="flex flex-col items-center mb-6 w-full">
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-20 h-20 mb-4 rounded-2xl bg-white shadow-[0px_4px_20px_rgba(0,0,0,0.05)] flex items-center justify-center border border-surface-container"
+            className="w-16 h-16 mb-3 rounded-2xl bg-white shadow-[0px_4px_20px_rgba(0,0,0,0.05)] flex items-center justify-center border border-surface-container"
           >
-            <Truck className="text-primary-container" size={36} fill="currentColor" />
+            <Truck className="text-primary-container" size={32} fill="currentColor" />
           </motion.div>
           <motion.h1 
             initial={{ y: -10, opacity: 0 }}
@@ -62,10 +65,38 @@ export default function Login({ onLoginSuccess, onNavigateToRegister, onGoogleLo
           >
             Bienvenido de nuevo
           </motion.h1>
-          <p className="text-sm text-on-surface-variant mt-2 text-center">
-            Inicia sesión para gestionar tus envíos.
+          <p className="text-sm text-on-surface-variant mt-1 text-center">
+            Selecciona tu rol para iniciar sesión.
           </p>
         </header>
+
+        {/* Mandatory Role Selection Toggle */}
+        <div className="w-full bg-surface-container-low p-1.5 rounded-2xl mb-6 border border-surface-container flex gap-1">
+          <button
+            type="button"
+            onClick={() => setSelectedRole('conductor')}
+            className={`flex-1 py-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              selectedRole === 'conductor'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'text-on-surface-variant hover:text-on-surface hover:bg-white/60'
+            }`}
+          >
+            <Truck size={18} />
+            <span>Soy Conductor</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedRole('cliente')}
+            className={`flex-1 py-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              selectedRole === 'cliente'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-on-surface-variant hover:text-on-surface hover:bg-white/60'
+            }`}
+          >
+            <User size={18} />
+            <span>Soy Cliente</span>
+          </button>
+        </div>
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="w-full">
@@ -120,40 +151,35 @@ export default function Login({ onLoginSuccess, onNavigateToRegister, onGoogleLo
             </button>
           </div>
 
-          {/* Forgot Password Link */}
-          <div className="flex justify-end mb-6">
-            <a href="#" className="text-xs font-bold text-primary hover:underline transition-colors">
-              ¿Olvidaste tu contraseña?
-            </a>
-          </div>
-
           {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full h-[56px] bg-[#1E5EFF] text-white font-bold text-base rounded-xl shadow-md hover:bg-primary transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer disabled:opacity-60"
+            className={`w-full h-[56px] text-white font-bold text-base rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer disabled:opacity-60 ${
+              selectedRole === 'conductor' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
-            {isLoading ? 'Conectando...' : 'Iniciar sesión'}
+            {isLoading ? 'Conectando...' : `Iniciar sesión como ${selectedRole === 'conductor' ? 'Conductor' : 'Cliente'}`}
           </button>
         </form>
 
         {/* Divider */}
-        <div className="relative flex items-center my-8">
+        <div className="relative flex items-center my-6">
           <div className="flex-grow border-t border-outline-variant"></div>
           <span className="flex-shrink-0 mx-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">
-            O continúa con
+            O continúa con Google
           </span>
           <div className="flex-grow border-t border-outline-variant"></div>
         </div>
 
         {/* Social Login */}
-        <div className="grid grid-cols-2 gap-4 w-full">
+        <div className="w-full">
           {/* Google Button */}
           <button
             type="button"
             onClick={handleGoogleClick}
             disabled={isLoading}
-            className="flex items-center justify-center gap-2 h-[56px] border-2 border-outline-variant rounded-xl hover:bg-surface-container-low transition-all active:scale-[0.98] cursor-pointer"
+            className="w-full flex items-center justify-center gap-3 h-[56px] border-2 border-outline-variant rounded-xl hover:bg-surface-container-low transition-all active:scale-[0.98] cursor-pointer shadow-xs"
             title="Iniciar sesión con Google"
           >
             <svg aria-hidden="true" className="w-6 h-6" viewBox="0 0 24 24">
@@ -162,20 +188,7 @@ export default function Login({ onLoginSuccess, onNavigateToRegister, onGoogleLo
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
             </svg>
-            <span className="text-xs font-bold text-on-surface">Google</span>
-          </button>
-          
-          {/* Facebook Button */}
-          <button
-            type="button"
-            onClick={() => onLoginSuccess('usuario.facebook@cargoflow.co')}
-            className="flex items-center justify-center gap-2 h-[56px] border-2 border-outline-variant rounded-xl hover:bg-surface-container-low transition-all active:scale-[0.98] cursor-pointer"
-            title="Iniciar sesión con Facebook"
-          >
-            <svg aria-hidden="true" className="w-6 h-6" viewBox="0 0 24 24">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"></path>
-            </svg>
-            <span className="text-xs font-bold text-on-surface">Facebook</span>
+            <span className="text-sm font-bold text-on-surface">Continuar con Google</span>
           </button>
         </div>
 
@@ -187,7 +200,7 @@ export default function Login({ onLoginSuccess, onNavigateToRegister, onGoogleLo
               onClick={onNavigateToRegister}
               className="text-primary font-bold ml-1 hover:underline focus:outline-none"
             >
-              Regístrate
+              Regístrate aquí
             </button>
           </p>
         </div>

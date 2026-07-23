@@ -124,30 +124,33 @@ export default function App() {
   };
 
   // Login completion (goes straight to main dashboard)
-  const handleLoginSuccess = (email: string) => {
+  const handleLoginSuccess = (email: string, role: UserRole = selectedRole) => {
+    setSelectedRole(role);
     setUser(prev => ({
       ...prev,
       email: email,
-      plateNumber: prev.plateNumber || 'WYZ-789',
+      role: role,
+      plateNumber: role === 'conductor' ? (prev.plateNumber || 'WYZ-789') : undefined,
       isVerified: true,
     }));
     setView('home');
   };
 
   // Registration completion
-  const handleRegisterSuccess = (name: string, email: string, phone: string) => {
+  const handleRegisterSuccess = (name: string, email: string, phone: string, role: UserRole = selectedRole) => {
+    setSelectedRole(role);
     setUser({
       name,
       email,
       phone,
-      role: selectedRole,
+      role: role,
       isVerified: true,
       rating: 5.0,
       balance: 1250000,
-      plateNumber: selectedRole === 'conductor' ? 'WYZ-789' : undefined,
+      plateNumber: role === 'conductor' ? 'WYZ-789' : undefined,
     });
 
-    if (selectedRole === 'conductor') {
+    if (role === 'conductor') {
       setView('complete_profile');
     } else {
       setView('home');
@@ -290,11 +293,15 @@ export default function App() {
 
           {view === 'login' && (
             <Login 
+              currentRole={selectedRole}
               onLoginSuccess={handleLoginSuccess} 
               onGoogleLoginSuccess={(profile) => {
+                const r = profile.role || selectedRole;
+                setSelectedRole(r);
                 setUser({
                   ...profile,
-                  plateNumber: profile.plateNumber || (selectedRole === 'conductor' ? 'WYZ-789' : undefined),
+                  role: r,
+                  plateNumber: profile.plateNumber || (r === 'conductor' ? 'WYZ-789' : undefined),
                   isVerified: true,
                 });
                 setView('home');
@@ -305,6 +312,7 @@ export default function App() {
 
           {view === 'register' && (
             <Register 
+              currentRole={selectedRole}
               onRegisterSuccess={handleRegisterSuccess} 
               onNavigateToLogin={() => setView('login')} 
             />

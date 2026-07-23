@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Truck, ArrowRight, X } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Eye, EyeOff, Truck, User, ArrowRight, X } from 'lucide-react';
+import { UserRole } from '../types';
 
 interface RegisterProps {
-  onRegisterSuccess: (name: string, email: string, phone: string) => void;
+  currentRole?: UserRole;
+  onRegisterSuccess: (name: string, email: string, phone: string, role: UserRole) => void;
   onNavigateToLogin: () => void;
 }
 
-export default function Register({ onRegisterSuccess, onNavigateToLogin }: RegisterProps) {
+export default function Register({ currentRole = 'conductor', onRegisterSuccess, onNavigateToLogin }: RegisterProps) {
+  const [selectedRole, setSelectedRole] = useState<UserRole>(currentRole);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -18,7 +20,7 @@ export default function Register({ onRegisterSuccess, onNavigateToLogin }: Regis
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name && email && phone && password && acceptedTerms) {
-      onRegisterSuccess(name, email, phone);
+      onRegisterSuccess(name, email, phone, selectedRole);
     }
   };
 
@@ -40,10 +42,38 @@ export default function Register({ onRegisterSuccess, onNavigateToLogin }: Regis
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-6 w-full max-w-md mx-auto">
-        <div className="w-full bg-white rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] p-6 border border-surface-container flex flex-col gap-6">
+        <div className="w-full bg-white rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] p-6 border border-surface-container flex flex-col gap-5">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-on-surface tracking-tight">Crea tu cuenta</h1>
-            <p className="text-sm text-on-surface-variant mt-1">Únete a la red logística más eficiente.</p>
+            <p className="text-sm text-on-surface-variant mt-1">Selecciona tu rol para unirte a la red logística.</p>
+          </div>
+
+          {/* Mandatory Role Selection Segmented Control */}
+          <div className="w-full bg-surface-container-low p-1.5 rounded-2xl border border-surface-container flex gap-1">
+            <button
+              type="button"
+              onClick={() => setSelectedRole('conductor')}
+              className={`flex-1 py-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                selectedRole === 'conductor'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-white/60'
+              }`}
+            >
+              <Truck size={18} />
+              <span>Soy Conductor</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedRole('cliente')}
+              className={`flex-1 py-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                selectedRole === 'cliente'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-white/60'
+              }`}
+            >
+              <User size={18} />
+              <span>Soy Cliente</span>
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -143,7 +173,7 @@ export default function Register({ onRegisterSuccess, onNavigateToLogin }: Regis
             </div>
 
             {/* Terms Checkbox */}
-            <label className="flex items-start gap-3 mt-2 cursor-pointer group">
+            <label className="flex items-start gap-3 mt-1 cursor-pointer group">
               <div className="relative flex items-center justify-center mt-1">
                 <input
                   type="checkbox"
@@ -174,19 +204,21 @@ export default function Register({ onRegisterSuccess, onNavigateToLogin }: Regis
             <button
               type="submit"
               disabled={!acceptedTerms}
-              className={`mt-4 w-full h-[56px] rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all shadow-sm ${
+              className={`mt-2 w-full h-[56px] rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all shadow-sm ${
                 acceptedTerms 
-                  ? 'bg-primary-container text-white hover:bg-primary active:scale-[0.98] cursor-pointer hover:shadow-md'
+                  ? selectedRole === 'conductor'
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-[0.98] cursor-pointer'
+                    : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98] cursor-pointer'
                   : 'bg-surface-variant text-outline opacity-60 cursor-not-allowed'
               }`}
             >
-              Crear cuenta
+              Registrarme como {selectedRole === 'conductor' ? 'Conductor' : 'Cliente'}
               <ArrowRight size={20} />
             </button>
           </form>
 
           {/* Navigation to Login */}
-          <div className="text-center pt-4 border-t border-surface-container-high">
+          <div className="text-center pt-3 border-t border-surface-container-high">
             <p className="text-sm text-on-surface-variant">
               ¿Ya tienes una cuenta?{' '}
               <button
