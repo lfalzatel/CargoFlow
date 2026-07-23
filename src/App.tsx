@@ -143,7 +143,7 @@ export default function App() {
     setView(newView);
   };
 
-  // Login completion (Checks if profile is completed or directs to complete-profile)
+  // Login completion (Checks if profile is completed or directs to complete_profile)
   const handleLoginSuccess = (profileData: any) => {
     const role = profileData.role || selectedRole;
     setSelectedRole(role);
@@ -157,17 +157,18 @@ export default function App() {
     };
     setUser(updatedUser);
 
+    // Set view IMMEDIATELY underneath splash screen to eliminate any blank/white screen
+    const targetView = isProfileComplete ? 'home' : 'complete_profile';
+    setView(targetView);
+
+    // Trigger splash screen overlay and sound
     triggerSplash(
       'Iniciando sesión...', 
       `Bienvenido, ${updatedUser.name.split(' ')[0]}`, 
       '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
       2600, 
       () => {
-        if (!isProfileComplete) {
-          setView('complete-profile');
-        } else {
-          setView('home');
-        }
+        // Splash completed
       }
     );
   };

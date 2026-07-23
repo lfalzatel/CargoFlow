@@ -30,8 +30,12 @@ export default function SplashScreen({
     }
 
     return () => {
-      audio.pause();
-      audio.currentTime = 0;
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+      } catch (e) {
+        // Safe cleanup on unmount
+      }
     };
   }, [soundUrl]);
 

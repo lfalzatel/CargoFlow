@@ -26,7 +26,7 @@ export default function BottomNav({ currentView, onViewChange, unreadChatCount =
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-surface-container-highest shadow-[0px_-4px_25px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom,12px)] pt-2 px-4 h-16 flex justify-around items-center">
+    <nav className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-auto sm:w-[440px] sm:-translate-x-1/2 sm:left-1/2 z-40 rounded-[26px] glass-nav-container h-16 px-3 flex justify-around items-center">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = currentView === item.id;
