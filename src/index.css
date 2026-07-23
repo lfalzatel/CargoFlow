@@ -54,13 +54,13 @@ body {
   }
 }
 
-/* 2. micro-bounce: infinite breathing idle bounce for active item */
+/* 2. micro-bounce: 3px up/down infinite on icon of active item */
 @keyframes microBounce {
-  0%, 100% {
-    transform: translateY(-8px) scale(1.1) rotate(-2deg);
+  from {
+    transform: translateY(0px);
   }
-  50% {
-    transform: translateY(-11px) scale(1.1) rotate(-2deg);
+  to {
+    transform: translateY(-3px);
   }
 }
 
@@ -82,39 +82,44 @@ body {
 }
 
 .anim-micro-bounce {
-  animation: microBounce 1.5s ease-in-out infinite alternate;
+  /* Fast 3px icon bounce, starts after push-and-settle completes */
+  animation: microBounce 0.4s ease-in-out infinite alternate;
   animation-delay: 0.45s;
+}
+
+/* Static settled state: item stays elevated after push-and-settle */
+.nav-item-settled {
+  transform: scale(1.1) translateY(-8px) rotate(-2deg);
 }
 
 .anim-float-bounce {
   animation: floatBounce 2.2s ease-in-out infinite;
 }
 
-/* Glassmorphism Ultra Premium Navbar with 3D Light Reflection & Saturate 180% */
+/* Glassmorphism Ultra Premium Navbar - Light/Day mode adaptive */
 .glass-nav-container {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.62);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14), 0 4px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
   position: relative;
-  overflow: hidden;
+  /* No overflow:hidden — active items scale/translate outside bounds */
 }
 
-/* 1px top edge gradient light reflection simulation */
+/* Bottom edge gradient light reflection - simulates 3D glass bottom edge */
 .glass-nav-container::before {
   content: "";
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
-  height: 1.5px;
+  height: 2px;
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.95) 25%,
-    rgba(16, 185, 129, 0.8) 50%,
-    rgba(59, 130, 246, 0.8) 75%,
+    rgba(11, 34, 77, 0.5) 30%,
+    rgba(30, 94, 255, 0.5) 70%,
     rgba(255, 255, 255, 0) 100%
   );
   pointer-events: none;

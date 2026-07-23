@@ -10,7 +10,8 @@ import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import SplashScreen from './components/SplashScreen';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './config/firebase';
+import { auth, db } from './config/firebase';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 
 const INITIAL_TRIPS: Trip[] = [
@@ -105,16 +106,43 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Listen for active Firebase Auth session so session NEVER closes unexpectedly
+  // Listen for active Firebase Auth session and read full profile from Firestore
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        // Always merge base auth data first
         setUser(prev => ({
           ...prev,
           name: firebaseUser.displayName || prev.name,
           email: firebaseUser.email || prev.email,
           photoURL: firebaseUser.photoURL || prev.photoURL,
         }));
+        // Read the persisted Firestore profile to get isComplete and role-specific fields
+        try {
+          for (const role of ['conductor', 'cliente']) {
+            const docRef = doc(db, 'users', `${firebaseUser.uid}_${role}`);
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+              const firestoreProfile = snap.data() as UserProfile;
+              // If this role matches the currently selected role, restore the full profile
+              setUser(prev => {
+                if (prev.role === role || role === 'conductor') {
+                  return {
+                    ...prev,
+                    ...firestoreProfile,
+                    name: firebaseUser.displayName || firestoreProfile.name || prev.name,
+                    email: firebaseUser.email || firestoreProfile.email || prev.email,
+                    photoURL: firebaseUser.photoURL || firestoreProfile.photoURL || prev.photoURL,
+                  };
+                }
+                return prev;
+              });
+              break; // Stop after finding first matching profile
+            }
+          }
+        } catch (e) {
+          console.warn('Could not read Firestore profile on auth change:', e);
+        }
       }
     });
     return () => unsubscribe();
@@ -173,15 +201,14 @@ export default function App() {
     );
   };
 
-  // Complete profile completion (Driver vehicle/doc step)
+  // Complete profile completion (Driver vehicle/doc step — only conductors reach here)
   const handleCompleteProfile = (data: {
     fullName: string;
     idNumber: string;
     plateNumber: string;
     vehicleType: 'furgon' | 'sencillo';
   }) => {
-    setUser(prev => ({
-      ...prev,
+    const updatedProfile = {
       name: data.fullName,
       plateNumber: data.plateNumber,
       vehicleType: data.vehicleType,
@@ -193,15 +220,37 @@ export default function App() {
         soat: true,
         propiedad: true,
       }
-    }));
+    };
+
+    setUser(prev => ({ ...prev, ...updatedProfile }));
+    setView('home');
+
+    // Persist to Firestore AND localStorage (localStorage is the offline fallback)
+    const firebaseUser = auth.currentUser;
+    if (firebaseUser) {
+      const role = user.role || 'conductor';
+      const fullProfile = { ...user, ...updatedProfile };
+
+      // 1. Save to localStorage immediately (works offline)
+      try {
+        localStorage.setItem(`cf_profile_${firebaseUser.uid}_${role}`, JSON.stringify(fullProfile));
+      } catch (_) {}
+
+      // 2. Save to Firestore (async, may fail if offline — that's OK)
+      const docRef = doc(db, 'users', `${firebaseUser.uid}_${role}`);
+      updateDoc(docRef, updatedProfile)
+        .catch(() => {
+          setDoc(docRef, fullProfile)
+            .catch((e: Error) => console.warn('Firestore setDoc fallback error:', e));
+        });
+    }
+
     triggerSplash(
       'Verificando perfil...', 
       'Configurando tu vehículo en CargoFlow', 
       '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
       2600, 
-      () => {
-        setView('home');
-      }
+      () => {}
     );
   };
 
@@ -311,7 +360,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-surface">
+    <div className={`bg-background text-on-surface ${
+      ['home', 'activity', 'chat', 'profile'].includes(view)
+        ? 'h-screen flex flex-col overflow-hidden'
+        : 'min-h-screen'
+    }`}>
       {/* Global Splash Screen Overlay with Audio */}
       <AnimatePresence>
         {isSplashActive && (
@@ -323,19 +376,22 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Global Header on main authenticated dashboards */}
+      {/* Global Header on main authenticated dashboards — flex-none so it doesn't steal from content area */}
       {['home', 'activity', 'chat', 'profile'].includes(view) && (
-        <Header
-          user={user}
-          linkedAccounts={linkedAccounts}
-          onNavigateToView={handleViewChange}
-          onLogout={handleLogout}
-          onAddAccount={handleAddAccount}
-          onSwitchAccount={handleSwitchAccount}
-          unreadCount={2}
-        />
+        <div className="flex-none">
+          <Header
+            user={user}
+            linkedAccounts={linkedAccounts}
+            onNavigateToView={handleViewChange}
+            onLogout={handleLogout}
+            onAddAccount={handleAddAccount}
+            onSwitchAccount={handleSwitchAccount}
+            unreadCount={2}
+          />
+        </div>
       )}
 
+      {/* Main content area — flex-1 so it takes exactly the remaining space */}
       <AnimatePresence mode="wait">
         <motion.div
           key={view}
@@ -343,7 +399,13 @@ export default function App() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -10 }}
           transition={{ duration: 0.15 }}
-          className="min-h-screen flex flex-col"
+          className={`flex flex-col ${
+            view === 'home'
+              ? 'flex-1 overflow-hidden'
+              : ['activity', 'chat', 'profile'].includes(view)
+              ? 'flex-1 overflow-y-auto pb-28'
+              : 'min-h-screen'
+          }`}
         >
           {view === 'login' && (
             <Login 

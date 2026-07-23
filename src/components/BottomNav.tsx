@@ -7,14 +7,17 @@ interface BottomNavProps {
   unreadChatCount?: number;
 }
 
+const ACCENT = '#0b224d';
+
 export default function BottomNav({ currentView, onViewChange, unreadChatCount = 0 }: BottomNavProps) {
   const [animatingId, setAnimatingId] = useState<string | null>(currentView);
 
   useEffect(() => {
+    // Re-trigger push-and-settle animation on every view change
     setAnimatingId(currentView);
     const timer = setTimeout(() => {
       setAnimatingId(null);
-    }, 450); // Duration of push-and-settle
+    }, 450); // Matches pushAndSettle duration
     return () => clearTimeout(timer);
   }, [currentView]);
 
@@ -26,7 +29,7 @@ export default function BottomNav({ currentView, onViewChange, unreadChatCount =
   ];
 
   return (
-    <nav className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-auto sm:w-[440px] sm:-translate-x-1/2 sm:left-1/2 z-40 rounded-[26px] glass-nav-container h-16 px-3 flex justify-around items-center">
+    <nav className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40 rounded-[28px] glass-nav-container h-16 px-4 flex justify-around items-center w-[calc(100%-24px)] max-w-[360px]">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = currentView === item.id;
@@ -36,46 +39,56 @@ export default function BottomNav({ currentView, onViewChange, unreadChatCount =
           <button
             key={item.id}
             onClick={() => onViewChange(item.id)}
-            className={`relative flex flex-col items-center justify-center w-16 h-full rounded-2xl transition-all duration-200 focus:outline-none cursor-pointer ${
-              isActive 
-                ? 'text-primary-container font-black' 
-                : 'text-on-surface-variant hover:bg-surface-container-low'
-            }`}
+            className="relative flex flex-col items-center justify-center flex-1 h-full focus:outline-none cursor-pointer"
+            style={{ color: isActive ? '#fff' : ACCENT }}
           >
-            {/* Top Indicator Bar */}
-            {isActive && (
-              <span className="absolute top-0 w-8 h-1 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-full shadow-xs" />
-            )}
-
-            {/* Icon with Push-and-Settle & Micro-Bounce */}
-            <div 
-              className={`relative transition-all ${
-                isActive 
-                  ? isPushing 
-                    ? 'anim-push-and-settle' 
-                    : 'anim-micro-bounce'
-                  : 'hover:scale-105'
-              }`}
+            {/*
+              Inner container: receives both classes simultaneously when active.
+              - nav-item-settled: static transform so it doesn't snap when anim ends
+              - anim-push-and-settle: overrides during the 450ms animation (forwards)
+              Both have the same final transform, so the transition is seamless.
+            */}
+            <div
+              className={[
+                'flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-2xl transition-colors duration-200',
+                isActive ? 'nav-item-settled' : '',
+                isPushing ? 'anim-push-and-settle' : '',
+              ].join(' ')}
+              style={
+                isActive
+                  ? {
+                      backgroundColor: ACCENT,
+                      boxShadow: '0 4px 16px rgba(11, 34, 77, 0.4)',
+                    }
+                  : {
+                      backgroundColor: 'transparent',
+                    }
+              }
             >
-              <div className={`p-1.5 rounded-xl transition-colors ${
-                isActive ? 'bg-blue-50/90 text-primary-container shadow-xs' : ''
-              }`}>
-                <Icon 
-                  size={20} 
-                  fill={isActive ? 'currentColor' : 'none'}
-                />
+              {/* Icon — gets micro-bounce 3px when settled (after push-and-settle) */}
+              <div className="relative">
+                <div className={isActive && !isPushing ? 'anim-micro-bounce' : ''}>
+                  <Icon
+                    size={19}
+                    fill="none"
+                    strokeWidth={isActive ? 2.5 : 1.8}
+                  />
+                </div>
+
+                {/* Unread badge */}
+                {item.badge && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 border border-white rounded-full animate-pulse" />
+                )}
               </div>
 
-              {item.badge && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full animate-pulse" />
-              )}
+              {/* Label */}
+              <span
+                className="text-[9px] font-bold tracking-tight leading-none"
+                style={{ color: isActive ? '#fff' : ACCENT }}
+              >
+                {item.label}
+              </span>
             </div>
-
-            <span className={`text-[10px] tracking-tight transition-all ${
-              isActive ? 'font-extrabold text-primary-container -translate-y-0.5' : 'font-medium'
-            }`}>
-              {item.label}
-            </span>
           </button>
         );
       })}

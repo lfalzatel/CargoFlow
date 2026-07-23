@@ -105,7 +105,7 @@ export default function Home({ user, onCreateShipment, onNavigateToView, onLogou
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-background">
+    <div className="relative w-full h-screen bg-background">
       {/* Drawer Sidebar Menu */}
       <AnimatePresence>
         {showDrawer && (

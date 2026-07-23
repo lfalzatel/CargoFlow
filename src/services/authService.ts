@@ -90,27 +90,52 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
 
     if (snap && snap.exists()) {
       const existing = snap.data() as UserProfile;
-      return {
+      const merged = {
         ...existing,
         role: role,
         photoURL: cred.user.photoURL || existing.photoURL,
         email: cred.user.email || existing.email,
         name: cred.user.displayName || existing.name,
       };
+      // Keep localStorage in sync with Firestore data
+      try { localStorage.setItem(`cf_profile_${uid}_${role}`, JSON.stringify(merged)); } catch (_) {}
+      return merged;
     }
 
-    // New profile creation for this specific role (incomplete by default until user completes profile step)
+    // Firestore was offline or doc not found — check localStorage cache
+    const cachedRaw = (() => { try { return localStorage.getItem(`cf_profile_${uid}_${role}`); } catch(_) { return null; } })();
+    if (cachedRaw) {
+      try {
+        const cached = JSON.parse(cachedRaw) as UserProfile;
+        return {
+          ...cached,
+          role,
+          photoURL: cred.user.photoURL || cached.photoURL,
+          email: cred.user.email || cached.email,
+          name: cred.user.displayName || cached.name,
+        };
+      } catch (_) {}
+    }
+
+    // New profile creation for this specific role
+    // Clients are auto-complete — they don't need vehicle/doc setup
+    const isComplete = role === 'cliente' ? true : false;
     const profile: UserProfile = {
       name: cred.user.displayName || 'Usuario CargoFlow',
       email: cred.user.email || 'usuario.google@cargoflow.co',
       phone: cred.user.phoneNumber || '',
       role: role,
       isVerified: true,
-      isComplete: false,
+      isComplete,
       rating: 5.0,
       balance: 1250000,
       photoURL: cred.user.photoURL || undefined,
     };
+
+    // Cache to localStorage so it survives Firestore offline periods
+    try {
+      localStorage.setItem(`cf_profile_${uid}_${role}`, JSON.stringify(profile));
+    } catch (_) {}
 
     // Save asynchronously to Firestore
     setDoc(docRef, profile).catch(err => console.warn('Firestore setDoc notice:', err));
@@ -124,12 +149,14 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
     }
 
     // Return instant profile fallback for demo/offline mode
+    // Clients are always complete; conductors need vehicle setup
     return {
       name: role === 'cliente' ? 'Luis Fernando (Cliente)' : 'Luis Fernando Alzate',
       email: role === 'cliente' ? 'lfalzatel29@gmail.com' : 'lfalzatel@gmail.com',
       phone: role === 'cliente' ? '+57 300 123 4567' : '+57 312 987 6543',
       role: role,
       isVerified: true,
+      isComplete: role === 'cliente' ? true : false,
       rating: 5.0,
       balance: 1250000,
       photoURL: undefined,

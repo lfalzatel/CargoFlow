@@ -183,9 +183,7 @@ export default function Header({
           <div className="group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
             <CargoFlowLogo size="sm" />
           </div>
-          <span className="font-headline-md text-base sm:text-xl font-extrabold text-primary-container tracking-tight hidden xs:inline sm:inline">
-            CargoFlow
-          </span>
+          <span className="font-headline-md text-base font-extrabold text-primary-container tracking-tight">CargoFlow</span>
         </div>
 
         {/* Right Actions: WhatsApp Support, Notifications, Profile Capsule */}
