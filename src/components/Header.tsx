@@ -50,9 +50,24 @@ export default function Header({
   const menuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // Dynamic user avatar (Google profile photo if logged in with Google, or fallback avatar)
-  const defaultAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80";
-  const userAvatar = user.photoURL || defaultAvatar;
+  // Dynamic user avatar helper (Google profile photo if logged in with Google, or sleek initials avatar)
+  const renderAvatar = (photoURL?: string, name?: string, sizeClass = "w-8 h-8 text-xs") => {
+    if (photoURL && photoURL.startsWith('http') && !photoURL.includes('unsplash')) {
+      return (
+        <img
+          src={photoURL}
+          alt={name || 'Usuario'}
+          className={`${sizeClass} rounded-full object-cover border border-white shadow-xs flex-shrink-0`}
+        />
+      );
+    }
+    const initials = (name || 'Usuario').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    return (
+      <div className={`${sizeClass} rounded-full bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 text-white font-extrabold flex items-center justify-center border border-white shadow-xs flex-shrink-0 uppercase`}>
+        {initials}
+      </div>
+    );
+  };
 
   // Capture PWA install prompt event
   useEffect(() => {
@@ -272,11 +287,7 @@ export default function Header({
               }`}
             >
               {/* User Profile Avatar from Google/Registration */}
-              <img
-                src={userAvatar}
-                alt={user.name || 'Usuario'}
-                className="w-8 h-8 rounded-full object-cover border border-white shadow-xs"
-              />
+              {renderAvatar(user.photoURL, user.name, "w-8 h-8 text-xs")}
 
               {/* Name & Role Badge */}
               <div className="flex flex-col text-left hidden sm:flex">
@@ -308,11 +319,7 @@ export default function Header({
                 >
                   {/* Header User Card (Google Photo & Registration Email) */}
                   <div className="p-5 bg-gradient-to-br from-emerald-50/60 via-blue-50/40 to-white border-b border-surface-container flex items-center gap-3.5">
-                    <img
-                      src={userAvatar}
-                      alt={user.name}
-                      className="w-14 h-14 rounded-full object-cover border-2 border-emerald-400 shadow-md flex-shrink-0"
-                    />
+                    {renderAvatar(user.photoURL, user.name, "w-14 h-14 text-base")}
                     <div className="flex flex-col min-w-0">
                       <h3 className="font-extrabold text-sm text-on-surface truncate">{user.name || 'Usuario CargoFlow'}</h3>
                       <p className="text-xs text-on-surface-variant truncate mt-0.5 font-medium">{user.email || 'usuario@cargoflow.co'}</p>
@@ -467,11 +474,7 @@ export default function Header({
                           title="Haz clic para cambiar a esta cuenta"
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <img
-                              src={acc.photoURL || defaultAvatar}
-                              alt={acc.name}
-                              className="w-8 h-8 rounded-full object-cover border border-outline-variant shadow-xs flex-shrink-0"
-                            />
+                            {renderAvatar(acc.photoURL, acc.name, "w-8 h-8 text-xs")}
                             <div className="flex flex-col min-w-0">
                               <span className="text-xs font-bold text-on-surface truncate group-hover:text-emerald-700">{acc.name}</span>
                               <span className="text-[11px] text-outline truncate">{acc.email}</span>
@@ -491,11 +494,7 @@ export default function Header({
                         className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-emerald-50 transition-colors cursor-pointer border border-dashed border-outline-variant"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <img
-                            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80"
-                            alt="Luis Fernando (Cliente)"
-                            className="w-8 h-8 rounded-full object-cover border border-outline-variant"
-                          />
+                          {renderAvatar(undefined, "Luis Fernando (Cliente)", "w-8 h-8 text-xs")}
                           <div className="flex flex-col min-w-0">
                             <span className="text-xs font-bold text-on-surface truncate">Luis Fernando (Cliente)</span>
                             <span className="text-[11px] text-outline truncate">lfalzatel29@gmail.com</span>
@@ -550,7 +549,7 @@ export default function Header({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowSplashModal(false)}
-            className="fixed inset-0 z-[99999] bg-gradient-to-br from-[#060A12] via-[#091224] to-[#04070F] text-white flex flex-col items-center justify-between py-12 px-6 select-none cursor-pointer"
+            className="fixed inset-0 z-[99999] bg-gradient-to-br from-[#09152b] via-[#0b224d] to-[#041029] text-white flex flex-col items-center justify-between py-12 px-6 select-none cursor-pointer"
           >
             {/* Close Button */}
             <button

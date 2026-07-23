@@ -41,7 +41,7 @@ export default function SplashScreen({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0 z-[9999] bg-gradient-to-br from-[#060A12] via-[#091224] to-[#04070F] text-white flex flex-col items-center justify-between py-12 px-6 antialiased select-none"
+      className="fixed inset-0 z-[9999] bg-gradient-to-br from-[#09152b] via-[#0b224d] to-[#041029] text-white flex flex-col items-center justify-between py-12 px-6 antialiased select-none"
     >
       {/* Top Tag */}
       <div className="w-full flex justify-center pt-4">

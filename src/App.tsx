@@ -212,7 +212,6 @@ export default function App() {
       isVerified: true,
       rating: 5.0,
       balance: 1500000,
-      photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
     }
   ]);
 

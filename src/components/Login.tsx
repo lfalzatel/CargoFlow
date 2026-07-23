@@ -35,7 +35,7 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess }: Log
         isVerified: true,
         rating: 5.0,
         balance: 1250000,
-        photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+        photoURL: undefined,
       });
     }
   };

@@ -132,7 +132,7 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
       isVerified: true,
       rating: 5.0,
       balance: 1250000,
-      photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+      photoURL: undefined,
       plateNumber: role === 'conductor' ? 'WYZ-789' : undefined,
     };
   }
