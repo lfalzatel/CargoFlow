@@ -199,6 +199,53 @@ export default function App() {
     }));
   };
 
+  // Linked accounts list (Instagram style quick account switcher)
+  const [linkedAccounts, setLinkedAccounts] = useState<UserProfile[]>([
+    {
+      name: 'Luis Fernando (Cliente)',
+      email: 'lfalzatel29@gmail.com',
+      phone: '+57 300 123 4567',
+      role: 'cliente',
+      isVerified: true,
+      rating: 5.0,
+      balance: 1500000,
+      photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+    }
+  ]);
+
+  // Switch account helper (Instagram style)
+  const handleSwitchAccount = (targetAccount: UserProfile) => {
+    setLinkedAccounts(prev => {
+      const filtered = prev.filter(acc => !(acc.email === targetAccount.email && acc.role === targetAccount.role));
+      const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
+      if (!exists) {
+        return [...filtered, user];
+      }
+      return filtered;
+    });
+    setUser(targetAccount);
+  };
+
+  // Add new account helper (Triggers Google Auth)
+  const handleAddAccount = async () => {
+    try {
+      const { loginWithGoogle } = await import('./services/authService');
+      const targetRole = user.role === 'conductor' ? 'cliente' : 'conductor';
+      const newProfile = await loginWithGoogle(targetRole);
+      
+      setLinkedAccounts(prev => {
+        const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
+        if (!exists) {
+          return [...prev, user];
+        }
+        return prev;
+      });
+      setUser(newProfile);
+    } catch (e) {
+      console.warn('Add account notice:', e);
+    }
+  };
+
   // Reset/Logout helper
   const handleLogout = async () => {
     try {
@@ -216,8 +263,11 @@ export default function App() {
       {['home', 'activity', 'chat', 'profile'].includes(view) && (
         <Header
           user={user}
+          linkedAccounts={linkedAccounts}
           onNavigateToView={handleViewChange}
           onLogout={handleLogout}
+          onAddAccount={handleAddAccount}
+          onSwitchAccount={handleSwitchAccount}
           unreadCount={2}
         />
       )}

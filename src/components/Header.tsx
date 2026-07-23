@@ -20,12 +20,23 @@ import { UserProfile } from '../types';
 
 interface HeaderProps {
   user: UserProfile;
+  linkedAccounts?: UserProfile[];
   onNavigateToView: (view: 'home' | 'activity' | 'chat' | 'profile') => void;
   onLogout: () => void;
+  onAddAccount?: () => void;
+  onSwitchAccount?: (acc: UserProfile) => void;
   unreadCount?: number;
 }
 
-export default function Header({ user, onNavigateToView, onLogout, unreadCount = 3 }: HeaderProps) {
+export default function Header({ 
+  user, 
+  linkedAccounts = [], 
+  onNavigateToView, 
+  onLogout, 
+  onAddAccount, 
+  onSwitchAccount, 
+  unreadCount = 3 
+}: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -36,8 +47,8 @@ export default function Header({ user, onNavigateToView, onLogout, unreadCount =
   const menuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // Dynamic user avatar (Google profile photo if logged in with Google, or fallback)
-  const defaultAvatar = "https://lh3.googleusercontent.com/aida-public/AB6AXuAaVqRCs3Sd6gJvISf50cSCmx0gy6bYEvm1R0IzY4p64VNvfe1-3MIdU67GvSNK95J1--2vNcWvxnrIq8iCD-iHT1D8hQ7XtZaehyM01PAqzIOpnvfjJaYX0RRdOKnv96PNPbSoA0WCXp4x_h7jmJ4ihCCgJ8Z8drczuCJb_JVBDIY5LL_WCnZNTNXviCXjNodS3ym6pf7GR5ZWc7nUdVM8cc7a6Zs2qvDNwDS_1XEoVjtbFFt-4bF8";
+  // Dynamic user avatar (Google profile photo if logged in with Google, or fallback avatar)
+  const defaultAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80";
   const userAvatar = user.photoURL || defaultAvatar;
 
   // Capture PWA install prompt event
@@ -64,21 +75,22 @@ export default function Header({ user, onNavigateToView, onLogout, unreadCount =
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle Share App
+  // Handle Share App - Exactly shares https://cargoflow-c387d.web.app/
   const handleShareApp = async () => {
+    const shareUrl = 'https://cargoflow-c387d.web.app/';
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'CargoFlow Colombia',
           text: 'CargoFlow - La plataforma líder de transporte de carga en Colombia',
-          url: window.location.origin,
+          url: shareUrl,
         });
       } catch (err) {
         console.log('Share canceled');
       }
     } else {
-      navigator.clipboard.writeText(window.location.origin);
-      alert('¡Enlace de CargoFlow copiado al portapapeles!');
+      await navigator.clipboard.writeText(shareUrl);
+      alert(`¡Enlace copiado al portapapeles!\n${shareUrl}`);
     }
   };
 
@@ -432,37 +444,77 @@ export default function Header({ user, onNavigateToView, onLogout, unreadCount =
                     </button>
                   </div>
 
-                  {/* OTRAS CUENTAS Section */}
-                  <div className="p-3 bg-surface-container-lowest flex flex-col gap-1 pb-6">
+                  {/* OTRAS CUENTAS Section (Instagram-Style Quick Account Switcher) */}
+                  <div className="p-3 bg-surface-container-lowest flex flex-col gap-1.5 pb-6">
                     <span className="text-[10px] font-extrabold uppercase tracking-widest text-outline px-2 block mb-1">
-                      OTRAS CUENTAS
+                      OTRAS CUENTAS (CAMBIO RÁPIDO)
                     </span>
 
-                    {/* Linked Account */}
-                    <div className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer">
-                      <img
-                        src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80"
-                        alt="Otras Cuentas"
-                        className="w-8 h-8 rounded-full object-cover border border-outline-variant"
-                      />
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-bold text-on-surface truncate">Luis Fernando Alzate Lopez</span>
-                        <span className="text-[11px] text-outline truncate">lfalzatel29@gmail.com</span>
+                    {/* Dynamic List of Linked Accounts */}
+                    {linkedAccounts.length > 0 ? (
+                      linkedAccounts.map((acc, idx) => (
+                        <div
+                          key={acc.email + idx}
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            if (onSwitchAccount) onSwitchAccount(acc);
+                          }}
+                          className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-emerald-50/80 transition-colors cursor-pointer border border-transparent hover:border-emerald-200 group"
+                          title="Haz clic para cambiar a esta cuenta"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <img
+                              src={acc.photoURL || defaultAvatar}
+                              alt={acc.name}
+                              className="w-8 h-8 rounded-full object-cover border border-outline-variant shadow-xs flex-shrink-0"
+                            />
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-xs font-bold text-on-surface truncate group-hover:text-emerald-700">{acc.name}</span>
+                              <span className="text-[11px] text-outline truncate">{acc.email}</span>
+                            </div>
+                          </div>
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex-shrink-0">
+                            {acc.role === 'conductor' ? 'CONDUCTOR' : 'CLIENTE'}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div 
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          if (onAddAccount) onAddAccount();
+                        }}
+                        className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-emerald-50 transition-colors cursor-pointer border border-dashed border-outline-variant"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <img
+                            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80"
+                            alt="Luis Fernando (Cliente)"
+                            className="w-8 h-8 rounded-full object-cover border border-outline-variant"
+                          />
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs font-bold text-on-surface truncate">Luis Fernando (Cliente)</span>
+                            <span className="text-[11px] text-outline truncate">lfalzatel29@gmail.com</span>
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                          CLIENTE
+                        </span>
                       </div>
-                    </div>
+                    )}
 
-                    {/* Añadir Cuenta */}
+                    {/* Añadir Cuenta Button (Triggers Google Auth Account Chooser) */}
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
-                        onLogout();
+                        if (onAddAccount) onAddAccount();
                       }}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-surface-container-low text-on-surface transition-colors"
+                      className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-surface-container-low text-on-surface transition-colors mt-1"
                     >
-                      <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-outline">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
                         <Plus size={18} />
                       </div>
-                      <span className="text-xs font-bold">Añadir Cuenta</span>
+                      <span className="text-xs font-bold text-emerald-700">Añadir otra cuenta (Google)</span>
                     </button>
 
                     {/* Cerrar Sesión directly inside/under OTRAS CUENTAS */}
