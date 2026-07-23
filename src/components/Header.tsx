@@ -19,11 +19,12 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
 import CargoFlowLogo from './CargoFlowLogo';
+import { notify, scheduleNotification } from '../services/notificationService';
 
 interface HeaderProps {
   user: UserProfile;
   linkedAccounts?: UserProfile[];
-  onNavigateToView: (view: 'home' | 'activity' | 'chat' | 'profile') => void;
+  onNavigateToView: (view: 'home' | 'activity' | 'chat' | 'profile' | 'settings') => void;
   onLogout: () => void;
   onAddAccount?: () => void;
   onSwitchAccount?: (acc: UserProfile) => void;
@@ -46,6 +47,7 @@ export default function Header({
   const [activeTheme, setActiveTheme] = useState<'dia' | 'cyber' | 'kilo'>('dia');
   const [pwaInstallPrompt, setPwaInstallPrompt] = useState<any>(null);
   const [installSuccess, setInstallSuccess] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -168,7 +170,7 @@ export default function Header({
               setIsMenuOpen(false);
               setIsNotificationsOpen(false);
             }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-[90]"
+            className="fixed inset-0 bg-transparent backdrop-blur-[2px] z-[90]"
           />
         )}
       </AnimatePresence>
@@ -205,8 +207,30 @@ export default function Header({
           <div className="relative flex-shrink-0" ref={notifRef}>
             <button
               onClick={() => {
-                setIsNotificationsOpen(!isNotificationsOpen);
+                const opening = !isNotificationsOpen;
+                setIsNotificationsOpen(opening);
                 setIsMenuOpen(false);
+
+                if (opening) {
+                  // Fire in-app + OS push + sound on bell click
+                  notify({
+                    title: 'CargoFlow — Notificaciones',
+                    body:  'Tienes 2 ofertas de carga disponibles cerca de tu ubicación.',
+                    tag:   'cargoflow-flete',
+                    url:   '/activity',
+                    sound: '/sounds/550332__wax_vibe__cyberpunk-bass.wav',
+                  });
+                  // Demo scheduled push: fires 15s after closing app
+                  scheduleNotification(
+                    'demo-scheduled',
+                    {
+                      title: '¡Nuevo flete disponible!',
+                      body:  'Bogotá → Medellín • $1.250.000 COP • Furgón',
+                      url:   '/activity',
+                    },
+                    15000  // 15 segundos
+                  );
+                }
               }}
               className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-all relative active:scale-95"
               title="Notificaciones"
@@ -304,237 +328,229 @@ export default function Header({
                 <ChevronDown size={14} className="text-outline flex-shrink-0" />
               )}
             </button>
-
             {/* Profile Dropdown Menu */}
-            <AnimatePresence>
-              {isMenuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-3 w-80 sm:w-84 bg-white rounded-3xl shadow-[0px_20px_60px_rgba(0,0,0,0.25)] border border-surface-container overflow-hidden z-[100] max-h-[calc(100vh-80px)] overflow-y-auto no-scrollbar"
-                >
-                  {/* Header User Card (Google Photo & Registration Email) */}
-                  <div className="p-3 bg-gradient-to-br from-emerald-50/60 via-blue-50/40 to-white border-b border-surface-container flex items-center gap-2.5">
-                    {renderAvatar(user.photoURL, user.name, "w-10 h-10 text-sm")}
-                    <div className="flex flex-col min-w-0">
-                      <h3 className="font-extrabold text-xs text-on-surface truncate">{user.name || 'Usuario CargoFlow'}</h3>
-                      <p className="text-[11px] text-on-surface-variant truncate font-medium">{user.email || 'usuario@cargoflow.co'}</p>
-                      <span className="mt-1 text-[9px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-100 border border-emerald-300 px-1.5 py-0.2 rounded-full w-fit">
-                        {user.role === 'conductor' ? 'CONDUCTOR' : 'CLIENTE'}
-                      </span>
-                    </div>
+            {isMenuOpen && (
+              <div 
+                className="absolute right-0 top-full mt-2.5 shadow-2xl shadow-black/10 animate-slide-down origin-top-right overflow-y-auto max-h-[calc(100vh-120px)] no-scrollbar z-50 glass-dropdown rounded-2xl border border-[var(--glass-border)]" 
+                style={{ width: '272px' }}
+              >
+                {/* Header User Card (Google Photo & Registration Email) */}
+                <div className="px-4 py-4 flex items-center gap-3 border-b border-[var(--glass-border)] bg-gradient-to-r from-[var(--accent-glow)] to-transparent">
+                  <div className="relative w-11 h-11 overflow-hidden ring-2 ring-[var(--accent)] flex-shrink-0 rounded-full">
+                    {renderAvatar(user.photoURL, user.name, "w-full h-full text-sm")}
                   </div>
-
-                  {/* Theme Selector Segmented Control (Día / Cyber / Kilo) */}
-                  <div className="p-2 bg-surface-container-lowest border-b border-surface-container">
-                    <div className="grid grid-cols-3 gap-1 bg-surface-container-low p-1 rounded-xl">
-                      <button
-                        onClick={() => setActiveTheme('dia')}
-                        className={`flex items-center justify-center gap-1 py-1 px-1 rounded-lg text-xs font-bold transition-all ${
-                          activeTheme === 'dia'
-                            ? 'bg-emerald-500 text-white shadow-xs'
-                            : 'text-on-surface-variant hover:text-on-surface'
-                        }`}
-                      >
-                        <Sun size={14} />
-                        <span>Día</span>
-                      </button>
-                      <button
-                        onClick={() => setActiveTheme('cyber')}
-                        className={`flex items-center justify-center gap-1 py-1 px-1 rounded-lg text-xs font-bold transition-all ${
-                          activeTheme === 'cyber'
-                            ? 'bg-emerald-500 text-white shadow-xs'
-                            : 'text-on-surface-variant hover:text-on-surface'
-                        }`}
-                      >
-                        <Monitor size={14} />
-                        <span>Cyber</span>
-                      </button>
-                      <button
-                        onClick={() => setActiveTheme('kilo')}
-                        className={`flex items-center justify-center gap-1 py-1 px-1 rounded-lg text-xs font-bold transition-all ${
-                          activeTheme === 'kilo'
-                            ? 'bg-emerald-500 text-white shadow-xs'
-                            : 'text-on-surface-variant hover:text-on-surface'
-                        }`}
-                      >
-                        <Moon size={14} />
-                        <span>Kilo</span>
-                      </button>
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate text-slate-800">{user.name || 'Usuario CargoFlow'}</p>
+                    <p className="text-xs truncate text-slate-500">{user.email || 'usuario@cargoflow.co'}</p>
+                    <span className="inline-block mt-1 text-[9px] px-2 py-0.5 uppercase tracking-widest font-bold rounded-full bg-[var(--accent-glow)] border border-[var(--accent)] text-[var(--accent)]">
+                      {user.role === 'conductor' ? 'CONDUCTOR' : 'CLIENTE'}
+                    </span>
                   </div>
+                </div>
 
-                  {/* Primary Menu Options (Compact Padding & Icon Boxes) */}
-                  <div className="p-1.5 space-y-0.5 border-b border-surface-container">
-                    {/* MiPerfil */}
+                {/* Theme Selector Segmented Control */}
+                <div className="p-1.5 border-b border-surface-container">
+                  <div className="flex items-center justify-between gap-1 p-1 bg-[var(--glass)] border border-[var(--glass-border)] rounded-xl">
+                    <button
+                      onClick={() => setActiveTheme('dia')}
+                      className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg transition-all font-bold ${
+                        activeTheme === 'dia'
+                          ? 'bg-[var(--accent)] text-black shadow-sm font-bold'
+                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)]'
+                      }`}
+                    >
+                      <Sun size={16} className="mb-1" />
+                      <span className="text-[9px] font-semibold">Día</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTheme('cyber')}
+                      className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg transition-all font-bold ${
+                        activeTheme === 'cyber'
+                          ? 'bg-[var(--accent)] text-black shadow-sm font-bold'
+                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)]'
+                      }`}
+                    >
+                      <Monitor size={16} className="mb-1" />
+                      <span className="text-[9px] font-semibold">Cyber</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTheme('kilo')}
+                      className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg transition-all font-bold ${
+                        activeTheme === 'kilo'
+                          ? 'bg-[var(--accent)] text-black shadow-sm font-bold'
+                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)]'
+                      }`}
+                    >
+                      <Moon size={16} className="mb-1" />
+                      <span className="text-[9px] font-semibold">Kilo</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Primary Menu Options */}
+                <div className="p-1.5">
+                  <div>
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
                         onNavigateToView('profile');
                       }}
-                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-surface-container-low text-on-surface transition-colors group"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)] transition-colors"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-surface-container-low group-hover:bg-blue-50 text-on-surface-variant group-hover:text-primary-container flex items-center justify-center transition-colors">
-                          <User size={15} />
+                      <div className="w-7 h-7 rounded-lg bg-[var(--glass-strong)] flex items-center justify-center">
+                        <User size={14} />
+                      </div>
+                      <span className="text-sm font-semibold">Mi perfil</span>
+                    </button>
+                  </div>
+
+                  <div>
+                    <button
+                      onClick={(e) => {
+                        // Don't close the menu, just toggle
+                        e.stopPropagation();
+                        setNotificationsEnabled(!notificationsEnabled);
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)] transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-lg bg-[var(--accent)]/25 text-[var(--accent)] flex items-center justify-center">
+                          <Bell size={14} />
                         </div>
-                        <span className="text-xs font-bold">Mi perfil</span>
+                        <span className="text-sm font-semibold">Notificaciones</span>
+                      </div>
+                      
+                      {/* Toggle Switch */}
+                      <div className={`w-8 h-[18px] rounded-full p-0.5 transition-colors duration-200 ${notificationsEnabled ? 'bg-[var(--accent)]' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                        <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${notificationsEnabled ? 'translate-x-3.5' : 'translate-x-0'}`} />
                       </div>
                     </button>
+                  </div>
 
-                    {/* Instalar App */}
+                  <div>
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
-                        handleInstallPwa();
+                        setShowInstallModal(true);
                       }}
-                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-50 text-emerald-700 transition-colors group"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)] transition-colors"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-emerald-100/70 text-emerald-600 flex items-center justify-center">
-                          <Download size={15} />
-                        </div>
-                        <span className="text-xs font-bold">Instalar app</span>
+                      <div className="w-7 h-7 rounded-lg bg-[var(--glass-strong)] flex items-center justify-center">
+                        <Download size={14} />
                       </div>
-                      {installSuccess && <Check size={15} className="text-emerald-600" />}
+                      <span className="text-sm font-semibold flex-1 text-left">Instalar app</span>
+                      {installSuccess && <Check size={14} className="text-[var(--accent)]" />}
                     </button>
+                  </div>
 
-                    {/* Compartir App */}
+                  <div>
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
                         handleShareApp();
                       }}
-                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-surface-container-low text-on-surface transition-colors group"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)] transition-colors"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-surface-container-low group-hover:bg-blue-50 text-on-surface-variant group-hover:text-primary-container flex items-center justify-center transition-colors">
-                          <Share2 size={15} />
-                        </div>
-                        <span className="text-xs font-bold">Compartir app</span>
+                      <div className="w-7 h-7 rounded-lg bg-[var(--glass-strong)] flex items-center justify-center">
+                        <Share2 size={14} />
                       </div>
-                    </button>
-
-                    {/* Notificaciones Toggle */}
-                    <div className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-surface-container-low text-on-surface transition-colors">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-emerald-100/60 text-emerald-600 flex items-center justify-center">
-                          <Bell size={15} />
-                        </div>
-                        <span className="text-xs font-bold">Notificaciones</span>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={notificationsEnabled}
-                          onChange={(e) => setNotificationsEnabled(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
-                      </label>
-                    </div>
-
-                    {/* Configuración */}
-                    <button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        onNavigateToView('profile');
-                      }}
-                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-surface-container-low text-on-surface transition-colors group"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-surface-container-low group-hover:bg-blue-50 text-on-surface-variant group-hover:text-primary-container flex items-center justify-center transition-colors">
-                          <Settings size={15} />
-                        </div>
-                        <span className="text-xs font-bold">Configuración</span>
-                      </div>
+                      <span className="text-sm font-semibold">Compartir app</span>
                     </button>
                   </div>
 
-                  {/* OTRAS CUENTAS Section (Compact Instagram-Style Quick Account Switcher) */}
-                  <div className="p-2 bg-surface-container-lowest flex flex-col gap-1 pb-4">
-                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-outline px-1.5 block my-0.5">
-                      OTRAS CUENTAS (CAMBIO RÁPIDO)
-                    </span>
+                  <div>
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        onNavigateToView('settings');
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)] transition-colors"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-[var(--glass-strong)] flex items-center justify-center">
+                        <Settings size={14} />
+                      </div>
+                      <span className="text-sm font-semibold">Configuración</span>
+                    </button>
+                  </div>
+                </div>
 
+                {/* OTRAS CUENTAS Section */}
+                <div className="p-1.5 border-t border-surface-container">
+                  <div className="mb-2">
+                    <p className="px-2 py-1.5 text-[10px] uppercase tracking-widest font-extrabold text-slate-400">
+                      Otras Cuentas
+                    </p>
+                    
                     {/* Dynamic List of Linked Accounts */}
                     {linkedAccounts.length > 0 ? (
                       linkedAccounts.map((acc, idx) => (
-                        <div
+                        <button
                           key={acc.email + idx}
                           onClick={() => {
                             setIsMenuOpen(false);
                             if (onSwitchAccount) onSwitchAccount(acc);
                           }}
-                          className="flex items-center justify-between p-1.5 rounded-xl hover:bg-emerald-50/80 transition-colors cursor-pointer border border-transparent hover:border-emerald-200 group"
-                          title="Haz clic para cambiar a esta cuenta"
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/60 transition-colors text-left group"
                         >
-                          <div className="flex items-center gap-2 min-w-0">
-                            {renderAvatar(acc.photoURL, acc.name, "w-7 h-7 text-[10px]")}
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-xs font-bold text-on-surface truncate group-hover:text-emerald-700">{acc.name}</span>
-                              <span className="text-[10px] text-outline truncate">{acc.email}</span>
-                            </div>
+                          <div className="relative w-7 h-7 overflow-hidden rounded-full ring-1 ring-slate-200">
+                            {renderAvatar(acc.photoURL, acc.name, "w-full h-full text-[10px] grayscale group-hover:grayscale-0 transition-all")}
                           </div>
-                          <span className="text-[8px] font-extrabold uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 flex-shrink-0">
-                            {acc.role === 'conductor' ? 'CONDUCTOR' : 'CLIENTE'}
-                          </span>
-                        </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs truncate text-slate-800 font-medium group-hover:text-emerald-700">{acc.name}</p>
+                            <p className="text-[10px] truncate text-slate-500">{acc.email}</p>
+                          </div>
+                        </button>
                       ))
                     ) : (
-                      <div 
+                      <button 
                         onClick={() => {
                           setIsMenuOpen(false);
                           if (onAddAccount) onAddAccount();
                         }}
-                        className="flex items-center justify-between p-1.5 rounded-xl hover:bg-emerald-50 transition-colors cursor-pointer border border-dashed border-outline-variant"
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/60 transition-colors text-left group opacity-60 hover:opacity-100"
                       >
-                        <div className="flex items-center gap-2 min-w-0">
-                          {renderAvatar(undefined, "Luis Fernando (Cliente)", "w-7 h-7 text-[10px]")}
-                          <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-bold text-on-surface truncate">Luis Fernando (Cliente)</span>
-                            <span className="text-[10px] text-outline truncate">lfalzatel29@gmail.com</span>
-                          </div>
+                        <div className="relative w-7 h-7 overflow-hidden rounded-full ring-1 ring-slate-200">
+                          {renderAvatar(undefined, "Luis Fernando", "w-full h-full text-[10px] grayscale group-hover:grayscale-0 transition-all")}
                         </div>
-                        <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800">
-                          CLIENTE
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Añadir Cuenta Button (Triggers Google Auth Account Chooser) */}
-                    <button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        if (onAddAccount) onAddAccount();
-                      }}
-                      className="w-full flex items-center gap-2 p-1.5 rounded-xl hover:bg-surface-container-low text-on-surface transition-colors mt-0.5"
-                    >
-                      <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                        <Plus size={15} />
-                      </div>
-                      <span className="text-xs font-bold text-emerald-700">Añadir otra cuenta (Google)</span>
-                    </button>
-
-                    {/* Cerrar Sesión directly inside/under OTRAS CUENTAS */}
-                    <div className="pt-2 mt-1 border-t border-surface-container">
-                      <button
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          onLogout();
-                        }}
-                        className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-rose-50 text-rose-600 transition-colors font-bold text-xs"
-                      >
-                        <LogOut size={18} />
-                        <span>Cerrar sesión</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs truncate text-slate-800 font-medium group-hover:text-emerald-700">Luis Fernando</p>
+                          <p className="text-[10px] truncate text-slate-500">lfalzatel29@gmail.com</p>
+                        </div>
                       </button>
-                    </div>
+                    )}
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      if (onAddAccount) onAddAccount();
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/50 transition-colors"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                      <span className="text-lg leading-none font-bold">+</span>
+                    </div>
+                    <span className="text-sm font-semibold">Añadir Cuenta</span>
+                  </button>
+                </div>
+
+                {/* Cerrar Sesión */}
+                <div className="p-1.5 border-t border-surface-container">
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      onLogout();
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400/80 hover:text-red-400 hover:bg-red-500/8 active:bg-red-500/15 transition-all duration-150 group/so"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-transparent flex items-center justify-center group-hover/so:bg-red-500/15 transition-colors">
+                      <LogOut size={14} />
+                    </div>
+                    <span className="text-sm font-bold">Cerrar sesión</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -606,6 +622,140 @@ export default function Header({
               </p>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── PWA Install Instructions Modal ─────────────────── */}
+      <AnimatePresence>
+        {showInstallModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
+            onClick={() => setShowInstallModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1,   y: 0  }}
+              exit={{    opacity: 0, scale: 0.9,  y: 20 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden max-h-[95vh] flex flex-col"
+            >
+              {/* Header del modal */}
+              <div className="bg-gradient-to-br from-[#09152b] to-[#0b224d] px-6 pt-7 pb-6 text-center relative flex-shrink-0">
+                <button
+                  onClick={() => setShowInstallModal(false)}
+                  className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+                <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center mx-auto mb-3">
+                  <Download size={26} className="text-white" />
+                </div>
+                <h2 className="text-white font-bold text-lg leading-tight">Instalar CargoFlow</h2>
+                <p className="text-blue-200 text-xs mt-1 leading-relaxed">
+                  Para la mejor experiencia y acceso rápido,<br />instala la app en tu dispositivo.
+                </p>
+              </div>
+
+              <div className="overflow-y-auto no-scrollbar flex-1">
+                {/* ⚠️ Nota importante: limpiar caché */}
+                <div className="mx-4 mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 flex gap-2.5">
+                <span className="text-amber-500 text-base flex-shrink-0 mt-0.5">⚠️</span>
+                <div>
+                  <p className="text-amber-800 text-xs font-bold mb-0.5">Antes de instalar: limpia el caché</p>
+                  <p className="text-amber-700 text-[11px] leading-snug">
+                    Si ya instalaste la app anteriormente, debes borrar el caché del navegador para que se instale con las últimas actualizaciones. De lo contrario puede quedar una versión desactualizada.
+                  </p>
+                  <p className="text-amber-800 text-[11px] font-semibold mt-1.5">
+                    Chrome: Menú → Más herramientas → Borrar datos de navegación → Imágenes y archivos en caché ✓
+                  </p>
+                </div>
+              </div>
+
+              {/* Instrucciones por plataforma */}
+              <div className="px-4 pb-2 mt-4 space-y-3">
+
+                {/* PC — Chrome / Edge */}
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3.5 flex gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+                      <rect x="2" y="3" width="20" height="14" rx="2" stroke="#1d4ed8" strokeWidth="1.8"/>
+                      <path d="M8 21h8M12 17v4" stroke="#1d4ed8" strokeWidth="1.8" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-slate-800 text-xs font-bold">En PC — Chrome o Edge</p>
+                    <p className="text-slate-600 text-[11px] mt-0.5 leading-snug">
+                      Haz clic en el ícono de <strong>instalar</strong> (⊕) en la barra de direcciones, o ve al menú <strong>(⋮)</strong> y selecciona <strong>"Instalar CargoFlow"</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Android — Chrome */}
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3.5 flex gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+                      <path d="M17 2L7 2M17 2C19.2 2 21 3.8 21 6V18C21 20.2 19.2 22 17 22H7C4.8 22 3 20.2 3 18V6C3 3.8 4.8 2 7 2" stroke="#15803d" strokeWidth="1.8" strokeLinecap="round"/>
+                      <circle cx="12" cy="19" r="1" fill="#15803d"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-slate-800 text-xs font-bold">En Android — Chrome</p>
+                    <p className="text-slate-600 text-[11px] mt-0.5 leading-snug">
+                      Toca el menú de <strong>tres puntos (⋮)</strong> arriba a la derecha y selecciona <strong>"Añadir a pantalla de inicio"</strong> o <strong>"Instalar app"</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                {/* iPhone / iPad — Safari */}
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3.5 flex gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="#374151" strokeWidth="1.8"/>
+                      <path d="M12 8v4l3 3" stroke="#374151" strokeWidth="1.8" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-slate-800 text-xs font-bold">En iPhone / iPad — Safari</p>
+                    <p className="text-slate-600 text-[11px] mt-0.5 leading-snug">
+                      Toca el botón <strong>Compartir</strong> (□↑) en la barra inferior y selecciona <strong>"Añadir a pantalla de inicio"</strong>. Solo funciona desde Safari.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botón instalar directo (Chrome Android/PC) */}
+              {pwaInstallPrompt && (
+                <div className="px-4 pt-2 pb-1">
+                  <button
+                    onClick={async () => {
+                      await handleInstallPwa();
+                      setShowInstallModal(false);
+                    }}
+                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#09152b] to-[#0b224d] text-white text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                  >
+                    <Download size={16} />
+                    Instalar ahora en este dispositivo
+                  </button>
+                </div>
+              )}
+
+              {/* Footer — cerrar */}
+              <div className="px-4 pt-2 pb-5">
+                <button
+                  onClick={() => setShowInstallModal(false)}
+                  className="w-full py-2.5 rounded-2xl text-slate-500 text-sm font-semibold hover:bg-slate-100 transition-colors"
+                >
+                  Entendido
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
         )}
       </AnimatePresence>
     </>

@@ -3,6 +3,14 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Glass & Accent Variables */
+  --accent: #00e5a0; /* Green accent from user specs */
+  --accent-glow: rgba(0, 229, 160, 0.15);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass: rgba(255, 255, 255, 0.06);
+  --glass-strong: rgba(255, 255, 255, 0.12);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
   
   --color-primary: #0047d3;
   --color-primary-container: #1e5eff;
@@ -133,5 +141,29 @@ body {
 ::view-transition-new(*) {
   animation-duration: 0.25s;
   animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* Glassmorphism Dropdown */
+.glass-dropdown {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.15s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 

@@ -8,9 +8,10 @@ interface ProfileProps {
   onUpdateProfile: (name: string, vehiclePlate?: string) => void;
   onDeposit: (amount: number) => void;
   onLogout: () => void;
+  onNavigateToSettings: () => void;
 }
 
-export default function Profile({ user, onUpdateProfile, onDeposit, onLogout }: ProfileProps) {
+export default function Profile({ user, onUpdateProfile, onDeposit, onLogout, onNavigateToSettings }: ProfileProps) {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [depositAmount, setDepositAmount] = useState('200000');
   

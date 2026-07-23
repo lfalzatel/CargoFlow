@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { UserProfile, Trip, ChatMessage, UserRole } from './types';
 import Login from './components/Login';
 import CompleteProfile from './components/CompleteProfile';
@@ -6,13 +6,20 @@ import Home from './components/Home';
 import Activity from './components/Activity';
 import Chat from './components/Chat';
 import Profile from './components/Profile';
+import Settings from './components/Settings';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import SplashScreen from './components/SplashScreen';
+import NotificationToast from './components/NotificationToast';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './config/firebase';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
+import {
+  requestNotificationPermission,
+  listenForSWMessages,
+  sendInAppNotification,
+} from './services/notificationService';
 
 const INITIAL_TRIPS: Trip[] = [
   {
@@ -65,7 +72,7 @@ const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
 ];
 
 export default function App() {
-  const [view, setView] = useState<'login' | 'complete_profile' | 'home' | 'activity' | 'chat' | 'profile'>('login');
+  const [view, setView] = useState<'login' | 'complete_profile' | 'home' | 'activity' | 'chat' | 'profile' | 'settings'>('login');
   
   // Splash Screen State
   const [isSplashActive, setIsSplashActive] = useState<boolean>(true);
@@ -105,6 +112,40 @@ export default function App() {
     }, 2600);
     return () => clearTimeout(timer);
   }, []);
+
+  // Request notification permission once user is logged in
+  // and listen for SW notification click messages
+  const notifPermRequestedRef = useRef(false);
+  useEffect(() => {
+    if (!['home', 'activity', 'chat', 'profile'].includes(view)) return;
+    if (notifPermRequestedRef.current) return;
+    notifPermRequestedRef.current = true;
+
+    // Ask for permission after a short delay (avoids permission prompt on first render)
+    const t = setTimeout(() => {
+      requestNotificationPermission().then((perm) => {
+        if (perm === 'granted') {
+          sendInAppNotification({
+            title: '¡Notificaciones activadas!',
+            body:  'Recibirás alertas de fletes, estado de envíos y mensajes.',
+            tag:   'cargoflow-success',
+          });
+        }
+      });
+    }, 3000);
+
+    // Listen for SW notification click -> navigate within app
+    const unlistenSW = listenForSWMessages((url) => {
+      if (url.includes('chat'))     setView('chat');
+      else if (url.includes('activity')) setView('activity');
+      else setView('home');
+    });
+
+    return () => {
+      clearTimeout(t);
+      unlistenSW();
+    };
+  }, [view]);
 
   // Listen for active Firebase Auth session and read full profile from Firestore
   useEffect(() => {
@@ -360,11 +401,15 @@ export default function App() {
   };
 
   return (
-    <div className={`bg-background text-on-surface ${
-      ['home', 'activity', 'chat', 'profile'].includes(view)
-        ? 'h-screen flex flex-col overflow-hidden'
-        : 'min-h-screen'
-    }`}>
+    <>
+      {/* Global in-app notification toasts — rendered above everything */}
+      <NotificationToast />
+
+      <div className={`bg-background text-on-surface ${
+        ['home', 'activity', 'chat', 'profile', 'settings'].includes(view)
+          ? 'h-screen flex flex-col overflow-hidden'
+          : 'min-h-screen'
+      }`}>
       {/* Global Splash Screen Overlay with Audio */}
       <AnimatePresence>
         {isSplashActive && (
@@ -402,7 +447,7 @@ export default function App() {
           className={`flex flex-col ${
             view === 'home'
               ? 'flex-1 overflow-hidden'
-              : ['activity', 'chat', 'profile'].includes(view)
+              : ['activity', 'chat', 'profile', 'settings'].includes(view)
               ? 'flex-1 overflow-y-auto pb-28'
               : 'min-h-screen'
           }`}
@@ -450,7 +495,29 @@ export default function App() {
               user={user} 
               onUpdateProfile={handleUpdateProfile} 
               onDeposit={handleDeposit} 
-              onLogout={handleLogout} 
+              onLogout={handleLogout}
+              onNavigateToSettings={() => setView('settings')}
+            />
+          )}
+
+          {view === 'settings' && (
+            <Settings
+              user={user}
+              onBack={() => setView('home')}
+              onLogout={handleLogout}
+              onInstallApp={() => {
+                const headerEvent = new CustomEvent('cargoflow:install-app');
+                window.dispatchEvent(headerEvent);
+              }}
+              onShareApp={() => {
+                 if (navigator.share) {
+                    navigator.share({
+                      title: 'CargoFlow',
+                      text: 'Únete a CargoFlow, la plataforma de logística inteligente.',
+                      url: window.location.origin
+                    }).catch(() => {});
+                 }
+              }}
             />
           )}
         </motion.div>
@@ -465,5 +532,6 @@ export default function App() {
         />
       )}
     </div>
+    </>
   );
 }
