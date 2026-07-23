@@ -43,6 +43,9 @@ export default function SplashScreen({
       transition={{ duration: 0.3 }}
       className="fixed inset-0 z-[9999] bg-gradient-to-br from-[#09152b] via-[#0b224d] to-[#041029] text-white flex flex-col items-center justify-between py-12 px-6 antialiased select-none"
     >
+      {/* Thin Cyberpunk Scanlines Overlay */}
+      <div className="absolute inset-0 pointer-events-none z-0 opacity-25 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[length:100%_4px]" />
+
       {/* Top Tag */}
       <div className="w-full flex justify-center pt-4">
         <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-950/70 px-3 py-1 rounded-full border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.3)]">

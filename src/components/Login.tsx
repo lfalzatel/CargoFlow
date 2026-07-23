@@ -46,6 +46,11 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess }: Log
         ? 'bg-gradient-to-br from-[#09152b] via-[#0b224d] to-[#041029] text-white' 
         : 'bg-gradient-to-br from-slate-100 via-blue-50 to-slate-200 text-slate-900'
     }`}>
+      {/* Thin Cyberpunk Scanlines Overlay */}
+      {isDarkMode && (
+        <div className="absolute inset-0 pointer-events-none z-0 opacity-20 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[length:100%_4px]" />
+      )}
+
       {/* Top Right Floating Day/Night Theme Toggle */}
       <button
         type="button"

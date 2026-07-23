@@ -1,21 +1,29 @@
 {
   "short_name": "CargoFlow",
-  "name": "CargoFlow - Logística y Carga Colombia",
+  "name": "CargoFlow - Logística & Carga Colombia",
+  "description": "La plataforma inteligente para conectar conductores y clientes en todo el país.",
   "icons": [
     {
-      "src": "/assets/icon-192.png",
+      "src": "/pwa-192x192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
-      "src": "/assets/icon-512.png",
+      "src": "/pwa-512x512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180"
     }
   ],
   "start_url": "/",
-  "background_color": "#FCF9F8",
-  "theme_color": "#0047D3",
+  "background_color": "#09152b",
+  "theme_color": "#09152b",
   "display": "standalone",
   "orientation": "portrait"
 }

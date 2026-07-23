@@ -551,6 +551,9 @@ export default function Header({
             onClick={() => setShowSplashModal(false)}
             className="fixed inset-0 z-[99999] bg-gradient-to-br from-[#09152b] via-[#0b224d] to-[#041029] text-white flex flex-col items-center justify-between py-12 px-6 select-none cursor-pointer"
           >
+            {/* Thin Cyberpunk Scanlines Overlay */}
+            <div className="absolute inset-0 pointer-events-none z-0 opacity-25 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[length:100%_4px]" />
+
             {/* Close Button */}
             <button
               onClick={() => setShowSplashModal(false)}
