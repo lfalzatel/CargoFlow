@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Crea tu cuenta - CargoFlow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#f3f0ef",
+                        "surface-container-low": "#f6f3f2",
+                        "primary-container": "#1e5eff",
+                        "on-secondary-container": "#00732c",
+                        "background": "#fcf9f8",
+                        "on-primary-fixed-variant": "#003ab2",
+                        "tertiary": "#7e4900",
+                        "secondary-fixed-dim": "#3ce36a",
+                        "inverse-surface": "#313030",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#69ff87",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "surface-container": "#f0eded",
+                        "surface-bright": "#fcf9f8",
+                        "on-background": "#1c1b1b",
+                        "surface-dim": "#dcd9d9",
+                        "surface-container-highest": "#e5e2e1",
+                        "surface": "#fcf9f8",
+                        "on-tertiary-fixed-variant": "#693c00",
+                        "on-secondary-fixed-variant": "#00531e",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c3c5d9",
+                        "surface-variant": "#e5e2e1",
+                        "secondary": "#006e2a",
+                        "primary-fixed": "#dce1ff",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#434656",
+                        "tertiary-fixed-dim": "#ffb870",
+                        "surface-tint": "#004ee8",
+                        "primary": "#0047d3",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#a05e00",
+                        "surface-container-high": "#eae7e7",
+                        "on-surface": "#1c1b1b",
+                        "tertiary-fixed": "#ffdcbe",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#5cfd80",
+                        "on-secondary-fixed": "#002108",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#737688",
+                        "on-tertiary-container": "#ffeee2",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#b6c4ff",
+                        "on-tertiary-fixed": "#2c1600",
+                        "on-primary-fixed": "#001550",
+                        "on-primary-container": "#f0f0ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "lg": "24px",
+                        "container-margin": "16px",
+                        "gutter": "12px",
+                        "xs": "4px",
+                        "base": "4px",
+                        "sm": "8px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "data-price": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "data-price": ["20px", { "lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Ambient Shadows & Depth Layering */
+        .elevation-base { background-color: #F5F7FA; }
+        .elevation-card { box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05); }
+        
+        /* Floating Labels */
+        .floating-input:focus ~ .floating-label,
+        .floating-input:not(:placeholder-shown) ~ .floating-label {
+            transform: translateY(-50%) scale(0.85);
+            top: 0;
+            background-color: white;
+            padding: 0 4px;
+            color: #1E5EFF;
+        }
+        
+        .floating-input {
+            border: 1.5px solid #dcd9d9; /* surface-dim */
+        }
+        .floating-input:focus {
+            border-color: #1E5EFF;
+            outline: none;
+            box-shadow: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background h-full text-on-background font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation (Simplified for transactional page) -->
+<header class="bg-background w-full top-0 sticky flex items-center justify-between px-md py-sm w-full z-50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary font-bold">local_shipping</span>
+<span class="font-headline-md text-headline-md font-bold text-primary">CargoFlow</span>
+</div>
+<button class="text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-64px)] px-container-margin py-xl w-full max-w-md mx-auto">
+<div class="w-full bg-surface-container-lowest rounded-[16px] elevation-card p-lg border border-surface-container flex flex-col gap-lg">
+<div class="text-center space-y-sm">
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Crea tu cuenta</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Únete a la red logística más eficiente.</p>
+</div>
+<form class="flex flex-col gap-md mt-sm">
+<!-- Full Name -->
+<div class="relative w-full group">
+<input class="floating-input w-full h-[56px] px-md rounded-lg font-body-lg text-body-lg text-on-surface bg-transparent transition-colors" id="nombre" placeholder=" " required="" type="text"/>
+<label class="floating-label absolute left-md top-1/2 -translate-y-1/2 text-outline font-body-md transition-all duration-200 pointer-events-none origin-left" for="nombre">
+                        Nombre completo
+                    </label>
+</div>
+<!-- Email -->
+<div class="relative w-full group">
+<input class="floating-input w-full h-[56px] px-md rounded-lg font-body-lg text-body-lg text-on-surface bg-transparent transition-colors" id="correo" placeholder=" " required="" type="email"/>
+<label class="floating-label absolute left-md top-1/2 -translate-y-1/2 text-outline font-body-md transition-all duration-200 pointer-events-none origin-left" for="correo">
+                        Correo electrónico
+                    </label>
+</div>
+<!-- Phone -->
+<div class="relative w-full group">
+<input class="floating-input w-full h-[56px] px-md rounded-lg font-body-lg text-body-lg text-on-surface bg-transparent transition-colors" id="telefono" placeholder=" " required="" type="tel"/>
+<label class="floating-label absolute left-md top-1/2 -translate-y-1/2 text-outline font-body-md transition-all duration-200 pointer-events-none origin-left" for="telefono">
+                        Teléfono
+                    </label>
+</div>
+<!-- Password -->
+<div class="relative w-full group">
+<input class="floating-input w-full h-[56px] px-md rounded-lg font-body-lg text-body-lg text-on-surface bg-transparent transition-colors pr-12" id="password" placeholder=" " required="" type="password"/>
+<label class="floating-label absolute left-md top-1/2 -translate-y-1/2 text-outline font-body-md transition-all duration-200 pointer-events-none origin-left" for="password">
+                        Contraseña
+                    </label>
+<button class="absolute right-md top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined" data-icon="visibility_off">visibility_off</span>
+</button>
+</div>
+<!-- Terms Checkbox -->
+<label class="flex items-start gap-sm mt-sm cursor-pointer group">
+<div class="relative flex items-center justify-center mt-1">
+<input class="peer appearance-none w-5 h-5 border-[1.5px] border-outline rounded-[4px] checked:bg-primary-container checked:border-primary-container focus:ring-2 focus:ring-primary-container/30 focus:ring-offset-1 transition-all" required="" type="checkbox"/>
+<span class="material-symbols-outlined absolute text-[16px] text-on-primary-container opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" data-icon="check" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface transition-colors select-none">
+                        Acepto los <a class="text-primary-container hover:underline font-medium" href="#">términos y condiciones</a> de servicio.
+                    </span>
+</label>
+<!-- Submit Button -->
+<button class="mt-lg w-full h-[56px] bg-[#1E5EFF] text-on-primary rounded-[12px] font-headline-sm text-headline-sm hover:bg-primary transition-colors shadow-sm hover:shadow-md active:scale-[0.98] flex items-center justify-center gap-sm" type="submit">
+                    Crear cuenta
+                    <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</form>
+<div class="text-center pt-md border-t border-surface-variant/50">
+<p class="font-body-md text-body-md text-on-surface-variant">
+                    ¿Ya tienes una cuenta? <a class="text-primary-container font-semibold hover:underline" href="#">Inicia sesión</a>
+</p>
+</div>
+</div>
+</main>
+</body></html>

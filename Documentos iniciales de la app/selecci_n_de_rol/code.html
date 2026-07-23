@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CargoFlow - Selección de Rol</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Design System Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-on-surface": "#f3f0ef",
+                    "surface-container-low": "#f6f3f2",
+                    "primary-container": "#1e5eff",
+                    "on-secondary-container": "#00732c",
+                    "background": "#fcf9f8",
+                    "on-primary-fixed-variant": "#003ab2",
+                    "tertiary": "#7e4900",
+                    "secondary-fixed-dim": "#3ce36a",
+                    "inverse-surface": "#313030",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed": "#69ff87",
+                    "primary-fixed-dim": "#b6c4ff",
+                    "surface-container": "#f0eded",
+                    "surface-bright": "#fcf9f8",
+                    "on-background": "#1c1b1b",
+                    "surface-dim": "#dcd9d9",
+                    "surface-container-highest": "#e5e2e1",
+                    "surface": "#fcf9f8",
+                    "on-tertiary-fixed-variant": "#693c00",
+                    "on-secondary-fixed-variant": "#00531e",
+                    "on-error-container": "#93000a",
+                    "outline-variant": "#c3c5d9",
+                    "surface-variant": "#e5e2e1",
+                    "secondary": "#006e2a",
+                    "primary-fixed": "#dce1ff",
+                    "error-container": "#ffdad6",
+                    "on-surface-variant": "#434656",
+                    "tertiary-fixed-dim": "#ffb870",
+                    "surface-tint": "#004ee8",
+                    "primary": "#0047d3",
+                    "error": "#ba1a1a",
+                    "tertiary-container": "#a05e00",
+                    "surface-container-high": "#eae7e7",
+                    "on-surface": "#1c1b1b",
+                    "tertiary-fixed": "#ffdcbe",
+                    "on-secondary": "#ffffff",
+                    "secondary-container": "#5cfd80",
+                    "on-secondary-fixed": "#002108",
+                    "on-tertiary": "#ffffff",
+                    "outline": "#737688",
+                    "on-tertiary-container": "#ffeee2",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#b6c4ff",
+                    "on-tertiary-fixed": "#2c1600",
+                    "on-primary-fixed": "#001550",
+                    "on-primary-container": "#f0f0ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "2xl": "1rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "lg": "24px",
+                    "container-margin": "16px",
+                    "gutter": "12px",
+                    "xs": "4px",
+                    "base": "4px",
+                    "sm": "8px",
+                    "xl": "32px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "data-price": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "data-price": ["20px", {"lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Custom styles for interactions */
+        .role-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .role-card.selected {
+            border-color: #1e5eff; /* primary-container */
+            background-color: #f0f0ff; /* on-primary-container as a light tint */
+            box-shadow: 0px 8px 30px rgba(30, 94, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        .role-card.selected .icon-wrapper {
+            color: #1e5eff;
+            transform: scale(1.1);
+        }
+        .icon-wrapper {
+            transition: all 0.3s ease;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-lowest text-on-background min-h-screen flex flex-col font-body-md antialiased">
+<!-- Top Brand Area (No Navigation Shell for Linear Flow) -->
+<header class="w-full flex justify-center items-center py-lg px-container-margin">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tight">CargoFlow</span>
+</div>
+</header>
+<!-- Main Content Container -->
+<main class="flex-1 flex flex-col items-center justify-center px-container-margin pb-xl w-full max-w-3xl mx-auto">
+<div class="text-center mb-xl w-full">
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-sm">¿Cómo usarás CargoFlow?</h1>
+<p class="font-body-md text-body-md text-outline">Selecciona tu perfil para personalizar tu experiencia.</p>
+</div>
+<!-- Role Selection Grid -->
+<div class="flex flex-col sm:flex-row gap-lg w-full">
+<!-- Card 1: Client -->
+<button class="role-card flex-1 bg-surface-container-lowest border-2 border-outline-variant rounded-2xl p-xl flex flex-col items-center justify-center cursor-pointer hover:shadow-lg shadow-[0px_4px_20px_rgba(0,0,0,0.05)] group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary-container focus:ring-offset-2" type="button">
+<div class="icon-wrapper text-outline group-hover:text-primary-container mb-lg">
+<span class="material-symbols-outlined text-[64px] font-light">package_2</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Soy cliente</h2>
+<p class="font-body-md text-body-md text-outline mt-sm text-center">Quiero enviar carga y rastrear mis despachos.</p>
+<!-- Selection Indicator -->
+<div class="absolute top-md right-md opacity-0 transition-opacity duration-300 indicator">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</button>
+<!-- Card 2: Driver -->
+<button class="role-card flex-1 bg-surface-container-lowest border-2 border-outline-variant rounded-2xl p-xl flex flex-col items-center justify-center cursor-pointer hover:shadow-lg shadow-[0px_4px_20px_rgba(0,0,0,0.05)] group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary-container focus:ring-offset-2" type="button">
+<div class="icon-wrapper text-outline group-hover:text-primary-container mb-lg">
+<span class="material-symbols-outlined text-[64px] font-light">directions_car</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Soy conductor</h2>
+<p class="font-body-md text-body-md text-outline mt-sm text-center">Quiero encontrar cargas y gestionar mis viajes.</p>
+<!-- Selection Indicator -->
+<div class="absolute top-md right-md opacity-0 transition-opacity duration-300 indicator">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</button>
+</div>
+</main>
+<!-- Fixed Bottom Action Area -->
+<div class="w-full bg-surface-container-lowest p-container-margin pb-[env(safe-area-inset-bottom,24px)] flex justify-center shadow-[0px_-4px_20px_rgba(0,0,0,0.05)] sticky bottom-0 z-10">
+<button class="w-full max-w-md h-[56px] rounded-xl font-label-caps text-label-caps uppercase flex items-center justify-center transition-all duration-300 bg-surface-variant text-outline cursor-not-allowed disabled:opacity-50" disabled="" id="continueBtn">
+            Continuar
+        </button>
+</div>
+<!-- Interaction Logic -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.role-card');
+            const continueBtn = document.getElementById('continueBtn');
+            let selectedRole = null;
+
+            cards.forEach((card, index) => {
+                card.addEventListener('click', () => {
+                    // Remove selected state from all cards
+                    cards.forEach(c => {
+                        c.classList.remove('selected');
+                        c.querySelector('.indicator').classList.remove('opacity-100');
+                        c.querySelector('.indicator').classList.add('opacity-0');
+                    });
+
+                    // Add selected state to clicked card
+                    card.classList.add('selected');
+                    card.querySelector('.indicator').classList.remove('opacity-0');
+                    card.querySelector('.indicator').classList.add('opacity-100');
+
+                    // Enable continue button
+                    selectedRole = index === 0 ? 'cliente' : 'conductor';
+                    
+                    continueBtn.disabled = false;
+                    continueBtn.classList.remove('bg-surface-variant', 'text-outline', 'cursor-not-allowed');
+                    continueBtn.classList.add('bg-primary-container', 'text-white', 'hover:bg-primary', 'active:scale-[0.98]', 'shadow-md');
+                });
+            });
+        });
+    </script>
+</body></html>

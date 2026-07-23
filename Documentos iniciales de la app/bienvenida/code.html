@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CargoFlow - Onboarding</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#f3f0ef",
+                        "surface-container-low": "#f6f3f2",
+                        "primary-container": "#1e5eff",
+                        "on-secondary-container": "#00732c",
+                        "background": "#fcf9f8",
+                        "on-primary-fixed-variant": "#003ab2",
+                        "tertiary": "#7e4900",
+                        "secondary-fixed-dim": "#3ce36a",
+                        "inverse-surface": "#313030",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#69ff87",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "surface-container": "#f0eded",
+                        "surface-bright": "#fcf9f8",
+                        "on-background": "#1c1b1b",
+                        "surface-dim": "#dcd9d9",
+                        "surface-container-highest": "#e5e2e1",
+                        "surface": "#fcf9f8",
+                        "on-tertiary-fixed-variant": "#693c00",
+                        "on-secondary-fixed-variant": "#00531e",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c3c5d9",
+                        "surface-variant": "#e5e2e1",
+                        "secondary": "#006e2a",
+                        "primary-fixed": "#dce1ff",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#434656",
+                        "tertiary-fixed-dim": "#ffb870",
+                        "surface-tint": "#004ee8",
+                        "primary": "#0047d3",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#a05e00",
+                        "surface-container-high": "#eae7e7",
+                        "on-surface": "#1c1b1b",
+                        "tertiary-fixed": "#ffdcbe",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#5cfd80",
+                        "on-secondary-fixed": "#002108",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#737688",
+                        "on-tertiary-container": "#ffeee2",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#b6c4ff",
+                        "on-tertiary-fixed": "#2c1600",
+                        "on-primary-fixed": "#001550",
+                        "on-primary-container": "#f0f0ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "lg": "24px",
+                        "container-margin": "16px",
+                        "gutter": "12px",
+                        "xs": "4px",
+                        "base": "4px",
+                        "sm": "8px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "data-price": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "data-price": ["20px", { "lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Baseline grid utility if needed for strict alignment */
+        .baseline-grid {
+            background-size: 100% 4px;
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+        }
+        
+        /* Floating label transition */
+        .float-label {
+            transition: all 0.2s ease-out;
+        }
+        input:focus + .float-label,
+        input:not(:placeholder-shown) + .float-label {
+            transform: translateY(-50%) scale(0.85);
+            top: 0;
+            background-color: white;
+            padding: 0 4px;
+            color: #1E5EFF;
+        }
+    </style>
+</head>
+<body class="bg-surface-container-lowest text-on-background min-h-screen flex flex-col font-body-md antialiased overflow-hidden">
+<!-- TopAppBar Semantic Shell Suppressed for Onboarding Flow -->
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col relative w-full h-full">
+<!-- Illustration Area (Top Half) -->
+<div class="flex-grow flex items-center justify-center bg-surface-container-low p-md rounded-b-[32px] shadow-[0px_4px_20px_rgba(0,0,0,0.05)] z-10">
+<div class="relative w-full max-w-sm aspect-[0.67] overflow-hidden rounded-2xl shadow-lg">
+<img alt="Modern flat illustration for a cargo app onboarding" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjOcQ9SKjNKBK-Q44kJHm5suhKhQC6ArknzQSi2bwkt744S2TERid5Tk3S_IM1nFwk4qUASLWNwhUUf-z8i6FUiB6nz_0SzbYzxKZMCN-sPKQEYOr3S_WNZf9IuSMOnA6FZoAG7Qwb0JnqQs1x46WcDzB9RJQgf8CXLcqEumiL93uWyKxWotlND92EnkenzovtnAc9LAj8v43bb82Vc8z427x4icdIuHFBQXxUs-ayG4nCXy_UVv90"/>
+</div>
+</div>
+<!-- Content Area (Bottom Half) -->
+<div class="flex flex-col px-container-margin py-xl z-20 bg-surface-container-lowest">
+<div class="text-center mb-xl">
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-sm">
+                    Envía tu carga fácil y rápido
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xs mx-auto">
+                    Conecta con transportistas confiables para tus envíos locales y nacionales.
+                </p>
+</div>
+<!-- Pagination Dots -->
+<div class="flex justify-center items-center space-x-sm mb-lg">
+<div class="w-8 h-2 rounded-full bg-primary transition-all duration-300"></div>
+<div class="w-2 h-2 rounded-full bg-surface-variant transition-all duration-300"></div>
+<div class="w-2 h-2 rounded-full bg-surface-variant transition-all duration-300"></div>
+</div>
+<!-- Primary Action Button -->
+<button class="w-full h-[56px] bg-[#1E5EFF] text-white rounded-[12px] font-headline-sm text-headline-sm flex items-center justify-center active:scale-[0.98] transition-transform shadow-[0px_8px_30px_rgba(30,94,255,0.2)]">
+                Siguiente
+            </button>
+</div>
+</main>
+<!-- BottomNavBar Semantic Shell Suppressed for Onboarding Flow -->
+</body></html>

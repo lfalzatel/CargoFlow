@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Detalles del Viaje - Transporte Carga</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#1e5eff",
+                        "outline": "#737688",
+                        "on-background": "#1c1b1b",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "surface": "#fcf9f8",
+                        "on-primary-fixed": "#001550",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#7e4900",
+                        "secondary-fixed-dim": "#3ce36a",
+                        "surface-container-highest": "#e5e2e1",
+                        "background": "#fcf9f8",
+                        "secondary-container": "#5cfd80",
+                        "on-primary-container": "#f0f0ff",
+                        "on-secondary-container": "#00732c",
+                        "on-tertiary-fixed-variant": "#693c00",
+                        "on-tertiary-fixed": "#2c1600",
+                        "primary-fixed": "#dce1ff",
+                        "outline-variant": "#c3c5d9",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#003ab2",
+                        "inverse-on-surface": "#f3f0ef",
+                        "secondary-fixed": "#69ff87",
+                        "surface-container-high": "#eae7e7",
+                        "on-surface": "#1c1b1b",
+                        "on-secondary-fixed": "#002108",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e5e2e1",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#a05e00",
+                        "surface-container": "#f0eded",
+                        "secondary": "#006e2a",
+                        "tertiary-fixed-dim": "#ffb870",
+                        "inverse-primary": "#b6c4ff",
+                        "surface-tint": "#004ee8",
+                        "surface-dim": "#dcd9d9",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "surface-container-low": "#f6f3f2",
+                        "on-tertiary-container": "#ffeee2",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#434656",
+                        "primary": "#0047d3",
+                        "on-secondary-fixed-variant": "#00531e",
+                        "surface-bright": "#fcf9f8",
+                        "inverse-surface": "#313030",
+                        "tertiary-fixed": "#ffdcbe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "lg": "24px",
+                        "container-margin": "16px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "gutter": "12px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "data-price": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-lg": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "data-price": ["20px", { "lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .timer-circle {
+            transition: stroke-dashoffset 1s linear;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex flex-col min-h-screen">
+<!-- Header (Transactional, minimal nav) -->
+<header class="bg-surface w-full top-0 sticky shadow-sm z-50">
+<div class="flex justify-between items-center px-container-margin h-14 w-full">
+<button class="text-primary hover:bg-surface-container-high transition-colors p-2 rounded-full flex items-center justify-center active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">close</span>
+</button>
+<h1 class="text-headline-md font-headline-md text-primary tracking-tight">Nueva Solicitud</h1>
+<div class="w-10"></div> <!-- Spacer for centering -->
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center px-container-margin py-lg w-full max-w-2xl mx-auto space-y-md">
+<!-- Urgency Header / Timer -->
+<div class="flex flex-col items-center justify-center space-y-sm mb-lg">
+<div class="relative w-24 h-24 flex items-center justify-center">
+<svg class="absolute inset-0 w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<circle class="text-surface-container-high" cx="50" cy="50" fill="none" r="45" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-error timer-circle" cx="50" cy="50" fill="none" id="timer-ring" r="45" stroke="currentColor" stroke-dasharray="283" stroke-dashoffset="50" stroke-width="8"></circle>
+</svg>
+<span class="text-headline-lg font-headline-lg text-error" id="timer-text">25s</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant">Tiempo para aceptar</p>
+</div>
+<!-- Earnings Highlight -->
+<div class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] w-full p-md text-center border-t-4 border-secondary">
+<p class="text-label-caps font-label-caps text-on-surface-variant uppercase tracking-wider mb-xs">Ganancia Estimada</p>
+<p class="text-headline-lg font-headline-lg text-secondary">$280,000 COP</p>
+</div>
+<!-- Route Details Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] w-full p-md space-y-md relative overflow-hidden">
+<!-- Map background decorative element -->
+<div class="absolute inset-0 opacity-10 pointer-events-none" data-alt="A subtle, highly desaturated roadmap pattern serving as a textured background. The lines are faint and elegant, suggesting transportation routes in a modern, clean light-mode aesthetic, utilizing very pale grays on a white canvas." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAqm8Xz9K6KRLf3rubBwxqCDLXViBo8ISSuhqCNscoUjmsGBHuwchM6bhMfo675JiEkJRzOCTyZUu3djTEQbz_TWcsmBtiCg405BIYdB4oMtHA70-5u5rJkA1aMwc5Q0rD44Wv4Uc_FvZZqC-Hv_-Lkg1ZPoPU5jtgVenajI_Dj94Fv7NjD2ds247m_Oko9VqV39mDlNZWinZp5va-W6jxShH8KeINfW9AjZGJsVaaQqrM5x6_nEu3F')"></div>
+<div class="relative z-10 space-y-md">
+<!-- Origin -->
+<div class="flex items-start gap-4">
+<div class="flex flex-col items-center mt-1">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">trip_origin</span>
+<div class="w-0.5 h-10 bg-outline-variant my-1"></div>
+</div>
+<div>
+<p class="text-label-caps font-label-caps text-on-surface-variant">ORIGEN</p>
+<p class="text-headline-sm font-headline-sm text-on-surface mt-xs">Bodega Central Norte</p>
+<p class="text-body-md font-body-md text-outline">Cl. 170 #54-11, Bogotá</p>
+</div>
+</div>
+<!-- Destination -->
+<div class="flex items-start gap-4">
+<div class="flex flex-col items-center mt-1">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">location_on</span>
+</div>
+<div>
+<p class="text-label-caps font-label-caps text-on-surface-variant">DESTINO</p>
+<p class="text-headline-sm font-headline-sm text-on-surface mt-xs">Ferretería El Sol</p>
+<p class="text-body-md font-body-md text-outline">Cra. 43A #1-50, Medellín</p>
+</div>
+</div>
+</div>
+<!-- Trip Meta Info -->
+<div class="relative z-10 flex flex-row justify-around border-t border-surface-variant pt-md mt-sm">
+<div class="text-center">
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-xs">DISTANCIA</p>
+<p class="text-data-price font-data-price text-on-surface">415 km</p>
+</div>
+<div class="text-center">
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-xs">TIEMPO EST.</p>
+<p class="text-data-price font-data-price text-on-surface">8 h 30 min</p>
+</div>
+</div>
+</div>
+<!-- Cargo Details Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] w-full p-md">
+<h3 class="text-headline-sm font-headline-sm text-on-surface mb-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">inventory_2</span>
+                Detalles de Carga
+            </h3>
+<div class="flex gap-4 items-center">
+<img class="w-24 h-24 object-cover rounded-lg shadow-sm" data-alt="A neat stack of square cardboard boxes labeled as ceramic tiles, wrapped securely on a wooden pallet. The setting is a clean, modern warehouse interior with bright overhead lighting, captured in a crisp, high-resolution light-mode corporate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALiOlve4P1MQ7OIlCp05-6UkJmGitRF3YQ_CGR-VImzNIBILU4dKnw9seav-DnP2qn96Br-EF9EEc8W1czd_PVd3vS03OmDnY0HzUF4VFVttLnz--jUZYMHDl7DCigb0m1lJRh_3LyH6S-sl9rz6H0PjIt6a7arktThaelULZfc56IkHK6h-VrrAak8A-iNH4Hqg_nc-WFwvqkx7ZAi7fWBqO3uBhIQraZx3KdXK_YHqL9356Uy8c-"/>
+<div>
+<p class="text-headline-sm font-headline-sm text-on-surface">20 cajas de cerámica</p>
+<p class="text-body-md font-body-md text-outline mt-1">Peso total aprox: 450 kg</p>
+<div class="flex flex-wrap gap-2 mt-2">
+<span class="bg-surface-container-high text-on-surface-variant text-label-sm font-label-sm px-2 py-1 rounded">Carga Frágil</span>
+<span class="bg-surface-container-high text-on-surface-variant text-label-sm font-label-sm px-2 py-1 rounded">Seca</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Area (Fixed Bottom or inline if space permits) -->
+<div class="w-full mt-lg pb-xl space-y-sm">
+<button class="w-full bg-secondary text-on-secondary rounded-xl h-[56px] flex items-center justify-center text-headline-sm font-headline-sm shadow-md hover:bg-on-secondary-container transition-colors active:scale-[0.98]">
+                Aceptar Viaje
+            </button>
+<button class="w-full bg-transparent border-[1.5px] border-outline text-outline rounded-xl h-[56px] flex items-center justify-center text-headline-sm font-headline-sm hover:bg-surface-container-low transition-colors active:scale-[0.98]">
+                Rechazar
+            </button>
+</div>
+</main>
+<script>
+        // Simple timer animation script
+        let timeLeft = 25;
+        const timerText = document.getElementById('timer-text');
+        const timerRing = document.getElementById('timer-ring');
+        const totalDash = 283; // Circumference of r=45
+
+        const countdown = setInterval(() => {
+            timeLeft--;
+            if(timeLeft < 0) {
+                clearInterval(countdown);
+                timerText.innerText = "0s";
+                return;
+            }
+            timerText.innerText = timeLeft + "s";
+            
+            // Calculate offset (283 is full circle)
+            const progress = timeLeft / 25;
+            const offset = totalDash - (progress * totalDash);
+            timerRing.style.strokeDashoffset = offset;
+
+            // Change color as time runs out
+            if(timeLeft <= 10) {
+                timerRing.classList.remove('text-primary');
+                timerRing.classList.add('text-error');
+                timerText.classList.add('text-error');
+            }
+
+        }, 1000);
+    </script>
+</body></html>

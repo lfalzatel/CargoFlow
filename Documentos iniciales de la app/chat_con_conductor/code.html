@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>CargoFlow - Chat</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#f6f3f2",
+                        "secondary-fixed-dim": "#3ce36a",
+                        "inverse-primary": "#b6c4ff",
+                        "surface-tint": "#004ee8",
+                        "surface-container-high": "#eae7e7",
+                        "on-tertiary-fixed": "#2c1600",
+                        "surface-dim": "#dcd9d9",
+                        "background": "#fcf9f8",
+                        "on-primary-container": "#f0f0ff",
+                        "surface-bright": "#fcf9f8",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "on-tertiary-fixed-variant": "#693c00",
+                        "tertiary-fixed-dim": "#ffb870",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed": "#69ff87",
+                        "secondary-container": "#5cfd80",
+                        "on-secondary-container": "#00732c",
+                        "error": "#ba1a1a",
+                        "tertiary": "#7e4900",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface-variant": "#434656",
+                        "on-secondary-fixed-variant": "#00531e",
+                        "surface": "#fcf9f8",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#313030",
+                        "primary-container": "#1e5eff",
+                        "tertiary-fixed": "#ffdcbe",
+                        "on-tertiary": "#ffffff",
+                        "on-background": "#1c1b1b",
+                        "tertiary-container": "#a05e00",
+                        "outline-variant": "#c3c5d9",
+                        "on-error-container": "#93000a",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e5e2e1",
+                        "on-secondary-fixed": "#002108",
+                        "surface-container-highest": "#e5e2e1",
+                        "on-primary-fixed-variant": "#003ab2",
+                        "primary-fixed": "#dce1ff",
+                        "inverse-on-surface": "#f3f0ef",
+                        "on-primary-fixed": "#001550",
+                        "outline": "#737688",
+                        "secondary": "#006e2a",
+                        "surface-container": "#f0eded",
+                        "primary": "#0047d3",
+                        "on-tertiary-container": "#ffeee2",
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#1c1b1b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "xl": "32px",
+                        "container-margin": "16px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "base": "4px",
+                        "gutter": "12px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "data-price": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "data-price": ["20px", { "lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-lg": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .safe-area-pt { padding-top: env(safe-area-inset-top, 0px); }
+        .safe-area-pb { padding-bottom: env(safe-area-inset-bottom, 0px); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background h-screen flex flex-col overflow-hidden">
+<!-- Top Navigation (Driver Info) -->
+<header class="bg-surface-container-lowest sticky top-0 w-full z-50 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] safe-area-pt">
+<div class="flex items-center justify-between px-md py-sm w-full h-[64px]">
+<div class="flex items-center gap-3">
+<button aria-label="Back" class="p-2 -ml-2 rounded-full hover:bg-surface-container-low transition-colors text-on-surface">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+<div class="flex items-center gap-3">
+<img alt="Driver Profile" class="w-10 h-10 rounded-full object-cover border border-surface-variant" data-alt="A close up portrait of a professional Colombian delivery driver named Carlos. He is smiling warmly, wearing a clean blue corporate logistics uniform. The lighting is bright and modern, suggesting a reliable and friendly service. The background is slightly blurred, showing a modern white delivery van." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHl24DM4RFyynWzu8Wda0bWb-UTWppcvp6VpsXhX-iMBEyOy8HlbJJWntIfMyf68ylLHzhuCLAehPIFxkDFrNcMnDgk3FCHM8uFpAc-ZrLzN2P4KsF_x7LrA5c88gOQABDk56vx2umk-gSLOg3kfLf3M6Mxk-78gwFAqghTeHojOVq7eOvSyfghToybLm572eiKwzOzRM66vTJmvvKcxikSUDX13zVqdMH2eqliS5EG_8yWHZKmbqT"/>
+<div>
+<h1 class="font-headline-sm text-headline-sm text-on-surface m-0 leading-tight">Carlos Rodriguez</h1>
+<div class="flex items-center gap-1 mt-0.5">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">En camino • Llega en 12 min</span>
+</div>
+</div>
+</div>
+</div>
+<button aria-label="Call Driver" class="p-2 -mr-2 rounded-full hover:bg-surface-container-low transition-colors text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">call</span>
+</button>
+</div>
+</header>
+<!-- Chat Canvas -->
+<main class="flex-1 overflow-y-auto px-md py-lg flex flex-col gap-4 bg-background">
+<!-- Date Divider -->
+<div class="flex justify-center my-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-full">Hoy, 10:42 AM</span>
+</div>
+<!-- Driver Message -->
+<div class="flex items-start gap-2 max-w-[85%] self-start">
+<img alt="Carlos" class="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1" data-alt="A very small, circular thumbnail portrait of Carlos, the Colombian delivery driver, smiling in his blue logistics uniform. Bright lighting, clean background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4Fyu0I4QCZwcATt1f7UIXt-v_bip8JrrHB7t_TxbLtQZxa6y6l7nWD0PpBIaKQLO5WVOrGj6mqsXtbt1mzcbILLlMKhkQPshzDH61HMnIn3jyopvlEhIIDjKlP6ZgXE5cJJi3KPwhfeh0TGVbZFzS9BkuA3mBu66m_fJF7iRU6z4DJ57LDTNX3UoBllKTk0-89IoXiIQJPH5lbamCypMzKTdWutEUlrmhG82jYynRZUxFmYJq43fV"/>
+<div class="flex flex-col gap-1">
+<div class="bg-surface-container-lowest text-on-surface font-body-md text-body-md px-4 py-3 rounded-2xl rounded-tl-sm shadow-[0px_2px_8px_rgba(0,0,0,0.03)] border border-surface-variant">
+                    Hola, estoy en camino a la dirección de entrega. ¿Hay alguna instrucción especial para llegar?
+                </div>
+<span class="font-label-sm text-label-sm text-on-surface-variant px-1">10:42 AM</span>
+</div>
+</div>
+<!-- System Message / Location Update -->
+<div class="flex justify-center my-2">
+<div class="flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-full">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">location_on</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">El conductor está a 3 km de distancia</span>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex flex-col gap-1 max-w-[85%] self-end">
+<div class="bg-primary text-on-primary font-body-md text-body-md px-4 py-3 rounded-2xl rounded-tr-sm shadow-[0px_4px_12px_rgba(30,94,255,0.15)]">
+                Hola Carlos. Sí, la entrada principal está en reparación. Por favor ingresa por la Calle 45.
+            </div>
+<div class="flex items-center justify-end gap-1 px-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">10:45 AM</span>
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 0;">done_all</span>
+</div>
+</div>
+<!-- Driver Message -->
+<div class="flex items-start gap-2 max-w-[85%] self-start">
+<img alt="Carlos" class="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1" data-alt="A very small, circular thumbnail portrait of Carlos, the Colombian delivery driver, smiling in his blue logistics uniform. Bright lighting, clean background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyrF3arj0y5sHKKbeYKyd52QP_A9i3gHC7e3RGoLJ4Mw9s-s59DUVQ0R0ykve5I5iutLn9XhpZNjq6KwGEitAC08hYGWut9qXXJOvpfbGu_Kq97WwWtCqLL4KZLLzft6sJekcgZoVSN3Vs9Iou5SbArEHOnbJWUmPiGnEsPJ8eq_f_fvELzlL2gRIUXZSfiWLH78qODsNztXfeXMwAejU36tTeFSYmfE8gC9Ml1QrPYd9VGaHbWzaK"/>
+<div class="flex flex-col gap-1">
+<div class="bg-surface-container-lowest text-on-surface font-body-md text-body-md px-4 py-3 rounded-2xl rounded-tl-sm shadow-[0px_2px_8px_rgba(0,0,0,0.03)] border border-surface-variant">
+                    Entendido, tomaré el desvío por la Calle 45. Gracias por avisar.
+                </div>
+<span class="font-label-sm text-label-sm text-on-surface-variant px-1">10:46 AM</span>
+</div>
+</div>
+<!-- Typing Indicator -->
+<div class="flex items-center gap-2 max-w-[85%] self-start opacity-70">
+<div class="bg-surface-container-lowest px-4 py-3 rounded-2xl rounded-tl-sm shadow-[0px_2px_8px_rgba(0,0,0,0.03)] border border-surface-variant flex items-center gap-1 h-10">
+<div class="w-1.5 h-1.5 rounded-full bg-outline animate-bounce" style="animation-delay: 0ms;"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-outline animate-bounce" style="animation-delay: 150ms;"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-outline animate-bounce" style="animation-delay: 300ms;"></div>
+</div>
+</div>
+<!-- Spacer to ensure content doesn't hide behind input -->
+<div class="h-4"></div>
+</main>
+<!-- Quick Replies & Input Area -->
+<div class="bg-surface-container-lowest border-t border-surface-variant safe-area-pb">
+<!-- Quick Replies (Horizontal Scroll) -->
+<div class="flex overflow-x-auto hide-scrollbar gap-2 px-md py-3 border-b border-surface-variant">
+<button class="whitespace-nowrap px-4 py-1.5 rounded-full border-1.5 border-primary text-primary font-label-sm text-label-sm hover:bg-surface-container-low transition-colors bg-transparent border-[1.5px]">
+                ¿Cuánto falta?
+            </button>
+<button class="whitespace-nowrap px-4 py-1.5 rounded-full border-1.5 border-primary text-primary font-label-sm text-label-sm hover:bg-surface-container-low transition-colors bg-transparent border-[1.5px]">
+                Ya estoy afuera
+            </button>
+<button class="whitespace-nowrap px-4 py-1.5 rounded-full border-1.5 border-outline text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-low transition-colors bg-transparent border-[1.5px]">
+                Déjalo en portería
+            </button>
+<button class="whitespace-nowrap px-4 py-1.5 rounded-full border-1.5 border-outline text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-low transition-colors bg-transparent border-[1.5px]">
+                Llamar al llegar
+            </button>
+</div>
+<!-- Text Input Field -->
+<div class="px-md py-3 flex items-end gap-2 bg-surface-container-lowest pb-4">
+<button aria-label="Attach File" class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container-low mb-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">attach_file</span>
+</button>
+<button aria-label="Camera" class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container-low mb-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">photo_camera</span>
+</button>
+<div class="flex-1 bg-surface-container-low rounded-2xl border border-surface-variant focus-within:border-primary transition-colors flex items-center min-h-[48px] px-4 py-1">
+<textarea class="w-full bg-transparent border-none focus:ring-0 resize-none max-h-32 text-on-surface font-body-md text-body-md py-2 m-0 p-0 placeholder:text-outline" placeholder="Escribe un mensaje..." rows="1"></textarea>
+</div>
+<button aria-label="Send Message" class="w-12 h-12 flex-shrink-0 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0px_4px_12px_rgba(30,94,255,0.2)] hover:bg-surface-tint transition-colors mb-0.5">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+<script>
+        // Simple auto-resize for textarea
+        const textarea = document.querySelector('textarea');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            if (this.value === '') {
+                this.style.height = 'auto';
+            }
+        });
+    </script>
+</body></html>

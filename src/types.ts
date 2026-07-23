@@ -1,0 +1,41 @@
+export type UserRole = 'cliente' | 'conductor';
+
+export interface UserProfile {
+  name: string;
+  email: string;
+  phone: string;
+  role: UserRole;
+  isVerified: boolean;
+  rating: number;
+  balance: number; // in COP
+  plateNumber?: string;
+  vehicleType?: 'furgon' | 'sencillo';
+  documentsUploaded?: {
+    cedula: boolean;
+    licencia: boolean;
+    soat: boolean;
+    propiedad: boolean;
+  };
+}
+
+export interface Trip {
+  id: string;
+  status: 'EN CAMINO' | 'COMPLETADO' | 'PENDIENTE';
+  price: number; // in COP
+  date: string;
+  origin: string;
+  originDetail?: string;
+  destination: string;
+  destinationDetail?: string;
+  vehicleType: string;
+  tag?: string; // e.g. "REFRIGERADO", "FRÁGIL"
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: 'driver' | 'user' | 'system';
+  text: string;
+  timestamp: string;
+  attachmentUrl?: string;
+  isRead?: boolean;
+}
