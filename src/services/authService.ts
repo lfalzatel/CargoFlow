@@ -99,17 +99,17 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
       };
     }
 
-    // New profile creation for this specific role
+    // New profile creation for this specific role (incomplete by default until user completes profile step)
     const profile: UserProfile = {
       name: cred.user.displayName || 'Usuario CargoFlow',
       email: cred.user.email || 'usuario.google@cargoflow.co',
-      phone: cred.user.phoneNumber || '+57 300 000 0000',
+      phone: cred.user.phoneNumber || '',
       role: role,
       isVerified: true,
+      isComplete: false,
       rating: 5.0,
       balance: 1250000,
       photoURL: cred.user.photoURL || undefined,
-      plateNumber: role === 'conductor' ? 'WYZ-789' : undefined,
     };
 
     // Save asynchronously to Firestore

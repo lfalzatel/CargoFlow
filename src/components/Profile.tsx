@@ -42,11 +42,17 @@ export default function Profile({ user, onUpdateProfile, onDeposit, onLogout }: 
         {/* Profile Header Section */}
         <section className="flex flex-col items-center justify-center pt-6 pb-4">
           <div className="relative">
-            <img
-              className="w-24 h-24 rounded-full object-cover shadow-[0px_4px_20px_rgba(0,0,0,0.08)] ring-4 ring-white"
-              alt="Profile avatar"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaVqRCs3Sd6gJvISf50cSCmx0gy6bYEvm1R0IzY4p64VNvfe1-3MIdU67GvSNK95J1--2vNcWvxnrIq8iCD-iHT1D8hQ7XtZaehyM01PAqzIOpnvfjJaYX0RRdOKnv96PNPbSoA0WCXp4x_h7jmJ4ihCCgJ8Z8drczuCJb_JVBDIY5LL_WCnZNTNXviCXjNodS3ym6pf7GR5ZWc7nUdVM8cc7a6Zs2qvDNwDS_1XEoVjtbFFt-4bF8"
-            />
+            {user.photoURL && user.photoURL.startsWith('http') && !user.photoURL.includes('unsplash') ? (
+              <img
+                className="w-24 h-24 rounded-full object-cover shadow-[0px_4px_20px_rgba(0,0,0,0.08)] ring-4 ring-white"
+                alt={user.name || 'Foto de Perfil'}
+                src={user.photoURL}
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 text-white font-extrabold text-2xl flex items-center justify-center shadow-md ring-4 ring-white uppercase">
+                {(user.name || 'Usuario').split(' ').map(n => n[0]).join('').substring(0, 2)}
+              </div>
+            )}
             <button 
               onClick={() => setShowEditModal(true)}
               className="absolute bottom-0 right-0 bg-primary-container text-white rounded-full p-2 shadow-md hover:opacity-95 active:scale-95 transition-all cursor-pointer"

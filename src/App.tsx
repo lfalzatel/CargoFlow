@@ -143,13 +143,15 @@ export default function App() {
     setView(newView);
   };
 
-  // Login completion (goes straight to main dashboard with Splash)
+  // Login completion (Checks if profile is completed or directs to complete-profile)
   const handleLoginSuccess = (profileData: any) => {
     const role = profileData.role || selectedRole;
     setSelectedRole(role);
+    const isProfileComplete = Boolean(profileData.isComplete);
     const updatedUser: UserProfile = {
       ...profileData,
       role,
+      isComplete: isProfileComplete,
       plateNumber: profileData.plateNumber || (role === 'conductor' ? 'WYZ-789' : undefined),
       isVerified: true,
     };
@@ -161,7 +163,11 @@ export default function App() {
       '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
       2600, 
       () => {
-        setView('home');
+        if (!isProfileComplete) {
+          setView('complete-profile');
+        } else {
+          setView('home');
+        }
       }
     );
   };
@@ -179,6 +185,7 @@ export default function App() {
       plateNumber: data.plateNumber,
       vehicleType: data.vehicleType,
       isVerified: true,
+      isComplete: true,
       documentsUploaded: {
         cedula: true,
         licencia: true,
@@ -188,7 +195,7 @@ export default function App() {
     }));
     triggerSplash(
       'Verificando perfil...', 
-      'Configurando vehículo', 
+      'Configurando tu vehículo en CargoFlow', 
       '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
       2600, 
       () => {
