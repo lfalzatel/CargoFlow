@@ -1,27 +1,51 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
 import CargoFlowLogo from './CargoFlowLogo';
 
 interface SplashScreenProps {
   message?: string;
   subtext?: string;
+  soundUrl?: string; // Optional sound to play during splash screen
 }
 
 export default function SplashScreen({ 
   message = 'Cargando CargoFlow...', 
-  subtext = 'Tu solución inteligente de transporte' 
+  subtext = 'Tu solución inteligente de transporte',
+  soundUrl = '/sounds/550332__wax_vibe__cyberpunk-bass.wav'
 }: SplashScreenProps) {
+
+  // Play audio sound during splash screen animation
+  useEffect(() => {
+    if (!soundUrl) return;
+    
+    const audio = new Audio(soundUrl);
+    audio.volume = 0.6;
+
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        // Autoplay policy warning in some browsers if not user interaction yet
+        console.warn('Audio play notice (user interaction may be required):', err);
+      });
+    }
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, [soundUrl]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0 z-[9999] bg-gradient-to-br from-[#09152b] via-[#0b224d] to-[#041029] text-white flex flex-col items-center justify-between py-12 px-6 antialiased select-none"
+      className="fixed inset-0 z-[9999] bg-gradient-to-br from-[#060A12] via-[#091224] to-[#04070F] text-white flex flex-col items-center justify-between py-12 px-6 antialiased select-none"
     >
-      {/* Top Spacer */}
+      {/* Top Tag */}
       <div className="w-full flex justify-center pt-4">
-        <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400/80 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-500/20">
+        <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-950/70 px-3 py-1 rounded-full border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
           CargoFlow Colombia PWA
         </span>
       </div>
@@ -32,6 +56,7 @@ export default function SplashScreen({
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="drop-shadow-[0_0_30px_rgba(16,185,129,0.25)]"
         >
           <CargoFlowLogo size="xl" />
         </motion.div>
@@ -41,7 +66,7 @@ export default function SplashScreen({
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-2xl font-extrabold text-white tracking-tight"
+            className="text-3xl font-extrabold text-white tracking-tight drop-shadow-md"
           >
             CargoFlow
           </motion.h2>
@@ -66,18 +91,18 @@ export default function SplashScreen({
         </div>
 
         {/* Pulse Bar Indicator */}
-        <div className="w-36 h-1.5 bg-blue-950/80 rounded-full overflow-hidden border border-blue-500/20 mt-2">
+        <div className="w-40 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-blue-500/20 mt-2 shadow-inner">
           <motion.div
             animate={{ x: ['-100%', '100%'] }}
-            transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
-            className="w-1/2 h-full bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full shadow-[0_0_12px_rgba(59,130,246,0.8)]"
+            transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
+            className="w-1/2 h-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.8)]"
           />
         </div>
       </div>
 
       {/* Footer Info */}
       <div className="text-center pb-2">
-        <p className="text-[11px] text-slate-400 font-medium">
+        <p className="text-[11px] text-slate-400 font-medium tracking-wide">
           Plataforma de Logística & Carga Terrestre
         </p>
       </div>

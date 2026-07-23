@@ -68,6 +68,7 @@ export default function App() {
   const [isSplashActive, setIsSplashActive] = useState<boolean>(true);
   const [splashMessage, setSplashMessage] = useState<string>('Cargando CargoFlow...');
   const [splashSubtext, setSplashSubtext] = useState<string>('Tu solución inteligente de transporte');
+  const [splashSound, setSplashSound] = useState<string>('/sounds/550332__wax_vibe__cyberpunk-bass.wav');
 
   // Selected role
   const [selectedRole, setSelectedRole] = useState<UserRole>('conductor');
@@ -95,6 +96,7 @@ export default function App() {
   useEffect(() => {
     setSplashMessage('Iniciando CargoFlow...');
     setSplashSubtext('Preparando tu panel logístico');
+    setSplashSound('/sounds/550332__wax_vibe__cyberpunk-bass.wav');
     const timer = setTimeout(() => {
       setIsSplashActive(false);
     }, 2600);
@@ -102,9 +104,16 @@ export default function App() {
   }, []);
 
   // Helper to trigger splash during async actions
-  const triggerSplash = (msg: string, sub: string, durationMs: number = 2600, callback: () => void) => {
+  const triggerSplash = (
+    msg: string, 
+    sub: string, 
+    sound: string = '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
+    durationMs: number = 2600, 
+    callback: () => void
+  ) => {
     setSplashMessage(msg);
     setSplashSubtext(sub);
+    setSplashSound(sound);
     setIsSplashActive(true);
     setTimeout(() => {
       callback();
@@ -129,9 +138,15 @@ export default function App() {
     };
     setUser(updatedUser);
 
-    triggerSplash('Iniciando sesión...', `Bienvenido, ${updatedUser.name.split(' ')[0]}`, 2600, () => {
-      setView('home');
-    });
+    triggerSplash(
+      'Iniciando sesión...', 
+      `Bienvenido, ${updatedUser.name.split(' ')[0]}`, 
+      '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
+      2600, 
+      () => {
+        setView('home');
+      }
+    );
   };
 
   // Complete profile completion (Driver vehicle/doc step)
@@ -154,9 +169,15 @@ export default function App() {
         propiedad: true,
       }
     }));
-    triggerSplash('Verificando perfil...', 'Configurando vehículo', 2600, () => {
-      setView('home');
-    });
+    triggerSplash(
+      'Verificando perfil...', 
+      'Configurando vehículo', 
+      '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
+      2600, 
+      () => {
+        setView('home');
+      }
+    );
   };
 
   // Create Shipment helper
@@ -197,18 +218,24 @@ export default function App() {
 
   // Switch account helper (Instagram style)
   const handleSwitchAccount = (targetAccount: UserProfile) => {
-    triggerSplash('Cambiando de cuenta...', `Accediendo como ${targetAccount.name.split(' ')[0]}`, 2600, () => {
-      setLinkedAccounts(prev => {
-        const filtered = prev.filter(acc => !(acc.email === targetAccount.email && acc.role === targetAccount.role));
-        const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
-        if (!exists) {
-          return [...filtered, user];
-        }
-        return filtered;
-      });
-      setUser(targetAccount);
-      setView('home');
-    });
+    triggerSplash(
+      'Cambiando de cuenta...', 
+      `Accediendo como ${targetAccount.name.split(' ')[0]}`, 
+      '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
+      2600, 
+      () => {
+        setLinkedAccounts(prev => {
+          const filtered = prev.filter(acc => !(acc.email === targetAccount.email && acc.role === targetAccount.role));
+          const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
+          if (!exists) {
+            return [...filtered, user];
+          }
+          return filtered;
+        });
+        setUser(targetAccount);
+        setView('home');
+      }
+    );
   };
 
   // Add new account helper (Triggers Google Auth)
@@ -218,43 +245,56 @@ export default function App() {
       const targetRole = user.role === 'conductor' ? 'cliente' : 'conductor';
       const newProfile = await loginWithGoogle(targetRole);
       
-      triggerSplash('Conectando nueva cuenta...', `Añadiendo a ${newProfile.name.split(' ')[0]}`, 2600, () => {
-        setLinkedAccounts(prev => {
-          const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
-          if (!exists) {
-            return [...prev, user];
-          }
-          return prev;
-        });
-        setUser(newProfile);
-        setView('home');
-      });
+      triggerSplash(
+        'Conectando nueva cuenta...', 
+        `Añadiendo a ${newProfile.name.split(' ')[0]}`, 
+        '/sounds/550332__wax_vibe__cyberpunk-bass.wav', 
+        2600, 
+        () => {
+          setLinkedAccounts(prev => {
+            const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
+            if (!exists) {
+              return [...prev, user];
+            }
+            return prev;
+          });
+          setUser(newProfile);
+          setView('home');
+        }
+      );
     } catch (e) {
       console.warn('Add account notice:', e);
     }
   };
 
-  // Reset/Logout helper
+  // Reset/Logout helper (plays 73577__cyberpunk64bit__boomstick.mp3)
   const handleLogout = async () => {
-    triggerSplash('Cerrando sesión...', '¡Hasta pronto!', 2600, async () => {
-      try {
-        const { logoutUser } = await import('./services/authService');
-        await logoutUser();
-      } catch (e) {
-        console.warn('Logout error:', e);
+    triggerSplash(
+      'Cerrando sesión...', 
+      '¡Hasta pronto!', 
+      '/sounds/73577__cyberpunk64bit__boomstick.mp3', 
+      2600, 
+      async () => {
+        try {
+          const { logoutUser } = await import('./services/authService');
+          await logoutUser();
+        } catch (e) {
+          console.warn('Logout error:', e);
+        }
+        setView('login');
       }
-      setView('login');
-    });
+    );
   };
 
   return (
     <div className="min-h-screen bg-background text-on-surface">
-      {/* Global Splash Screen Overlay */}
+      {/* Global Splash Screen Overlay with Audio */}
       <AnimatePresence>
         {isSplashActive && (
           <SplashScreen 
             message={splashMessage} 
             subtext={splashSubtext} 
+            soundUrl={splashSound}
           />
         )}
       </AnimatePresence>
