@@ -9,6 +9,7 @@ import Activity from './components/Activity';
 import Chat from './components/Chat';
 import Profile from './components/Profile';
 import BottomNav from './components/BottomNav';
+import Header from './components/Header';
 import { motion, AnimatePresence } from 'motion/react';
 
 const INITIAL_TRIPS: Trip[] = [
@@ -207,6 +208,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-on-surface">
+      {/* Global Header on main authenticated dashboards */}
+      {['home', 'activity', 'chat', 'profile'].includes(view) && (
+        <Header
+          user={user}
+          onNavigateToView={handleViewChange}
+          onLogout={handleLogout}
+          unreadCount={2}
+        />
+      )}
+
       <AnimatePresence mode="wait">
         <motion.div
           key={view}
