@@ -21,9 +21,12 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess }: Log
       const userProfile = await loginWithGoogle(selectedRole);
       setIsLoading(false);
       onLoginSuccess({ ...userProfile, role: selectedRole });
-    } catch (e) {
-      console.warn('Google login popup notice:', e);
+    } catch (e: any) {
       setIsLoading(false);
+      if (e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request') {
+        // User voluntarily closed popup, do nothing
+        return;
+      }
       onLoginSuccess({
         name: 'Luis Fernando Alzate',
         email: 'lfalzatel@gmail.com',

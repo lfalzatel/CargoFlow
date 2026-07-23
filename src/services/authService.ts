@@ -7,7 +7,7 @@ import {
   UserCredential
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { auth, googleProvider, db } from '../config/firebase';
+import { auth, db } from '../config/firebase';
 import { UserProfile, UserRole } from '../types';
 
 export const loginWithEmail = async (email: string, pass: string): Promise<{ uid: string; userProfile?: UserProfile }> => {
@@ -22,7 +22,6 @@ export const loginWithEmail = async (email: string, pass: string): Promise<{ uid
     }
     return { uid };
   } catch (error) {
-    // If firebase credentials fail in demo mode, gracefully return fallback
     console.warn('Firebase login notice:', error);
     return { uid: 'demo-user-id' };
   }
@@ -50,11 +49,11 @@ export const registerWithEmail = async (
     role,
     isVerified: true,
     rating: 5.0,
-    balance: 1250000, // Starting default COP balance
+    balance: 1250000,
   };
 
   try {
-    await setDoc(doc(db, 'users', uid), profile);
+    await setDoc(doc(db, 'users', `${uid}_${role}`), profile);
   } catch (e) {
     console.warn('Firestore setDoc notice:', e);
   }
@@ -63,70 +62,86 @@ export const registerWithEmail = async (
 };
 
 export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserProfile> => {
+  // Create a fresh GoogleAuthProvider with forced select_account prompt
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({
+    prompt: 'select_account',
+  });
+
   try {
-    // Force Firebase Auth SignOut first so any stored session token is completely cleared
-    try {
-      await signOut(auth);
-    } catch (_) {}
-
-    // Create a fresh GoogleAuthProvider instance with forced select_account prompt
-    const freshProvider = new GoogleAuthProvider();
-    freshProvider.setCustomParameters({
-      prompt: 'select_account',
-      auth_type: 'rerequest',
-    });
-
-    const cred = await signInWithPopup(auth, freshProvider);
+    // 1. Trigger Google popup immediately on click without any pre-await (prevents COOP popup blocking)
+    const cred = await signInWithPopup(auth, provider);
     const uid = cred.user.uid;
-    const docRef = doc(db, 'users', uid);
-    const snap = await getDoc(docRef);
+    
+    // 2. Dual-Role Firestore Key: Allows the exact same Google account to have both Conductor and Cliente profiles!
+    const docId = `${uid}_${role}`;
+    const docRef = doc(db, 'users', docId);
 
-    if (snap.exists()) {
+    // Fast non-blocking Firestore document fetch with 2-second timeout
+    let snap: any = null;
+    try {
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Firestore timeout')), 2000)
+      );
+      snap = await Promise.race([getDoc(docRef), timeoutPromise]);
+    } catch (e) {
+      console.warn('Firestore read notice (proceeding with profile):', e);
+    }
+
+    if (snap && snap.exists()) {
       const existing = snap.data() as UserProfile;
       return {
         ...existing,
-        role: existing.role || role,
+        role: role,
         photoURL: cred.user.photoURL || existing.photoURL,
         email: cred.user.email || existing.email,
+        name: cred.user.displayName || existing.name,
       };
     }
 
+    // New profile creation for this specific role
     const profile: UserProfile = {
       name: cred.user.displayName || 'Usuario CargoFlow',
       email: cred.user.email || 'usuario.google@cargoflow.co',
       phone: cred.user.phoneNumber || '+57 300 000 0000',
-      role,
+      role: role,
       isVerified: true,
       rating: 5.0,
       balance: 1250000,
       photoURL: cred.user.photoURL || undefined,
+      plateNumber: role === 'conductor' ? 'WYZ-789' : undefined,
     };
 
-    await setDoc(docRef, profile);
+    // Save asynchronously to Firestore
+    setDoc(docRef, profile).catch(err => console.warn('Firestore setDoc notice:', err));
+
     return profile;
   } catch (e: any) {
-    console.error('Google sign in popup error detail:', e);
-    // If popup closed by user or cancelled, do not force mock user
+    console.error('Google sign in popup notice:', e);
+    
     if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
       throw e;
     }
-    // Fallback for offline demo mode
+
+    // Return instant profile fallback for demo/offline mode
     return {
       name: 'Luis Fernando Alzate',
       email: 'lfalzatel@gmail.com',
       phone: '+57 312 987 6543',
-      role,
+      role: role,
       isVerified: true,
       rating: 5.0,
       balance: 1250000,
-      photoURL: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAaVqRCs3Sd6gJvISf50cSCmx0gy6bYEvm1R0IzY4p64VNvfe1-3MIdU67GvSNK95J1--2vNcWvxnrIq8iCD-iHT1D8hQ7XtZaehyM01PAqzIOpnvfjJaYX0RRdOKnv96PNPbSoA0WCXp4x_h7jmJ4ihCCgJ8Z8drczuCJb_JVBDIY5LL_WCnZNTNXviCXjNodS3ym6pf7GR5ZWc7nUdVM8cc7a6Zs2qvDNwDS_1XEoVjtbFFt-4bF8',
+      photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+      plateNumber: role === 'conductor' ? 'WYZ-789' : undefined,
     };
   }
 };
 
 export const updateUserProfileInFirestore = async (uid: string, updates: Partial<UserProfile>) => {
   try {
-    const docRef = doc(db, 'users', uid);
+    const role = updates.role || 'conductor';
+    const docRef = doc(db, 'users', `${uid}_${role}`);
     await updateDoc(docRef, updates);
   } catch (e) {
     console.warn('Update profile error:', e);
