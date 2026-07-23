@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword, 
   signInWithPopup, 
   signOut,
+  GoogleAuthProvider,
   UserCredential
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
@@ -63,7 +64,19 @@ export const registerWithEmail = async (
 
 export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserProfile> => {
   try {
-    const cred = await signInWithPopup(auth, googleProvider);
+    // Force Firebase Auth SignOut first so any stored session token is completely cleared
+    try {
+      await signOut(auth);
+    } catch (_) {}
+
+    // Create a fresh GoogleAuthProvider instance with forced select_account prompt
+    const freshProvider = new GoogleAuthProvider();
+    freshProvider.setCustomParameters({
+      prompt: 'select_account',
+      auth_type: 'rerequest',
+    });
+
+    const cred = await signInWithPopup(auth, freshProvider);
     const uid = cred.user.uid;
     const docRef = doc(db, 'users', uid);
     const snap = await getDoc(docRef);
@@ -72,6 +85,7 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
       const existing = snap.data() as UserProfile;
       return {
         ...existing,
+        role: existing.role || role,
         photoURL: cred.user.photoURL || existing.photoURL,
         email: cred.user.email || existing.email,
       };
