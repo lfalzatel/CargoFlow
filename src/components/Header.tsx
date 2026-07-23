@@ -13,10 +13,12 @@ import {
   Moon,
   Monitor,
   Check,
-  Truck
+  Truck,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
+import CargoFlowLogo from './CargoFlowLogo';
 
 interface HeaderProps {
   user: UserProfile;
@@ -39,6 +41,7 @@ export default function Header({
 }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [showSplashModal, setShowSplashModal] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [activeTheme, setActiveTheme] = useState<'dia' | 'cyber' | 'kilo'>('dia');
   const [pwaInstallPrompt, setPwaInstallPrompt] = useState<any>(null);
@@ -156,13 +159,14 @@ export default function Header({
       </AnimatePresence>
 
       <header className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-surface-container h-16 px-4 md:px-8 flex items-center justify-between shadow-sm transition-all">
-        {/* Left: Brand Logo & Title */}
+        {/* Left: Animated Circular Logo Icon (Triggers Fullscreen Splash Modal on Click) */}
         <div 
-          onClick={() => onNavigateToView('home')} 
-          className="flex items-center gap-2.5 cursor-pointer group"
+          onClick={() => setShowSplashModal(true)} 
+          className="flex items-center gap-2.5 cursor-pointer group select-none"
+          title="Ver Splash Screen CargoFlow"
         >
-          <div className="w-10 h-10 rounded-xl bg-primary-container text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-            <Truck size={22} fill="currentColor" />
+          <div className="group-hover:scale-110 transition-transform duration-300">
+            <CargoFlowLogo size="sm" />
           </div>
           <span className="font-headline-md text-xl font-extrabold text-primary-container tracking-tight">
             CargoFlow
@@ -537,6 +541,73 @@ export default function Header({
           </div>
         </div>
       </header>
+
+      {/* Fullscreen Splash Screen Modal Overlay (Triggered by clicking top left logo) */}
+      <AnimatePresence>
+        {showSplashModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSplashModal(false)}
+            className="fixed inset-0 z-[99999] bg-gradient-to-br from-[#060A12] via-[#091224] to-[#04070F] text-white flex flex-col items-center justify-between py-12 px-6 select-none cursor-pointer"
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowSplashModal(false)}
+              className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all border border-white/20 active:scale-95 z-10"
+              title="Cerrar Splash Screen"
+            >
+              <X size={24} />
+            </button>
+
+            {/* Top Tag */}
+            <div className="w-full flex justify-center pt-4">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-950/70 px-3.5 py-1 rounded-full border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+                CargoFlow Colombia PWA
+              </span>
+            </div>
+
+            {/* Main Center Animated Logo & Status (Matches user's reference image style) */}
+            <div className="flex flex-col items-center justify-center gap-6 text-center my-auto">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ 
+                  scale: 1, 
+                  opacity: 1,
+                  y: [0, -12, 0] // Smooth floating levitation
+                }}
+                transition={{ 
+                  scale: { duration: 0.4 },
+                  y: { repeat: Infinity, duration: 3.5, ease: 'easeInOut' }
+                }}
+                className="drop-shadow-[0_0_35px_rgba(16,185,129,0.35)]"
+              >
+                <CargoFlowLogo size="xl" />
+              </motion.div>
+
+              <div className="flex flex-col items-center gap-2 max-w-xs">
+                <h2 className="text-4xl font-extrabold text-white tracking-wider uppercase drop-shadow-md">
+                  CargoFlow
+                </h2>
+                <p className="text-sm font-semibold text-blue-200/90 mt-1">
+                  Tu solución inteligente de transporte
+                </p>
+                <span className="text-xs text-slate-400 mt-2 bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                  Toca en cualquier parte para cerrar
+                </span>
+              </div>
+            </div>
+
+            {/* Footer Info */}
+            <div className="text-center pb-2">
+              <p className="text-[11px] text-slate-400 font-medium tracking-wide">
+                Plataforma de Logística & Carga Terrestre
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
