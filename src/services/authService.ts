@@ -125,9 +125,9 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
 
     // Return instant profile fallback for demo/offline mode
     return {
-      name: 'Luis Fernando Alzate',
-      email: 'lfalzatel@gmail.com',
-      phone: '+57 312 987 6543',
+      name: role === 'cliente' ? 'Luis Fernando (Cliente)' : 'Luis Fernando Alzate',
+      email: role === 'cliente' ? 'lfalzatel29@gmail.com' : 'lfalzatel@gmail.com',
+      phone: role === 'cliente' ? '+57 300 123 4567' : '+57 312 987 6543',
       role: role,
       isVerified: true,
       rating: 5.0,

@@ -136,13 +136,16 @@ export default function Home({ user, onCreateShipment, onNavigateToView, onLogou
 
               <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl mb-6">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaVqRCs3Sd6gJvISf50cSCmx0gy6bYEvm1R0IzY4p64VNvfe1-3MIdU67GvSNK95J1--2vNcWvxnrIq8iCD-iHT1D8hQ7XtZaehyM01PAqzIOpnvfjJaYX0RRdOKnv96PNPbSoA0WCXp4x_h7jmJ4ihCCgJ8Z8drczuCJb_JVBDIY5LL_WCnZNTNXviCXjNodS3ym6pf7GR5ZWc7nUdVM8cc7a6Zs2qvDNwDS_1XEoVjtbFFt-4bF8"
-                  alt="Carlos Rodriguez"
-                  className="w-12 h-12 rounded-full object-cover border-2 border-white"
+                  src={user.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80"}
+                  alt={user.name || 'Usuario'}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-white flex-shrink-0"
                 />
-                <div>
-                  <h3 className="font-bold text-on-surface text-sm">{user.name || 'Carlos Rodriguez'}</h3>
-                  <p className="text-xs text-on-surface-variant capitalize">{user.role === 'conductor' ? 'Conductor Verificado' : 'Cliente'}</p>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-on-surface text-sm truncate">{user.name || 'Usuario CargoFlow'}</h3>
+                  <p className="text-xs text-on-surface-variant truncate font-medium">{user.email || 'cliente@cargoflow.co'}</p>
+                  <span className="text-[10px] font-extrabold uppercase text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full block w-fit mt-0.5">
+                    {user.role === 'conductor' ? 'CONDUCTOR' : 'CLIENTE'}
+                  </span>
                 </div>
               </div>
 
@@ -216,9 +219,9 @@ export default function Home({ user, onCreateShipment, onNavigateToView, onLogou
           className="hover:opacity-80 active:scale-95 transition-transform rounded-full overflow-hidden w-9 h-9 border-2 border-primary-container/20 focus:outline-none"
         >
           <img
-            alt="User Profile"
+            alt={user.name || 'User Profile'}
             className="w-full h-full object-cover"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuASokIq04ykHdenqstCfBTpdBprnrmnTGfnzzKShPJpyWcVKdiW-C0RWeko5uexwi-1R64G2NaVsP460scmmdWwd-6QmiVTu2lkZhB3MQcjMKpcuzc0VfJTkQ2DNnIoPbMfneYzhj51g363Ivqfq_PwDv6c-0Dz3XfhBOy6t7tuWuLYSUqYHhzKgL4w5VxgBWRLdf1LyrjVMwjNiaapUjoKor-klRGeEIKeFNercLI5TmRQGSY40Wfa"
+            src={user.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80"}
           />
         </button>
       </header>
@@ -304,16 +307,28 @@ export default function Home({ user, onCreateShipment, onNavigateToView, onLogou
         )}
       </AnimatePresence>
 
-      {/* Floating Search Card */}
+      {/* Floating Search Card / Client Action Header */}
       <div className="absolute top-20 left-4 right-4 z-20">
         <button
           onClick={() => setShowShipmentModal(true)}
-          className="w-full bg-white rounded-2xl shadow-[0px_8px_30px_rgba(0,0,0,0.06)] flex items-center p-4 cursor-pointer hover:bg-white/95 transition-colors border border-surface-container"
+          className="w-full bg-white rounded-2xl shadow-[0px_8px_30px_rgba(0,0,0,0.12)] flex items-center justify-between p-4 cursor-pointer hover:bg-white/95 transition-all border-2 border-emerald-500/30 group active:scale-[0.99]"
         >
-          <Search className="text-on-surface-variant mr-3" size={20} />
-          <span className="text-sm font-bold text-on-surface-variant truncate">
-            ¿A dónde enviamos tu carga?
-          </span>
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 font-bold shadow-sm">
+              <Truck size={22} fill="currentColor" />
+            </div>
+            <div className="flex flex-col text-left truncate">
+              <span className="text-xs font-black text-emerald-700 uppercase tracking-widest">
+                {user.role === 'cliente' ? 'PANEL CLIENTE • CREAR FLETE' : 'PANEL CONDUCTOR'}
+              </span>
+              <span className="text-sm font-extrabold text-on-surface truncate">
+                {user.role === 'cliente' ? '¿A dónde enviamos tu carga hoy?' : 'Buscar cargas disponibles cerca'}
+              </span>
+            </div>
+          </div>
+          <div className="p-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs shadow-md flex-shrink-0 group-hover:bg-emerald-700">
+            Solicitar Flete
+          </div>
         </button>
       </div>
 

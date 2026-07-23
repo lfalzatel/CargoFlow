@@ -310,8 +310,8 @@ export default function Header({
                       className="w-14 h-14 rounded-full object-cover border-2 border-emerald-400 shadow-md flex-shrink-0"
                     />
                     <div className="flex flex-col min-w-0">
-                      <h3 className="font-extrabold text-sm text-on-surface truncate">{user.name || 'Luis Fernando Alzate'}</h3>
-                      <p className="text-xs text-on-surface-variant truncate mt-0.5 font-medium">{user.email || 'lfalzatel@gmail.com'}</p>
+                      <h3 className="font-extrabold text-sm text-on-surface truncate">{user.name || 'Usuario CargoFlow'}</h3>
+                      <p className="text-xs text-on-surface-variant truncate mt-0.5 font-medium">{user.email || 'usuario@cargoflow.co'}</p>
                       <span className="mt-1.5 text-[10px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full w-fit">
                         {user.role === 'conductor' ? 'CONDUCTOR' : 'CLIENTE'}
                       </span>

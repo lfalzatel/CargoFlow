@@ -28,9 +28,9 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess }: Log
         return;
       }
       onLoginSuccess({
-        name: 'Luis Fernando Alzate',
-        email: 'lfalzatel@gmail.com',
-        phone: '+57 312 987 6543',
+        name: selectedRole === 'cliente' ? 'Luis Fernando (Cliente)' : 'Luis Fernando Alzate',
+        email: selectedRole === 'cliente' ? 'lfalzatel29@gmail.com' : 'lfalzatel@gmail.com',
+        phone: selectedRole === 'cliente' ? '+57 300 123 4567' : '+57 312 987 6543',
         role: selectedRole,
         isVerified: true,
         rating: 5.0,
