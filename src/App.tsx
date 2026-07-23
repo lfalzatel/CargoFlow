@@ -226,6 +226,14 @@ export default function App() {
           {view === 'login' && (
             <Login 
               onLoginSuccess={handleLoginSuccess} 
+              onGoogleLoginSuccess={(profile) => {
+                setUser(profile);
+                if (selectedRole === 'conductor' && !profile.plateNumber) {
+                  setView('complete_profile');
+                } else {
+                  setView('home');
+                }
+              }}
               onNavigateToRegister={() => setView('register')} 
             />
           )}
