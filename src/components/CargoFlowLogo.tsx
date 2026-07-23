@@ -59,9 +59,13 @@ export default function CargoFlowLogo({ size = 'md', showText = false }: CargoFl
           />
         </motion.svg>
 
-        {/* Central Circular Badge with Truck Icon */}
-        <div className="w-[62%] h-[62%] rounded-full bg-white shadow-[0px_8px_24px_rgba(0,0,0,0.12)] flex items-center justify-center border-2 border-blue-100 z-10 relative">
-          <Truck size={dimensions.icon} className="text-primary-container" fill="currentColor" />
+        {/* Central Circular Badge with New Custom PWA Truck Icon */}
+        <div className="w-[68%] h-[68%] rounded-full bg-[#09152b] shadow-[0px_8px_24px_rgba(0,0,0,0.4)] flex items-center justify-center border-2 border-emerald-400/40 z-10 relative overflow-hidden p-1">
+          <img 
+            src="/pwa-512x512.png" 
+            alt="CargoFlow Truck Icon" 
+            className="w-full h-full object-cover rounded-full"
+          />
         </div>
       </div>
 
