@@ -40,7 +40,7 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess }: Log
   return (
     <div className={`min-h-screen relative flex flex-col justify-center items-center px-4 py-8 antialiased select-none transition-colors duration-500 ${
       isDarkMode 
-        ? 'bg-[#060913] text-white' 
+        ? 'bg-gradient-to-br from-[#09152b] via-[#0b224d] to-[#041029] text-white' 
         : 'bg-gradient-to-br from-slate-100 via-blue-50 to-slate-200 text-slate-900'
     }`}>
       {/* Top Right Floating Day/Night Theme Toggle */}
