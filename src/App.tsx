@@ -123,18 +123,15 @@ export default function App() {
     }
   };
 
-  // Login completion
+  // Login completion (goes straight to main dashboard)
   const handleLoginSuccess = (email: string) => {
     setUser(prev => ({
       ...prev,
       email: email,
+      plateNumber: prev.plateNumber || 'WYZ-789',
+      isVerified: true,
     }));
-    
-    if (selectedRole === 'conductor' && !user.plateNumber) {
-      setView('complete_profile');
-    } else {
-      setView('home');
-    }
+    setView('home');
   };
 
   // Registration completion
@@ -146,7 +143,8 @@ export default function App() {
       role: selectedRole,
       isVerified: true,
       rating: 5.0,
-      balance: 1250000, // starting balance COP
+      balance: 1250000,
+      plateNumber: selectedRole === 'conductor' ? 'WYZ-789' : undefined,
     });
 
     if (selectedRole === 'conductor') {
@@ -202,7 +200,13 @@ export default function App() {
   };
 
   // Reset/Logout helper
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const { logoutUser } = await import('./services/authService');
+      await logoutUser();
+    } catch (e) {
+      console.warn('Logout error:', e);
+    }
     setView('role_selection');
   };
 
@@ -238,12 +242,12 @@ export default function App() {
             <Login 
               onLoginSuccess={handleLoginSuccess} 
               onGoogleLoginSuccess={(profile) => {
-                setUser(profile);
-                if (selectedRole === 'conductor' && !profile.plateNumber) {
-                  setView('complete_profile');
-                } else {
-                  setView('home');
-                }
+                setUser({
+                  ...profile,
+                  plateNumber: profile.plateNumber || (selectedRole === 'conductor' ? 'WYZ-789' : undefined),
+                  isVerified: true,
+                });
+                setView('home');
               }}
               onNavigateToRegister={() => setView('register')} 
             />
