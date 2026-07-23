@@ -104,8 +104,13 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
 
     await setDoc(docRef, profile);
     return profile;
-  } catch (e) {
-    console.warn('Google sign in notice:', e);
+  } catch (e: any) {
+    console.error('Google sign in popup error detail:', e);
+    // If popup closed by user or cancelled, do not force mock user
+    if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+      throw e;
+    }
+    // Fallback for offline demo mode
     return {
       name: 'Luis Fernando Alzate',
       email: 'lfalzatel@gmail.com',
