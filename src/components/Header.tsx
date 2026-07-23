@@ -505,9 +505,14 @@ export default function Header({
                           <div className="relative w-7 h-7 overflow-hidden rounded-full ring-1 ring-slate-200">
                             {renderAvatar(acc.photoURL, acc.name, "w-full h-full text-[10px] grayscale group-hover:grayscale-0 transition-all")}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs truncate text-slate-800 font-medium group-hover:text-emerald-700">{acc.name}</p>
-                            <p className="text-[10px] truncate text-slate-500">{acc.email}</p>
+                          <div className="flex-1 min-w-0 flex items-center justify-between">
+                            <div>
+                              <p className="text-xs truncate text-slate-800 font-medium group-hover:text-emerald-700">{acc.name}</p>
+                              <p className="text-[10px] truncate text-slate-500">{acc.email}</p>
+                            </div>
+                            <span className="text-[9px] font-black uppercase tracking-tight text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full ml-2">
+                              {acc.role.toUpperCase()}
+                            </span>
                           </div>
                         </button>
                       ))
@@ -522,9 +527,14 @@ export default function Header({
                         <div className="relative w-7 h-7 overflow-hidden rounded-full ring-1 ring-slate-200">
                           {renderAvatar(undefined, "Luis Fernando", "w-full h-full text-[10px] grayscale group-hover:grayscale-0 transition-all")}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs truncate text-slate-800 font-medium group-hover:text-emerald-700">Luis Fernando</p>
-                          <p className="text-[10px] truncate text-slate-500">lfalzatel29@gmail.com</p>
+                        <div className="flex-1 min-w-0 flex items-center justify-between">
+                          <div>
+                            <p className="text-xs truncate text-slate-800 font-medium group-hover:text-emerald-700">Luis Fernando</p>
+                            <p className="text-[10px] truncate text-slate-500">lfalzatel29@gmail.com</p>
+                          </div>
+                          <span className="text-[9px] font-black uppercase tracking-tight text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full ml-2">
+                            CLIENTE
+                          </span>
                         </div>
                       </button>
                     )}

@@ -156,12 +156,13 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Always merge base auth data first
+        // Always merge base auth data first and FORCE admin if email matches
         setUser(prev => ({
           ...prev,
           name: firebaseUser.displayName || prev.name,
           email: firebaseUser.email || prev.email,
           photoURL: firebaseUser.photoURL || prev.photoURL,
+          role: firebaseUser.email === 'lfalzatel@gmail.com' ? 'admin' : prev.role,
         }));
         
         // Auto-upgrade developer email to admin
