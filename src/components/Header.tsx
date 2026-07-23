@@ -318,69 +318,69 @@ export default function Header({
                   className="absolute right-0 mt-3 w-80 sm:w-84 bg-white rounded-3xl shadow-[0px_20px_60px_rgba(0,0,0,0.25)] border border-surface-container overflow-hidden z-[100] max-h-[calc(100vh-80px)] overflow-y-auto no-scrollbar"
                 >
                   {/* Header User Card (Google Photo & Registration Email) */}
-                  <div className="p-5 bg-gradient-to-br from-emerald-50/60 via-blue-50/40 to-white border-b border-surface-container flex items-center gap-3.5">
-                    {renderAvatar(user.photoURL, user.name, "w-14 h-14 text-base")}
+                  <div className="p-3 bg-gradient-to-br from-emerald-50/60 via-blue-50/40 to-white border-b border-surface-container flex items-center gap-2.5">
+                    {renderAvatar(user.photoURL, user.name, "w-10 h-10 text-sm")}
                     <div className="flex flex-col min-w-0">
-                      <h3 className="font-extrabold text-sm text-on-surface truncate">{user.name || 'Usuario CargoFlow'}</h3>
-                      <p className="text-xs text-on-surface-variant truncate mt-0.5 font-medium">{user.email || 'usuario@cargoflow.co'}</p>
-                      <span className="mt-1.5 text-[10px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full w-fit">
+                      <h3 className="font-extrabold text-xs text-on-surface truncate">{user.name || 'Usuario CargoFlow'}</h3>
+                      <p className="text-[11px] text-on-surface-variant truncate font-medium">{user.email || 'usuario@cargoflow.co'}</p>
+                      <span className="mt-1 text-[9px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-100 border border-emerald-300 px-1.5 py-0.2 rounded-full w-fit">
                         {user.role === 'conductor' ? 'CONDUCTOR' : 'CLIENTE'}
                       </span>
                     </div>
                   </div>
 
                   {/* Theme Selector Segmented Control (Día / Cyber / Kilo) */}
-                  <div className="p-3 bg-surface-container-lowest border-b border-surface-container">
-                    <div className="grid grid-cols-3 gap-1 bg-surface-container-low p-1 rounded-2xl">
+                  <div className="p-2 bg-surface-container-lowest border-b border-surface-container">
+                    <div className="grid grid-cols-3 gap-1 bg-surface-container-low p-1 rounded-xl">
                       <button
                         onClick={() => setActiveTheme('dia')}
-                        className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl text-xs font-bold transition-all ${
+                        className={`flex items-center justify-center gap-1 py-1 px-1 rounded-lg text-xs font-bold transition-all ${
                           activeTheme === 'dia'
-                            ? 'bg-emerald-500 text-white shadow-sm'
+                            ? 'bg-emerald-500 text-white shadow-xs'
                             : 'text-on-surface-variant hover:text-on-surface'
                         }`}
                       >
-                        <Sun size={16} className="mb-0.5" />
+                        <Sun size={14} />
                         <span>Día</span>
                       </button>
                       <button
                         onClick={() => setActiveTheme('cyber')}
-                        className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl text-xs font-bold transition-all ${
+                        className={`flex items-center justify-center gap-1 py-1 px-1 rounded-lg text-xs font-bold transition-all ${
                           activeTheme === 'cyber'
-                            ? 'bg-emerald-500 text-white shadow-sm'
+                            ? 'bg-emerald-500 text-white shadow-xs'
                             : 'text-on-surface-variant hover:text-on-surface'
                         }`}
                       >
-                        <Monitor size={16} className="mb-0.5" />
+                        <Monitor size={14} />
                         <span>Cyber</span>
                       </button>
                       <button
                         onClick={() => setActiveTheme('kilo')}
-                        className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl text-xs font-bold transition-all ${
+                        className={`flex items-center justify-center gap-1 py-1 px-1 rounded-lg text-xs font-bold transition-all ${
                           activeTheme === 'kilo'
-                            ? 'bg-emerald-500 text-white shadow-sm'
+                            ? 'bg-emerald-500 text-white shadow-xs'
                             : 'text-on-surface-variant hover:text-on-surface'
                         }`}
                       >
-                        <Moon size={16} className="mb-0.5" />
+                        <Moon size={14} />
                         <span>Kilo</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Primary Menu Options */}
-                  <div className="p-2 space-y-0.5 border-b border-surface-container">
+                  {/* Primary Menu Options (Compact Padding & Icon Boxes) */}
+                  <div className="p-1.5 space-y-0.5 border-b border-surface-container">
                     {/* MiPerfil */}
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
                         onNavigateToView('profile');
                       }}
-                      className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-surface-container-low text-on-surface transition-colors group"
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-surface-container-low text-on-surface transition-colors group"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-surface-container-low group-hover:bg-blue-50 text-on-surface-variant group-hover:text-primary-container flex items-center justify-center transition-colors">
-                          <User size={18} />
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-surface-container-low group-hover:bg-blue-50 text-on-surface-variant group-hover:text-primary-container flex items-center justify-center transition-colors">
+                          <User size={15} />
                         </div>
                         <span className="text-xs font-bold">Mi perfil</span>
                       </div>
@@ -392,15 +392,15 @@ export default function Header({
                         setIsMenuOpen(false);
                         handleInstallPwa();
                       }}
-                      className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-emerald-50 text-emerald-700 transition-colors group"
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-50 text-emerald-700 transition-colors group"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-emerald-100/70 text-emerald-600 flex items-center justify-center">
-                          <Download size={18} />
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-100/70 text-emerald-600 flex items-center justify-center">
+                          <Download size={15} />
                         </div>
                         <span className="text-xs font-bold">Instalar app</span>
                       </div>
-                      {installSuccess && <Check size={16} className="text-emerald-600" />}
+                      {installSuccess && <Check size={15} className="text-emerald-600" />}
                     </button>
 
                     {/* Compartir App */}
@@ -409,21 +409,21 @@ export default function Header({
                         setIsMenuOpen(false);
                         handleShareApp();
                       }}
-                      className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-surface-container-low text-on-surface transition-colors group"
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-surface-container-low text-on-surface transition-colors group"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-surface-container-low group-hover:bg-blue-50 text-on-surface-variant group-hover:text-primary-container flex items-center justify-center transition-colors">
-                          <Share2 size={18} />
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-surface-container-low group-hover:bg-blue-50 text-on-surface-variant group-hover:text-primary-container flex items-center justify-center transition-colors">
+                          <Share2 size={15} />
                         </div>
                         <span className="text-xs font-bold">Compartir app</span>
                       </div>
                     </button>
 
                     {/* Notificaciones Toggle */}
-                    <div className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-surface-container-low text-on-surface transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-emerald-100/60 text-emerald-600 flex items-center justify-center">
-                          <Bell size={18} />
+                    <div className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-surface-container-low text-on-surface transition-colors">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-100/60 text-emerald-600 flex items-center justify-center">
+                          <Bell size={15} />
                         </div>
                         <span className="text-xs font-bold">Notificaciones</span>
                       </div>
@@ -434,7 +434,7 @@ export default function Header({
                           onChange={(e) => setNotificationsEnabled(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
                       </label>
                     </div>
 
@@ -444,20 +444,20 @@ export default function Header({
                         setIsMenuOpen(false);
                         onNavigateToView('profile');
                       }}
-                      className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-surface-container-low text-on-surface transition-colors group"
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-surface-container-low text-on-surface transition-colors group"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-surface-container-low group-hover:bg-blue-50 text-on-surface-variant group-hover:text-primary-container flex items-center justify-center transition-colors">
-                          <Settings size={18} />
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-surface-container-low group-hover:bg-blue-50 text-on-surface-variant group-hover:text-primary-container flex items-center justify-center transition-colors">
+                          <Settings size={15} />
                         </div>
                         <span className="text-xs font-bold">Configuración</span>
                       </div>
                     </button>
                   </div>
 
-                  {/* OTRAS CUENTAS Section (Instagram-Style Quick Account Switcher) */}
-                  <div className="p-3 bg-surface-container-lowest flex flex-col gap-1.5 pb-6">
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-outline px-2 block mb-1">
+                  {/* OTRAS CUENTAS Section (Compact Instagram-Style Quick Account Switcher) */}
+                  <div className="p-2 bg-surface-container-lowest flex flex-col gap-1 pb-4">
+                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-outline px-1.5 block my-0.5">
                       OTRAS CUENTAS (CAMBIO RÁPIDO)
                     </span>
 
@@ -470,17 +470,17 @@ export default function Header({
                             setIsMenuOpen(false);
                             if (onSwitchAccount) onSwitchAccount(acc);
                           }}
-                          className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-emerald-50/80 transition-colors cursor-pointer border border-transparent hover:border-emerald-200 group"
+                          className="flex items-center justify-between p-1.5 rounded-xl hover:bg-emerald-50/80 transition-colors cursor-pointer border border-transparent hover:border-emerald-200 group"
                           title="Haz clic para cambiar a esta cuenta"
                         >
-                          <div className="flex items-center gap-3 min-w-0">
-                            {renderAvatar(acc.photoURL, acc.name, "w-8 h-8 text-xs")}
+                          <div className="flex items-center gap-2 min-w-0">
+                            {renderAvatar(acc.photoURL, acc.name, "w-7 h-7 text-[10px]")}
                             <div className="flex flex-col min-w-0">
                               <span className="text-xs font-bold text-on-surface truncate group-hover:text-emerald-700">{acc.name}</span>
-                              <span className="text-[11px] text-outline truncate">{acc.email}</span>
+                              <span className="text-[10px] text-outline truncate">{acc.email}</span>
                             </div>
                           </div>
-                          <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex-shrink-0">
+                          <span className="text-[8px] font-extrabold uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 flex-shrink-0">
                             {acc.role === 'conductor' ? 'CONDUCTOR' : 'CLIENTE'}
                           </span>
                         </div>
@@ -491,16 +491,16 @@ export default function Header({
                           setIsMenuOpen(false);
                           if (onAddAccount) onAddAccount();
                         }}
-                        className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-emerald-50 transition-colors cursor-pointer border border-dashed border-outline-variant"
+                        className="flex items-center justify-between p-1.5 rounded-xl hover:bg-emerald-50 transition-colors cursor-pointer border border-dashed border-outline-variant"
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          {renderAvatar(undefined, "Luis Fernando (Cliente)", "w-8 h-8 text-xs")}
+                        <div className="flex items-center gap-2 min-w-0">
+                          {renderAvatar(undefined, "Luis Fernando (Cliente)", "w-7 h-7 text-[10px]")}
                           <div className="flex flex-col min-w-0">
                             <span className="text-xs font-bold text-on-surface truncate">Luis Fernando (Cliente)</span>
-                            <span className="text-[11px] text-outline truncate">lfalzatel29@gmail.com</span>
+                            <span className="text-[10px] text-outline truncate">lfalzatel29@gmail.com</span>
                           </div>
                         </div>
-                        <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                        <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800">
                           CLIENTE
                         </span>
                       </div>
@@ -512,10 +512,10 @@ export default function Header({
                         setIsMenuOpen(false);
                         if (onAddAccount) onAddAccount();
                       }}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-surface-container-low text-on-surface transition-colors mt-1"
+                      className="w-full flex items-center gap-2 p-1.5 rounded-xl hover:bg-surface-container-low text-on-surface transition-colors mt-0.5"
                     >
-                      <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                        <Plus size={18} />
+                      <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                        <Plus size={15} />
                       </div>
                       <span className="text-xs font-bold text-emerald-700">Añadir otra cuenta (Google)</span>
                     </button>
