@@ -91,18 +91,18 @@ export default function App() {
   // Chat messages
   const [chatMessages] = useState<ChatMessage[]>(INITIAL_CHAT_MESSAGES);
 
-  // Splash screen on initial app load / refresh
+  // Splash screen on initial app load / refresh (2.6s duration)
   useEffect(() => {
     setSplashMessage('Iniciando CargoFlow...');
     setSplashSubtext('Preparando tu panel logístico');
     const timer = setTimeout(() => {
       setIsSplashActive(false);
-    }, 1800);
+    }, 2600);
     return () => clearTimeout(timer);
   }, []);
 
   // Helper to trigger splash during async actions
-  const triggerSplash = (msg: string, sub: string, durationMs: number, callback: () => void) => {
+  const triggerSplash = (msg: string, sub: string, durationMs: number = 2600, callback: () => void) => {
     setSplashMessage(msg);
     setSplashSubtext(sub);
     setIsSplashActive(true);
@@ -129,7 +129,7 @@ export default function App() {
     };
     setUser(updatedUser);
 
-    triggerSplash('Iniciando sesión...', `Bienvenido, ${updatedUser.name.split(' ')[0]}`, 1500, () => {
+    triggerSplash('Iniciando sesión...', `Bienvenido, ${updatedUser.name.split(' ')[0]}`, 2600, () => {
       setView('home');
     });
   };
@@ -154,7 +154,7 @@ export default function App() {
         propiedad: true,
       }
     }));
-    triggerSplash('Verificando perfil...', 'Configurando vehículo', 1200, () => {
+    triggerSplash('Verificando perfil...', 'Configurando vehículo', 2600, () => {
       setView('home');
     });
   };
@@ -197,7 +197,7 @@ export default function App() {
 
   // Switch account helper (Instagram style)
   const handleSwitchAccount = (targetAccount: UserProfile) => {
-    triggerSplash('Cambiando de cuenta...', `Accediendo como ${targetAccount.name.split(' ')[0]}`, 1400, () => {
+    triggerSplash('Cambiando de cuenta...', `Accediendo como ${targetAccount.name.split(' ')[0]}`, 2600, () => {
       setLinkedAccounts(prev => {
         const filtered = prev.filter(acc => !(acc.email === targetAccount.email && acc.role === targetAccount.role));
         const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
@@ -218,7 +218,7 @@ export default function App() {
       const targetRole = user.role === 'conductor' ? 'cliente' : 'conductor';
       const newProfile = await loginWithGoogle(targetRole);
       
-      triggerSplash('Conectando nueva cuenta...', `Añadiendo a ${newProfile.name.split(' ')[0]}`, 1400, () => {
+      triggerSplash('Conectando nueva cuenta...', `Añadiendo a ${newProfile.name.split(' ')[0]}`, 2600, () => {
         setLinkedAccounts(prev => {
           const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
           if (!exists) {
@@ -236,7 +236,7 @@ export default function App() {
 
   // Reset/Logout helper
   const handleLogout = async () => {
-    triggerSplash('Cerrando sesión...', '¡Hasta pronto!', 1400, async () => {
+    triggerSplash('Cerrando sesión...', '¡Hasta pronto!', 2600, async () => {
       try {
         const { logoutUser } = await import('./services/authService');
         await logoutUser();
