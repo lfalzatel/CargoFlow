@@ -1,8 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UserProfile, Trip, ChatMessage, UserRole } from './types';
-import RoleSelection from './components/RoleSelection';
 import Login from './components/Login';
-import Register from './components/Register';
 import CompleteProfile from './components/CompleteProfile';
 import Home from './components/Home';
 import Activity from './components/Activity';
@@ -10,6 +8,7 @@ import Chat from './components/Chat';
 import Profile from './components/Profile';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
+import SplashScreen from './components/SplashScreen';
 import { motion, AnimatePresence } from 'motion/react';
 
 const INITIAL_TRIPS: Trip[] = [
@@ -63,9 +62,14 @@ const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
 ];
 
 export default function App() {
-  const [view, setView] = useState<'role_selection' | 'login' | 'register' | 'complete_profile' | 'home' | 'activity' | 'chat' | 'profile'>('role_selection');
+  const [view, setView] = useState<'login' | 'complete_profile' | 'home' | 'activity' | 'chat' | 'profile'>('login');
   
-  // Selected role from welcome screen
+  // Splash Screen State
+  const [isSplashActive, setIsSplashActive] = useState<boolean>(true);
+  const [splashMessage, setSplashMessage] = useState<string>('Cargando CargoFlow...');
+  const [splashSubtext, setSplashSubtext] = useState<string>('Tu solución inteligente de transporte');
+
+  // Selected role
   const [selectedRole, setSelectedRole] = useState<UserRole>('conductor');
   
   // Current user state
@@ -85,76 +89,49 @@ export default function App() {
   const [trips, setTrips] = useState<Trip[]>(INITIAL_TRIPS);
   
   // Chat messages
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(INITIAL_CHAT_MESSAGES);
+  const [chatMessages] = useState<ChatMessage[]>(INITIAL_CHAT_MESSAGES);
+
+  // Splash screen on initial app load / refresh
+  useEffect(() => {
+    setSplashMessage('Iniciando CargoFlow...');
+    setSplashSubtext('Preparando tu panel logístico');
+    const timer = setTimeout(() => {
+      setIsSplashActive(false);
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Helper to trigger splash during async actions
+  const triggerSplash = (msg: string, sub: string, durationMs: number, callback: () => void) => {
+    setSplashMessage(msg);
+    setSplashSubtext(sub);
+    setIsSplashActive(true);
+    setTimeout(() => {
+      callback();
+      setIsSplashActive(false);
+    }, durationMs);
+  };
 
   // Bottom Navigation View Change
   const handleViewChange = (newView: 'home' | 'activity' | 'chat' | 'profile') => {
     setView(newView);
   };
 
-  // Welcome page role selection completion
-  const handleRoleSelect = (role: UserRole) => {
+  // Login completion (goes straight to main dashboard with Splash)
+  const handleLoginSuccess = (profileData: any) => {
+    const role = profileData.role || selectedRole;
     setSelectedRole(role);
-    // Adjust default user data to selected role
-    if (role === 'cliente') {
-      setUser({
-        name: 'Carlos Rodríguez', // default name as mockup
-        email: 'carlos.cliente@cargoflow.co',
-        phone: '+57 320 123 4567',
-        role: 'cliente',
-        isVerified: true,
-        rating: 5.0,
-        balance: 1250000,
-      });
-      setView('login');
-    } else {
-      setUser({
-        name: 'Carlos Rodríguez',
-        email: 'carlos.rod@cargoflow.co',
-        phone: '+57 311 456 7890',
-        role: 'conductor',
-        isVerified: true,
-        rating: 4.9,
-        balance: 1250000,
-        plateNumber: 'WYZ-789',
-        vehicleType: 'furgon',
-      });
-      setView('login');
-    }
-  };
-
-  // Login completion (goes straight to main dashboard)
-  const handleLoginSuccess = (email: string, role: UserRole = selectedRole) => {
-    setSelectedRole(role);
-    setUser(prev => ({
-      ...prev,
-      email: email,
-      role: role,
-      plateNumber: role === 'conductor' ? (prev.plateNumber || 'WYZ-789') : undefined,
+    const updatedUser: UserProfile = {
+      ...profileData,
+      role,
+      plateNumber: profileData.plateNumber || (role === 'conductor' ? 'WYZ-789' : undefined),
       isVerified: true,
-    }));
-    setView('home');
-  };
+    };
+    setUser(updatedUser);
 
-  // Registration completion
-  const handleRegisterSuccess = (name: string, email: string, phone: string, role: UserRole = selectedRole) => {
-    setSelectedRole(role);
-    setUser({
-      name,
-      email,
-      phone,
-      role: role,
-      isVerified: true,
-      rating: 5.0,
-      balance: 1250000,
-      plateNumber: role === 'conductor' ? 'WYZ-789' : undefined,
-    });
-
-    if (role === 'conductor') {
-      setView('complete_profile');
-    } else {
+    triggerSplash('Iniciando sesión...', `Bienvenido, ${updatedUser.name.split(' ')[0]}`, 1500, () => {
       setView('home');
-    }
+    });
   };
 
   // Complete profile completion (Driver vehicle/doc step)
@@ -177,7 +154,9 @@ export default function App() {
         propiedad: true,
       }
     }));
-    setView('home');
+    triggerSplash('Verificando perfil...', 'Configurando vehículo', 1200, () => {
+      setView('home');
+    });
   };
 
   // Create Shipment helper
@@ -218,15 +197,18 @@ export default function App() {
 
   // Switch account helper (Instagram style)
   const handleSwitchAccount = (targetAccount: UserProfile) => {
-    setLinkedAccounts(prev => {
-      const filtered = prev.filter(acc => !(acc.email === targetAccount.email && acc.role === targetAccount.role));
-      const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
-      if (!exists) {
-        return [...filtered, user];
-      }
-      return filtered;
+    triggerSplash('Cambiando de cuenta...', `Accediendo como ${targetAccount.name.split(' ')[0]}`, 1400, () => {
+      setLinkedAccounts(prev => {
+        const filtered = prev.filter(acc => !(acc.email === targetAccount.email && acc.role === targetAccount.role));
+        const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
+        if (!exists) {
+          return [...filtered, user];
+        }
+        return filtered;
+      });
+      setUser(targetAccount);
+      setView('home');
     });
-    setUser(targetAccount);
   };
 
   // Add new account helper (Triggers Google Auth)
@@ -236,14 +218,17 @@ export default function App() {
       const targetRole = user.role === 'conductor' ? 'cliente' : 'conductor';
       const newProfile = await loginWithGoogle(targetRole);
       
-      setLinkedAccounts(prev => {
-        const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
-        if (!exists) {
-          return [...prev, user];
-        }
-        return prev;
+      triggerSplash('Conectando nueva cuenta...', `Añadiendo a ${newProfile.name.split(' ')[0]}`, 1400, () => {
+        setLinkedAccounts(prev => {
+          const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
+          if (!exists) {
+            return [...prev, user];
+          }
+          return prev;
+        });
+        setUser(newProfile);
+        setView('home');
       });
-      setUser(newProfile);
     } catch (e) {
       console.warn('Add account notice:', e);
     }
@@ -251,17 +236,29 @@ export default function App() {
 
   // Reset/Logout helper
   const handleLogout = async () => {
-    try {
-      const { logoutUser } = await import('./services/authService');
-      await logoutUser();
-    } catch (e) {
-      console.warn('Logout error:', e);
-    }
-    setView('role_selection');
+    triggerSplash('Cerrando sesión...', '¡Hasta pronto!', 1400, async () => {
+      try {
+        const { logoutUser } = await import('./services/authService');
+        await logoutUser();
+      } catch (e) {
+        console.warn('Logout error:', e);
+      }
+      setView('login');
+    });
   };
 
   return (
     <div className="min-h-screen bg-background text-on-surface">
+      {/* Global Splash Screen Overlay */}
+      <AnimatePresence>
+        {isSplashActive && (
+          <SplashScreen 
+            message={splashMessage} 
+            subtext={splashSubtext} 
+          />
+        )}
+      </AnimatePresence>
+
       {/* Global Header on main authenticated dashboards */}
       {['home', 'activity', 'chat', 'profile'].includes(view) && (
         <Header
@@ -284,37 +281,10 @@ export default function App() {
           transition={{ duration: 0.15 }}
           className="min-h-screen flex flex-col"
         >
-          {view === 'role_selection' && (
-            <RoleSelection 
-              onRoleSelect={handleRoleSelect} 
-              onNavigateToLogin={() => setView('login')} 
-            />
-          )}
-
           {view === 'login' && (
             <Login 
               currentRole={selectedRole}
               onLoginSuccess={handleLoginSuccess} 
-              onGoogleLoginSuccess={(profile) => {
-                const r = profile.role || selectedRole;
-                setSelectedRole(r);
-                setUser({
-                  ...profile,
-                  role: r,
-                  plateNumber: profile.plateNumber || (r === 'conductor' ? 'WYZ-789' : undefined),
-                  isVerified: true,
-                });
-                setView('home');
-              }}
-              onNavigateToRegister={() => setView('register')} 
-            />
-          )}
-
-          {view === 'register' && (
-            <Register 
-              currentRole={selectedRole}
-              onRegisterSuccess={handleRegisterSuccess} 
-              onNavigateToLogin={() => setView('login')} 
             />
           )}
 
