@@ -155,25 +155,60 @@ export default function Header({
     }
   };
 
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('cf_notifications_history');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [
+      {
+        id: 'notif-welcome',
+        title: '¡Bienvenido a CargoFlow!',
+        desc: 'Aquí recibirás las alertas de solicitudes, ofertas y viajes en tiempo real.',
+        time: 'Hoy',
+        unread: false,
+      }
+    ];
+  });
 
-  const [localUnreadCount, setLocalUnreadCount] = useState(unreadCount);
+  const [localUnreadCount, setLocalUnreadCount] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cf_notifications_history');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter((n: any) => n.unread).length;
+      }
+    } catch (e) {}
+    return 1;
+  });
 
   useEffect(() => {
     const handleNotification = (e: Event) => {
       const customEvent = e as CustomEvent;
       const payload = customEvent.detail;
       
-      setNotifications(prev => [
-        {
-          id: `notif-${Date.now()}`,
-          title: payload.title,
-          desc: payload.body,
-          time: 'Ahora',
-          unread: true,
-        },
-        ...prev,
-      ]);
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      setNotifications(prev => {
+        const next = [
+          {
+            id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
+            title: payload.title,
+            desc: payload.body,
+            time: `Hoy, ${nowStr}`,
+            unread: true,
+          },
+          ...prev.filter(n => n.id !== 'notif-welcome'),
+        ].slice(0, 20); // Keep latest 20 notifications
+        
+        try {
+          localStorage.setItem('cf_notifications_history', JSON.stringify(next));
+        } catch (e) {}
+        return next;
+      });
       setLocalUnreadCount(prev => prev + 1);
     };
 
@@ -299,15 +334,23 @@ export default function Header({
                 setIsNotificationsOpen(opening);
                 setIsMenuOpen(false);
                 
-                // Set local unread count to 0 when opened
-                if (opening) setLocalUnreadCount(0);
+                if (opening) {
+                  setLocalUnreadCount(0);
+                  setNotifications(prev => {
+                    const marked = prev.map(n => ({ ...n, unread: false }));
+                    try {
+                      localStorage.setItem('cf_notifications_history', JSON.stringify(marked));
+                    } catch (e) {}
+                    return marked;
+                  });
+                }
               }}
               className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-all relative active:scale-95"
               title="Notificaciones"
             >
               <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
               {localUnreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white animate-pulse" />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white animate-pulse" />
               )}
             </button>
           </div>
