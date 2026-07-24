@@ -107,7 +107,7 @@ export default function Home({
         origin,
         destination,
         vehicleType: vehicle,
-        tag: tag || undefined,
+        ...(tag ? { tag } : {}),
       };
       onEditShipment(updatedTrip);
       if (onCloseEditing) onCloseEditing();
@@ -122,7 +122,7 @@ export default function Home({
         destination,
         destinationDetail: 'Entrega en Centro Ciudad',
         vehicleType: vehicle,
-        tag: tag || undefined,
+        ...(tag ? { tag } : {}),
       };
       onCreateShipment(newTrip);
     }

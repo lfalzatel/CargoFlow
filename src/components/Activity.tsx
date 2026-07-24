@@ -195,7 +195,6 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                         </>
                       )}
                     </div>
-                    </div>
                   </div>
 
                   {/* Counter Offer UI */}
