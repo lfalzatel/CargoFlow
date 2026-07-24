@@ -226,6 +226,65 @@ export default function Header({
         )}
       </AnimatePresence>
 
+      {/* Notifications Dropdown Panel (Moved out of header to prevent clipping) */}
+      <AnimatePresence>
+        {isNotificationsOpen && (
+          <div 
+            className="fixed inset-0 z-[100] backdrop-blur-sm bg-black/40 flex items-center justify-center p-4"
+            onClick={() => setIsNotificationsOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-surface-container flex flex-col max-h-[85vh]"
+            >
+              <div className="p-4 border-b border-surface-container flex items-center justify-between bg-surface-container-lowest flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  <Bell size={18} className="text-primary-container" />
+                  <h3 className="font-bold text-sm text-on-surface">Notificaciones</h3>
+                </div>
+                <span className="text-[11px] font-bold bg-blue-50 text-primary-container px-2 py-0.5 rounded-full">
+                  {localUnreadCount} Nuevas
+                </span>
+              </div>
+
+              <div className="flex-1 overflow-y-auto divide-y divide-surface-container-low min-h-0">
+                {notifications.map((n) => (
+                  <div 
+                    key={n.id} 
+                    className={`p-3.5 hover:bg-surface-container-low transition-colors cursor-pointer flex gap-3 ${
+                      n.unread ? 'bg-blue-50/30' : ''
+                    }`}
+                  >
+                    <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${n.unread ? 'bg-primary-container' : 'bg-outline-variant'}`} />
+                    <div className="flex-1">
+                      <h4 className="text-xs font-bold text-on-surface leading-snug">{n.title}</h4>
+                      <p className="text-[12px] text-on-surface-variant mt-0.5 leading-relaxed">{n.desc}</p>
+                      <span className="text-[10px] text-outline font-medium mt-1 block">{n.time}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-3 bg-surface-container-low text-center border-t border-surface-container flex-shrink-0">
+                <button 
+                  onClick={() => {
+                    setIsNotificationsOpen(false);
+                    onNavigateToView('activity');
+                  }} 
+                  className="text-xs font-bold text-primary hover:underline"
+                >
+                  Ver todas las actividades
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <header className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-surface-container h-16 px-2.5 sm:px-4 md:px-8 flex items-center justify-between shadow-sm transition-all">
         {/* Left: Animated Circular Logo Icon (Triggers Fullscreen Splash Modal on Click) */}
         <div 
@@ -293,65 +352,6 @@ export default function Header({
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white animate-pulse" />
               )}
             </button>
-
-            {/* Notifications Dropdown Panel */}
-            <AnimatePresence>
-              {isNotificationsOpen && (
-                <div 
-                  className="fixed inset-0 z-[100] backdrop-blur-sm bg-black/40 flex items-center justify-center p-4"
-                  onClick={() => setIsNotificationsOpen(false)}
-                >
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-surface-container"
-                  >
-                  <div className="p-4 border-b border-surface-container flex items-center justify-between bg-surface-container-lowest">
-                    <div className="flex items-center gap-2">
-                      <Bell size={18} className="text-primary-container" />
-                      <h3 className="font-bold text-sm text-on-surface">Notificaciones</h3>
-                    </div>
-                    <span className="text-[11px] font-bold bg-blue-50 text-primary-container px-2 py-0.5 rounded-full">
-                      {localUnreadCount} Nuevas
-                    </span>
-                  </div>
-
-                  <div className="max-h-72 overflow-y-auto divide-y divide-surface-container-low">
-                    {notifications.map((n) => (
-                      <div 
-                        key={n.id} 
-                        className={`p-3.5 hover:bg-surface-container-low transition-colors cursor-pointer flex gap-3 ${
-                          n.unread ? 'bg-blue-50/30' : ''
-                        }`}
-                      >
-                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${n.unread ? 'bg-primary-container' : 'bg-outline-variant'}`} />
-                        <div className="flex-1">
-                          <h4 className="text-xs font-bold text-on-surface leading-snug">{n.title}</h4>
-                          <p className="text-[12px] text-on-surface-variant mt-0.5 leading-relaxed">{n.desc}</p>
-                          <span className="text-[10px] text-outline font-medium mt-1 block">{n.time}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="p-3 bg-surface-container-low text-center border-t border-surface-container">
-                    <button 
-                      onClick={() => {
-                        setIsNotificationsOpen(false);
-                        onNavigateToView('activity');
-                      }} 
-                      className="text-xs font-bold text-primary hover:underline"
-                    >
-                      Ver todas las actividades
-                    </button>
-                  </div>
-                </motion.div>
-                </div>
-              )}
-            </AnimatePresence>
           </div>
 
           {/* Profile Capsule Button (Google Avatar + Name + Role Badge + Chevron) */}

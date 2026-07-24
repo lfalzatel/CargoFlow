@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Truck, MapPin, Eye, MessageSquare } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Trip } from '../types';
+import { UserProfile, Trip } from '../types';
 
 interface ActivityProps {
+  user: UserProfile;
   trips: Trip[];
   onNavigateToChat: () => void;
+  onCancelTrip: (tripId: string) => void;
 }
 
-export default function Activity({ trips, onNavigateToChat }: ActivityProps) {
+export default function Activity({ user, trips, onNavigateToChat, onCancelTrip }: ActivityProps) {
   const [filter, setFilter] = useState<'activos' | 'historial'>('activos');
 
   // Filter trips based on selection
@@ -151,13 +153,34 @@ export default function Activity({ trips, onNavigateToChat }: ActivityProps) {
                         </span>
                       )}
                       {isActive && (
-                        <button
-                          onClick={onNavigateToChat}
-                          className="flex items-center gap-1.5 px-3 py-1 bg-primary-container hover:bg-primary text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
-                        >
-                          <MessageSquare size={12} />
-                          <span>Chat</span>
-                        </button>
+                        <>
+                          {(trip.status === 'PENDIENTE' && user.role === 'cliente') ? (
+                            <button
+                              onClick={() => {
+                                if (window.confirm('¿Estás seguro de que deseas cancelar esta solicitud?')) {
+                                  onCancelTrip(trip.id);
+                                }
+                              }}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-error bg-red-50 hover:bg-red-100 border border-red-200 transition-colors"
+                            >
+                              Cancelar Flete
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={onNavigateToChat}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-primary hover:bg-blue-100 transition-colors"
+                              >
+                                <MessageSquare size={16} />
+                              </button>
+                              <button
+                                className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-primary-container hover:bg-primary transition-colors"
+                              >
+                                Rastrear
+                              </button>
+                            </>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

@@ -338,6 +338,21 @@ export default function App() {
     }
   };
 
+  const handleCancelTrip = async (tripId: string) => {
+    // Optimistic local update
+    setTrips(prev => prev.filter(t => t.id !== tripId));
+    
+    // Remove from Firestore
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, deleteDoc } = await import('firebase/firestore');
+      await deleteDoc(doc(db, 'trips', tripId));
+    } catch (e) {
+      console.warn('Could not delete trip from Firestore:', e);
+    }
+  };
+
+
   // Listen to new trips in real-time if user is conductor
   useEffect(() => {
     if (user.role !== 'conductor' && user.role !== 'admin') return;
@@ -585,8 +600,10 @@ export default function App() {
 
           {view === 'activity' && (
             <Activity 
+              user={user}
               trips={trips} 
               onNavigateToChat={() => setView('chat')} 
+              onCancelTrip={handleCancelTrip}
             />
           )}
 
