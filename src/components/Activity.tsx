@@ -208,7 +208,7 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                           {trip.tag}
                         </span>
                       )}
-                      {isActive && (
+                      {isActive ? (
                         <>
                           {(trip.status === 'PENDIENTE' && trip.clienteId === user.email) ? (
                             <div className="flex gap-2">
