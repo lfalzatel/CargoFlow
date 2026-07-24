@@ -585,46 +585,90 @@ export default function Home({
           )
         ) : (
           /* CLIENT BOTTOM CARD: RASTREO DE ENVÍO EN CURSO */
-          <div className="bg-white rounded-2xl shadow-[0px_12px_40px_rgba(0,0,0,0.12)] p-5 border border-surface-container">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-black text-primary-container uppercase tracking-widest flex items-center gap-1.5">
-                <History className="text-primary-container" size={16} />
-                MI ENVÍO EN CURSO (#CF-8842)
-              </span>
-              <span className="text-[10px] font-black uppercase text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-                ● EN CAMINO
-              </span>
-            </div>
+          (() => {
+            const clientActiveTrip = (trips || []).find(t => t.clienteId === user.email && (t.status === 'EN CAMINO' || t.status === 'PENDIENTE')) 
+              || (trips || []).find(t => t.clienteId === user.email) 
+              || (trips || [])[0];
 
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex flex-col items-center">
-                <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-                <div className="w-0.5 h-7 bg-slate-300 my-1" />
-                <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-              </div>
-              <div className="flex flex-col justify-between h-14">
-                <span className="text-sm text-on-surface font-extrabold leading-tight">Origen: Bogotá, D.C.</span>
-                <span className="text-sm text-on-surface font-extrabold leading-tight">Destino: Medellín, ANT</span>
-              </div>
-            </div>
+            if (!clientActiveTrip) {
+              return (
+                <div className="bg-white rounded-2xl shadow-[0px_12px_40px_rgba(0,0,0,0.12)] p-5 border border-surface-container">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-primary-container">
+                      <Truck size={20} />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-sm text-on-surface">¿Listo para enviar tu carga?</h4>
+                      <p className="text-xs text-on-surface-variant">Solicita tu servicio de transporte en segundos.</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowShipmentModal(true)}
+                    className="w-full h-11 rounded-xl bg-primary-container text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md hover:bg-primary transition-colors cursor-pointer"
+                  >
+                    + Solicitar Nuevo Flete
+                  </button>
+                </div>
+              );
+            }
 
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={handleQuickReorder}
-                className="h-[46px] rounded-xl border-2 border-primary-container text-primary-container hover:bg-blue-50 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <RefreshCw size={15} />
-                Reordenar
-              </button>
-              <button
-                onClick={() => onNavigateToView('chat')}
-                className="h-[46px] rounded-xl bg-primary-container text-white hover:bg-primary font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-colors cursor-pointer"
-              >
-                <Truck size={15} fill="currentColor" />
-                Contactar Conductor
-              </button>
-            </div>
-          </div>
+            return (
+              <div className="bg-white rounded-2xl shadow-[0px_12px_40px_rgba(0,0,0,0.12)] p-5 border border-surface-container">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-black text-primary-container uppercase tracking-widest flex items-center gap-1.5">
+                    <History className="text-primary-container" size={16} />
+                    MI ENVÍO EN CURSO (#{clientActiveTrip.id})
+                  </span>
+                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                    clientActiveTrip.status === 'EN CAMINO' ? 'text-blue-700 bg-blue-100' : 'text-amber-700 bg-amber-100'
+                  }`}>
+                    ● {clientActiveTrip.status}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                    <div className="w-0.5 h-7 bg-slate-300 my-1" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                  </div>
+                  <div className="flex flex-col justify-between h-14 min-w-0 flex-1">
+                    <span className="text-sm text-on-surface font-extrabold leading-tight truncate">Origen: {clientActiveTrip.origin}</span>
+                    <span className="text-sm text-on-surface font-extrabold leading-tight truncate">Destino: {clientActiveTrip.destination}</span>
+                  </div>
+                </div>
+
+                {clientActiveTrip.conductorName && (
+                  <div className="mb-3 p-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center uppercase">
+                      {(clientActiveTrip.conductorName).split(' ').map(n => n[0]).join('').substring(0, 2)}
+                    </div>
+                    <div className="flex flex-col text-xs min-w-0 flex-1">
+                      <span className="font-bold text-slate-700 truncate">{clientActiveTrip.conductorName}</span>
+                      <span className="text-[10px] text-slate-500 font-medium">{clientActiveTrip.conductorVehicleType || clientActiveTrip.vehicleType} • {clientActiveTrip.conductorPlate || 'Placa asignada'}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => onNavigateToView('activity')}
+                    className="h-[46px] rounded-xl border-2 border-primary-container text-primary-container hover:bg-blue-50 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <RefreshCw size={15} />
+                    Ver Detalle
+                  </button>
+                  <button
+                    onClick={() => onNavigateToView('chat')}
+                    className="h-[46px] rounded-xl bg-primary-container text-white hover:bg-primary font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-colors cursor-pointer"
+                  >
+                    <Truck size={15} fill="currentColor" />
+                    Contactar Conductor
+                  </button>
+                </div>
+              </div>
+            );
+          })()
         )}
       </div>
 

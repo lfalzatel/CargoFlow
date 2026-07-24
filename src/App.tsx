@@ -813,6 +813,7 @@ export default function App() {
           {view === 'home' && (
             <Home 
               user={user} 
+              trips={trips}
               pendingTrip={trips.find(t => t.status === 'PENDIENTE')}
               editingTrip={editingTrip}
               onCloseEditing={() => setEditingTrip(null)}
