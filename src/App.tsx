@@ -168,12 +168,30 @@ export default function App() {
     return () => { if (unsubscribe) unsubscribe(); };
   }, [user.email, view, playNotificationSound]);
 
-  // Clear unread chat badge when entering chat view
+  // Clear unread chat badge and mark notifications read when entering chat view
   useEffect(() => {
-    if (view === 'chat') {
+    if (view === 'chat' && user.email) {
       setUnreadChatCount(0);
+      (async () => {
+        try {
+          const { db } = await import('./config/firebase');
+          const { collection, query, where, getDocs, updateDoc, doc } = await import('firebase/firestore');
+          const q = query(
+            collection(db, 'notifications'),
+            where('userId', 'in', [user.email, 'all_conductors']),
+            where('read', '==', false)
+          );
+          const snap = await getDocs(q);
+          snap.forEach((d) => {
+            const data = d.data();
+            if (data.type === 'chat' || data.tag?.includes('chat') || data.title?.includes('Mensaje')) {
+              updateDoc(doc(db, 'notifications', d.id), { read: true }).catch(() => null);
+            }
+          });
+        } catch (_) {}
+      })();
     }
-  }, [view]);
+  }, [view, user.email]);
 
   // Splash screen on initial app load / refresh (2.6s duration)
   useEffect(() => {
