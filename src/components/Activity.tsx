@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Truck, MapPin, Eye, MessageSquare } from 'lucide-react';
+import { Truck, MapPin, Eye, MessageSquare, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { UserProfile, Trip } from '../types';
 

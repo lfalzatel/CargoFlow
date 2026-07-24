@@ -491,7 +491,9 @@ export default function App() {
 
     const listenToTrips = async () => {
       try {
-        const { db } = await import('./config/firebase');
+        const { auth, db } = await import('./config/firebase');
+        if (!auth.currentUser && !user.email) return;
+
         const { collection, query, where, onSnapshot } = await import('firebase/firestore');
         const { notify } = await import('./services/notificationService');
 
@@ -504,80 +506,86 @@ export default function App() {
           q = query(collection(db, 'trips'), where('clienteId', '==', user.email));
         }
 
-        unsubscribe = onSnapshot(q, (snapshot) => {
-          const isInitial = isInitialSnapshotRef.current;
+        unsubscribe = onSnapshot(
+          q, 
+          (snapshot) => {
+            const isInitial = isInitialSnapshotRef.current;
 
-          snapshot.docChanges().forEach((change) => {
-            const tripData = change.doc.data() as Trip;
-            const prevStatus = knownTripsRef.current.get(tripData.id);
-
-            if (change.type === 'added' || change.type === 'modified') {
-              // Add or update it locally
-              setTrips(prev => {
-                const exists = prev.some(t => t.id === tripData.id);
-                if (exists) {
-                  return prev.map(t => t.id === tripData.id ? tripData : t);
-                }
-                return [tripData, ...prev];
-              });
-
-              if (!isInitial) {
-                // NOTIFICATIONS FOR REAL-TIME UPDATES
-
-                // 1. Client creates trip -> Conductors get notified
-                if (change.type === 'added' && tripData.status === 'PENDIENTE') {
-                  if ((user.role === 'conductor' || user.role === 'admin') && tripData.clienteId !== user.email) {
-                    notify({
-                      title: '📦 ¡Nuevo Flete Disponible!',
-                      body: `${tripData.clienteName || 'Un cliente'} solicita flete (${tripData.vehicleType}): ${tripData.origin} → ${tripData.destination} por $${tripData.price.toLocaleString('es-CO')} COP`,
-                      tag: `trip-new-${tripData.id}`,
-                      url: '/activity',
-                      sound: localStorage.getItem('cf_notif_sound') !== 'false'
-                        ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
-                        : undefined,
-                    });
-                  }
-                }
-
-                // 2. Conductor accepts trip -> Client gets notified
-                if (tripData.status === 'EN CAMINO' && prevStatus === 'PENDIENTE') {
-                  if (user.email === tripData.clienteId) {
-                    notify({
-                      title: '🚚 ¡Tu Flete ha sido Aceptado!',
-                      body: `${tripData.conductorName || 'El conductor'} (${tripData.conductorVehicleType || tripData.vehicleType} - Placa: ${tripData.conductorPlate || 'asignada'}) aceptó tu servicio ${tripData.origin} → ${tripData.destination}.`,
-                      tag: `trip-accepted-${tripData.id}`,
-                      url: '/activity',
-                      sound: localStorage.getItem('cf_notif_sound') !== 'false'
-                        ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
-                        : undefined,
-                    });
-                  }
-                }
-
-                // 3. Conductor makes counteroffer -> Client gets notified
-                if (tripData.counterOffer && user.email === tripData.clienteId && prevStatus !== 'EN CAMINO') {
-                  notify({
-                    title: '🏷️ ¡Nueva Oferta de Conductor!',
-                    body: `${tripData.counterOffer.conductorName} propone realizar tu viaje por $${tripData.counterOffer.price.toLocaleString('es-CO')} COP.`,
-                    tag: `trip-offer-${tripData.id}`,
-                    url: '/activity',
-                    sound: localStorage.getItem('cf_notif_sound') !== 'false'
-                      ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
-                      : undefined,
-                  });
-                }
-              }
-
-              knownTripsRef.current.set(tripData.id, tripData.status);
-            } else if (change.type === 'removed') {
+            snapshot.docChanges().forEach((change) => {
               const tripData = change.doc.data() as Trip;
-              knownTripsRef.current.delete(tripData.id);
-              setTrips(prev => prev.filter(t => t.id !== tripData.id));
-            }
-          });
+              const prevStatus = knownTripsRef.current.get(tripData.id);
 
-          isInitialSnapshotRef.current = false;
-        });
+              if (change.type === 'added' || change.type === 'modified') {
+                // Add or update it locally
+                setTrips(prev => {
+                  const exists = prev.some(t => t.id === tripData.id);
+                  if (exists) {
+                    return prev.map(t => t.id === tripData.id ? tripData : t);
+                  }
+                  return [tripData, ...prev];
+                });
+
+                if (!isInitial) {
+                  // NOTIFICATIONS FOR REAL-TIME UPDATES
+
+                  // 1. Client creates trip -> Conductors get notified
+                  if (change.type === 'added' && tripData.status === 'PENDIENTE') {
+                    if ((user.role === 'conductor' || user.role === 'admin') && tripData.clienteId !== user.email) {
+                      notify({
+                        title: '📦 ¡Nuevo Flete Disponible!',
+                        body: `${tripData.clienteName || 'Un cliente'} solicita flete (${tripData.vehicleType}): ${tripData.origin} → ${tripData.destination} por $${tripData.price.toLocaleString('es-CO')} COP`,
+                        tag: `trip-new-${tripData.id}`,
+                        url: '/activity',
+                        sound: localStorage.getItem('cf_notif_sound') !== 'false'
+                          ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
+                          : undefined,
+                      });
+                    }
+                  }
+
+                  // 2. Conductor accepts trip -> Client gets notified
+                  if (tripData.status === 'EN CAMINO' && prevStatus === 'PENDIENTE') {
+                    if (user.email === tripData.clienteId) {
+                      notify({
+                        title: '🚚 ¡Tu Flete ha sido Aceptado!',
+                        body: `${tripData.conductorName || 'El conductor'} (${tripData.conductorVehicleType || tripData.vehicleType} - Placa: ${tripData.conductorPlate || 'asignada'}) aceptó tu servicio ${tripData.origin} → ${tripData.destination}.`,
+                        tag: `trip-accepted-${tripData.id}`,
+                        url: '/activity',
+                        sound: localStorage.getItem('cf_notif_sound') !== 'false'
+                          ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
+                          : undefined,
+                      });
+                    }
+                  }
+
+                  // 3. Conductor makes counteroffer -> Client gets notified
+                  if (tripData.counterOffer && user.email === tripData.clienteId && prevStatus !== 'EN CAMINO') {
+                    notify({
+                      title: '🏷️ ¡Nueva Oferta de Conductor!',
+                      body: `${tripData.counterOffer.conductorName} propone realizar tu viaje por $${tripData.counterOffer.price.toLocaleString('es-CO')} COP.`,
+                      tag: `trip-offer-${tripData.id}`,
+                      url: '/activity',
+                      sound: localStorage.getItem('cf_notif_sound') !== 'false'
+                        ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
+                        : undefined,
+                    });
+                  }
+                }
+
+                knownTripsRef.current.set(tripData.id, tripData.status);
+              } else if (change.type === 'removed') {
+                const tripData = change.doc.data() as Trip;
+                knownTripsRef.current.delete(tripData.id);
+                setTrips(prev => prev.filter(t => t.id !== tripData.id));
+              }
+            });
+
+            isInitialSnapshotRef.current = false;
+          },
+          (err) => {
+            console.warn('Firestore snapshot error handled:', err.message);
+          }
+        );
       } catch (e) {
         console.warn('Real-time trip listening failed:', e);
       }
