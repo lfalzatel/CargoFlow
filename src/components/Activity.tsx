@@ -8,9 +8,11 @@ interface ActivityProps {
   trips: Trip[];
   onNavigateToChat: () => void;
   onCancelTrip: (tripId: string) => void;
+  onEditTrip?: (trip: Trip) => void;
+  onResolveCounterOffer?: (tripId: string, accept: boolean) => void;
 }
 
-export default function Activity({ user, trips, onNavigateToChat, onCancelTrip }: ActivityProps) {
+export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, onEditTrip, onResolveCounterOffer }: ActivityProps) {
   const [filter, setFilter] = useState<'activos' | 'historial'>('activos');
 
   // Filter trips based on selection
@@ -155,16 +157,26 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip }
                       {isActive && (
                         <>
                           {(trip.status === 'PENDIENTE' && user.role === 'cliente') ? (
-                            <button
-                              onClick={() => {
-                                if (window.confirm('¿Estás seguro de que deseas cancelar esta solicitud?')) {
-                                  onCancelTrip(trip.id);
-                                }
-                              }}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-error bg-red-50 hover:bg-red-100 border border-red-200 transition-colors"
-                            >
-                              Cancelar Flete
-                            </button>
+                            <div className="flex gap-2">
+                              {onEditTrip && (
+                                <button
+                                  onClick={() => onEditTrip(trip)}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors"
+                                >
+                                  Editar
+                                </button>
+                              )}
+                              <button
+                                onClick={() => {
+                                  if (window.confirm('¿Estás seguro de que deseas cancelar esta solicitud?')) {
+                                    onCancelTrip(trip.id);
+                                  }
+                                }}
+                                className="px-3 py-1.5 rounded-lg text-xs font-bold text-error bg-red-50 hover:bg-red-100 border border-red-200 transition-colors"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
                           ) : (
                             <>
                               <button
@@ -183,7 +195,34 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip }
                         </>
                       )}
                     </div>
+                    </div>
                   </div>
+
+                  {/* Counter Offer UI */}
+                  {trip.status === 'PENDIENTE' && trip.counterOffer && user.role === 'cliente' && (
+                    <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                      <div className="text-xs text-amber-800 font-medium mb-2">
+                        El conductor <span className="font-bold">{trip.counterOffer.conductorName}</span> propone llevar tu carga por:
+                      </div>
+                      <div className="text-lg font-black text-amber-700 mb-3">
+                        ${trip.counterOffer.price.toLocaleString('es-CO')} COP
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => onResolveCounterOffer?.(trip.id, false)}
+                          className="flex-1 py-2 bg-white text-slate-600 border border-slate-300 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors"
+                        >
+                          Rechazar
+                        </button>
+                        <button
+                          onClick={() => onResolveCounterOffer?.(trip.id, true)}
+                          className="flex-1 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600 shadow-sm transition-colors"
+                        >
+                          Aceptar Oferta
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </motion.div>
               );
             })

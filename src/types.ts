@@ -32,6 +32,16 @@ export interface Trip {
   destinationDetail?: string;
   vehicleType: string;
   tag?: string; // e.g. "REFRIGERADO", "FRÁGIL"
+  createdAt?: string;
+  clienteId?: string;
+  clienteName?: string;
+  conductorId?: string;
+  conductorName?: string;
+  counterOffer?: {
+    price: number;
+    conductorId: string;
+    conductorName: string;
+  };
 }
 
 export interface ChatMessage {

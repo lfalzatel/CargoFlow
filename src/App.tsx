@@ -81,6 +81,7 @@ export default function App() {
 
   // Database of shipments (trips)
   const [trips, setTrips] = useState<Trip[]>(INITIAL_TRIPS);
+  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   
   // Chat messages
   const [chatMessages] = useState<ChatMessage[]>(INITIAL_CHAT_MESSAGES);
@@ -315,6 +316,22 @@ export default function App() {
     }
   };
 
+  const handleEditTrip = async (updatedTrip: Trip) => {
+    // Optimistic local update
+    setTrips(prev => prev.map(t => t.id === updatedTrip.id ? updatedTrip : t));
+    setEditingTrip(null);
+    
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc } = await import('firebase/firestore');
+      // eslint-origin-ignore
+      const { id, ...rest } = updatedTrip;
+      await updateDoc(doc(db, 'trips', updatedTrip.id), rest);
+    } catch (e) {
+      console.warn('Could not update trip in Firestore:', e);
+    }
+  };
+
   const handleCancelTrip = async (tripId: string) => {
     // Optimistic local update
     setTrips(prev => prev.filter(t => t.id !== tripId));
@@ -351,6 +368,76 @@ export default function App() {
     }
   };
 
+  const handleCounterOffer = async (tripId: string, price: number) => {
+    // Optimistic update
+    setTrips(prev => prev.map(t => 
+      t.id === tripId 
+        ? { ...t, counterOffer: { price, conductorId: user.email, conductorName: user.name } } 
+        : t
+    ));
+    
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'trips', tripId), {
+        counterOffer: { price, conductorId: user.email, conductorName: user.name }
+      });
+    } catch (e) {
+      console.warn('Could not add counter offer:', e);
+    }
+  };
+
+  const handleResolveCounterOffer = async (tripId: string, accept: boolean) => {
+    const trip = trips.find(t => t.id === tripId);
+    if (!trip || !trip.counterOffer) return;
+
+    if (accept) {
+      // Optimistic update
+      setTrips(prev => prev.map(t => 
+        t.id === tripId 
+          ? { 
+              ...t, 
+              status: 'EN CAMINO', 
+              price: trip.counterOffer!.price, 
+              conductorId: trip.counterOffer!.conductorId, 
+              conductorName: trip.counterOffer!.conductorName,
+              counterOffer: undefined 
+            } 
+          : t
+      ));
+      
+      try {
+        const { db } = await import('./config/firebase');
+        const { doc, updateDoc, deleteField } = await import('firebase/firestore');
+        await updateDoc(doc(db, 'trips', tripId), {
+          status: 'EN CAMINO',
+          price: trip.counterOffer.price,
+          conductorId: trip.counterOffer.conductorId,
+          conductorName: trip.counterOffer.conductorName,
+          counterOffer: deleteField()
+        });
+      } catch (e) {
+        console.warn('Could not accept counter offer:', e);
+      }
+    } else {
+      // Reject offer
+      setTrips(prev => prev.map(t => 
+        t.id === tripId 
+          ? { ...t, counterOffer: undefined } 
+          : t
+      ));
+      
+      try {
+        const { db } = await import('./config/firebase');
+        const { doc, updateDoc, deleteField } = await import('firebase/firestore');
+        await updateDoc(doc(db, 'trips', tripId), {
+          counterOffer: deleteField()
+        });
+      } catch (e) {
+        console.warn('Could not reject counter offer:', e);
+      }
+    }
+  };
 
 
   // Listen to new trips in real-time
@@ -603,8 +690,12 @@ export default function App() {
             <Home 
               user={user} 
               pendingTrip={trips.find(t => t.status === 'PENDIENTE')}
+              editingTrip={editingTrip}
+              onCloseEditing={() => setEditingTrip(null)}
               onCreateShipment={handleCreateShipment} 
+              onEditShipment={handleEditTrip}
               onAcceptTrip={handleAcceptTrip}
+              onCounterOfferTrip={handleCounterOffer}
               onNavigateToView={handleViewChange}
               onUpdateProfile={handleUpdateProfile}
               onLogout={handleLogout}
@@ -617,6 +708,11 @@ export default function App() {
               trips={trips} 
               onNavigateToChat={() => setView('chat')} 
               onCancelTrip={handleCancelTrip}
+              onEditTrip={(trip) => {
+                setEditingTrip(trip);
+                setView('home');
+              }}
+              onResolveCounterOffer={handleResolveCounterOffer}
             />
           )}
 

@@ -6,8 +6,12 @@ import { Trip, UserProfile } from '../types';
 interface HomeProps {
   user: UserProfile;
   pendingTrip?: Trip;
+  editingTrip?: Trip | null;
+  onCloseEditing?: () => void;
   onCreateShipment: (trip: Trip) => void;
+  onEditShipment?: (trip: Trip) => void;
   onAcceptTrip?: (tripId: string) => void;
+  onCounterOfferTrip?: (tripId: string, price: number) => void;
   onNavigateToView: (view: 'home' | 'activity' | 'chat' | 'profile') => void;
   onUpdateProfile?: (updates: Partial<UserProfile>) => void;
   onLogout: () => void;
@@ -16,8 +20,12 @@ interface HomeProps {
 export default function Home({ 
   user, 
   pendingTrip, 
+  editingTrip,
+  onCloseEditing,
   onCreateShipment, 
+  onEditShipment,
   onAcceptTrip,
+  onCounterOfferTrip,
   onNavigateToView, 
   onUpdateProfile, 
   onLogout 
@@ -39,6 +47,20 @@ export default function Home({
   const [tag, setTag] = useState<'REFRIGERADO' | 'FRÁGIL' | ''>('REFRIGERADO');
   const [vehicle, setVehicle] = useState('Tractomula');
   const [customPrice, setCustomPrice] = useState(1250000);
+  const [isCounterOffering, setIsCounterOffering] = useState(false);
+  const [counterOfferPrice, setCounterOfferPrice] = useState(pendingTrip?.price || 1250000);
+
+  // When editingTrip changes, load it into the form
+  React.useEffect(() => {
+    if (editingTrip) {
+      setOrigin(editingTrip.origin);
+      setDestination(editingTrip.destination);
+      setVehicle(editingTrip.vehicleType);
+      setTag(editingTrip.tag as any || 'REFRIGERADO');
+      setCustomPrice(editingTrip.price);
+      setShowShipmentModal(true);
+    }
+  }, [editingTrip]);
 
   // Pre-configured trucks to interact with on the map
   const trucksOnMap = [
@@ -78,20 +100,33 @@ export default function Home({
     e.preventDefault();
     if (!origin || !destination) return;
 
-    const newTrip: Trip = {
-      id: `#CF-${Math.floor(1000 + Math.random() * 9000)}`,
-      status: 'PENDIENTE',
-      price: customPrice,
-      date: 'Hoy, ' + new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
-      origin,
-      originDetail: 'Terminal de Carga Principal',
-      destination,
-      destinationDetail: 'Entrega en Centro Ciudad',
-      vehicleType: vehicle,
-      tag: tag || undefined,
-    };
+    if (editingTrip && onEditShipment) {
+      const updatedTrip: Trip = {
+        ...editingTrip,
+        price: customPrice,
+        origin,
+        destination,
+        vehicleType: vehicle,
+        tag: tag || undefined,
+      };
+      onEditShipment(updatedTrip);
+      if (onCloseEditing) onCloseEditing();
+    } else {
+      const newTrip: Trip = {
+        id: `#CF-${Math.floor(1000 + Math.random() * 9000)}`,
+        status: 'PENDIENTE',
+        price: customPrice,
+        date: 'Hoy, ' + new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+        origin,
+        originDetail: 'Terminal de Carga Principal',
+        destination,
+        destinationDetail: 'Entrega en Centro Ciudad',
+        vehicleType: vehicle,
+        tag: tag || undefined,
+      };
+      onCreateShipment(newTrip);
+    }
 
-    onCreateShipment(newTrip);
     setShowShipmentModal(false);
     onNavigateToView('activity'); // go to activity screen to see it
   };
@@ -430,19 +465,70 @@ export default function Home({
                 </div>
               </div>
 
-              <button
-                onClick={() => {
-                  if (onAcceptTrip && pendingTrip) {
-                    onAcceptTrip(pendingTrip.id);
-                  }
-                  alert(`¡Has tomado la oferta de carga hacia ${pendingTrip.destination}!`);
-                  onNavigateToView('activity');
-                }}
-                className="w-full h-[50px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] cursor-pointer"
-              >
-                <Truck size={18} fill="currentColor" />
-                Aceptar Carga & Tomar Flete
-              </button>
+              {isCounterOffering ? (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-slate-500">$</span>
+                    <input 
+                      type="number"
+                      value={counterOfferPrice}
+                      onChange={(e) => setCounterOfferPrice(Number(e.target.value))}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 font-black text-slate-800 text-lg outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setIsCounterOffering(false)}
+                      className="flex-1 h-[45px] rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs flex items-center justify-center transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (onCounterOfferTrip && pendingTrip) {
+                          onCounterOfferTrip(pendingTrip.id, counterOfferPrice);
+                          alert('¡Tu contraoferta ha sido enviada al cliente!');
+                          setIsCounterOffering(false);
+                          onNavigateToView('activity');
+                        }
+                      }}
+                      className="flex-1 h-[45px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center justify-center shadow-lg transition-all"
+                    >
+                      Enviar Oferta
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      if (onAcceptTrip && pendingTrip) {
+                        onAcceptTrip(pendingTrip.id);
+                      }
+                      alert(`¡Has tomado la oferta de carga hacia ${pendingTrip.destination}!`);
+                      onNavigateToView('activity');
+                    }}
+                    className="w-full h-[50px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+                  >
+                    <Truck size={18} fill="currentColor" />
+                    Aceptar Carga & Tomar Flete
+                  </button>
+                  
+                  {!pendingTrip.counterOffer && (
+                    <button
+                      onClick={() => setIsCounterOffering(true)}
+                      className="w-full h-[40px] rounded-xl bg-white border border-emerald-600 text-emerald-600 hover:bg-emerald-50 font-bold text-xs flex items-center justify-center transition-all active:scale-[0.98] cursor-pointer"
+                    >
+                      Proponer otro valor
+                    </button>
+                  )}
+                  {pendingTrip.counterOffer && pendingTrip.counterOffer.conductorId === user.email && (
+                    <div className="text-center text-xs font-bold text-amber-600 mt-1 bg-amber-50 p-2 rounded-lg">
+                      Esperando respuesta del cliente a tu oferta de ${pendingTrip.counterOffer.price.toLocaleString('es-CO')}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="bg-white rounded-2xl shadow-[0px_12px_40px_rgba(0,0,0,0.15)] p-5 border border-surface-container animate-pulse">
@@ -518,7 +604,9 @@ export default function Home({
               className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl overflow-y-auto max-h-[85vh] no-scrollbar border border-surface-container"
             >
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-black text-on-surface">Nuevo Despacho</h3>
+                <h3 className="text-lg font-black text-on-surface">
+                  {editingTrip ? 'Editar Flete' : 'Nuevo Despacho'}
+                </h3>
                 <button
                   onClick={() => setShowShipmentModal(false)}
                   className="p-1 hover:bg-surface-container rounded-full text-on-surface-variant"
@@ -622,23 +710,29 @@ export default function Home({
                 <div className="flex flex-col gap-1">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-bold text-outline uppercase tracking-wider">Flete Ofrecido (COP)</label>
-                    <span className="text-sm font-extrabold text-primary-container">
-                      ${customPrice.toLocaleString('es-CO')}
-                    </span>
+                    <div className="flex items-center gap-1 bg-surface-container rounded-lg p-1">
+                      <span className="text-sm font-extrabold text-primary-container pl-2">$</span>
+                      <input 
+                        type="number"
+                        value={customPrice}
+                        onChange={(e) => setCustomPrice(Number(e.target.value))}
+                        className="w-24 bg-transparent text-sm font-extrabold text-primary-container outline-none focus:ring-0"
+                      />
+                    </div>
                   </div>
                   <input
                     type="range"
-                    min="300000"
-                    max="3500000"
+                    min="100000"
+                    max="5000000"
                     step="50000"
                     value={customPrice}
                     onChange={(e) => setCustomPrice(Number(e.target.value))}
-                    className="w-full h-1.5 bg-surface-container rounded-lg appearance-none cursor-pointer accent-primary-container"
+                    className="w-full h-1.5 bg-surface-container rounded-lg appearance-none cursor-pointer accent-primary-container mt-2"
                   />
                   <div className="flex justify-between text-[10px] text-outline font-medium mt-1">
-                    <span>$300k</span>
+                    <span>$100k</span>
                     <span>Medio</span>
-                    <span>$3.5M</span>
+                    <span>$5M</span>
                   </div>
                 </div>
 
@@ -646,8 +740,14 @@ export default function Home({
                   type="submit"
                   className="w-full h-12 bg-primary-container hover:bg-primary text-white font-bold rounded-xl mt-4 flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
                 >
-                  <Truck size={18} fill="currentColor" />
-                  Publicar Despacho
+                  {editingTrip ? (
+                    <>Guardar Cambios</>
+                  ) : (
+                    <>
+                      <Truck size={18} fill="currentColor" />
+                      Publicar Despacho
+                    </>
+                  )}
                 </button>
               </form>
             </motion.div>
