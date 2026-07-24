@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Truck, User, Sun, Moon } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Truck, User, Sun, Moon, ChevronDown, ChevronUp, Mail, Lock } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { loginWithGoogle } from '../services/authService';
 import { UserRole } from '../types';
 import CargoFlowLogo from './CargoFlowLogo';
@@ -14,6 +14,27 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess }: Log
   const [selectedRole, setSelectedRole] = useState<UserRole>(currentRole);
   const [isLoading, setIsLoading] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true); // Permanent dark mode default
+  
+  const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleEmailLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    setIsLoading(true);
+    // Simulate email login
+    setTimeout(() => {
+      setIsLoading(false);
+      onLoginSuccess({
+        uid: 'demo-user-' + Date.now(),
+        name: email.split('@')[0],
+        email: email,
+        photoURL: null,
+        role: selectedRole
+      });
+    }, 1200);
+  };
 
   const handleGoogleClick = async () => {
     setIsLoading(true);
@@ -171,6 +192,76 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess }: Log
             </span>
           </button>
         </div>
+
+        {/* Email/Password Dropdown Toggle */}
+        <div className="w-full z-10 mt-4">
+          <button
+            onClick={() => setShowEmailLogin(!showEmailLogin)}
+            className={`flex items-center justify-center gap-2 w-full text-xs font-bold transition-colors ${
+              isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            {showEmailLogin ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            Ingreso con credenciales
+          </button>
+        </div>
+
+        {/* Email/Password Form */}
+        <AnimatePresence>
+          {showEmailLogin && (
+            <motion.form
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="w-full z-10 mt-4 flex flex-col gap-3 overflow-hidden"
+              onSubmit={handleEmailLogin}
+            >
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail size={18} className="text-slate-400" />
+                </div>
+                <input
+                  type="email"
+                  required
+                  placeholder="Correo electrónico"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`w-full h-12 pl-10 pr-3 rounded-xl border text-sm font-medium focus:outline-none transition-colors ${
+                    isDarkMode 
+                      ? 'bg-black/30 border-white/10 text-white placeholder-slate-500 focus:border-emerald-400 focus:bg-black/50' 
+                      : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
+                  }`}
+                />
+              </div>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock size={18} className="text-slate-400" />
+                </div>
+                <input
+                  type="password"
+                  required
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`w-full h-12 pl-10 pr-3 rounded-xl border text-sm font-medium focus:outline-none transition-colors ${
+                    isDarkMode 
+                      ? 'bg-black/30 border-white/10 text-white placeholder-slate-500 focus:border-emerald-400 focus:bg-black/50' 
+                      : 'bg-white border-slate-300 text-slate-900 focus:border-blue-500'
+                  }`}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`w-full h-12 rounded-xl text-sm font-extrabold text-white transition-all active:scale-[0.98] ${
+                  isDarkMode ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-blue-600 hover:bg-blue-500'
+                } ${isLoading ? 'opacity-75 cursor-wait' : ''}`}
+              >
+                {isLoading ? 'Iniciando...' : 'Iniciar Sesión'}
+              </button>
+            </motion.form>
+          )}
+        </AnimatePresence>
 
         {/* Terms Disclaimer Subtext */}
         <p className={`text-[11px] font-medium text-center mt-6 z-10 ${

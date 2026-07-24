@@ -7,12 +7,21 @@ interface HomeProps {
   user: UserProfile;
   pendingTrip?: Trip;
   onCreateShipment: (trip: Trip) => void;
+  onAcceptTrip?: (tripId: string) => void;
   onNavigateToView: (view: 'home' | 'activity' | 'chat' | 'profile') => void;
   onUpdateProfile?: (updates: Partial<UserProfile>) => void;
   onLogout: () => void;
 }
 
-export default function Home({ user, pendingTrip, onCreateShipment, onNavigateToView, onUpdateProfile, onLogout }: HomeProps) {
+export default function Home({ 
+  user, 
+  pendingTrip, 
+  onCreateShipment, 
+  onAcceptTrip,
+  onNavigateToView, 
+  onUpdateProfile, 
+  onLogout 
+}: HomeProps) {
   const [showShipmentModal, setShowShipmentModal] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedTruck, setSelectedTruck] = useState<{
@@ -71,7 +80,7 @@ export default function Home({ user, pendingTrip, onCreateShipment, onNavigateTo
 
     const newTrip: Trip = {
       id: `#CF-${Math.floor(1000 + Math.random() * 9000)}`,
-      status: 'EN CAMINO',
+      status: 'PENDIENTE',
       price: customPrice,
       date: 'Hoy, ' + new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
       origin,
@@ -91,7 +100,7 @@ export default function Home({ user, pendingTrip, onCreateShipment, onNavigateTo
     // Quick reorder for Bogotá to Medellín
     const quickTrip: Trip = {
       id: `#CF-${Math.floor(1000 + Math.random() * 9000)}`,
-      status: 'EN CAMINO',
+      status: 'PENDIENTE',
       price: 1250000,
       date: 'Hoy, 14:30',
       origin: 'Bogotá, D.C.',
@@ -423,6 +432,9 @@ export default function Home({ user, pendingTrip, onCreateShipment, onNavigateTo
 
               <button
                 onClick={() => {
+                  if (onAcceptTrip && pendingTrip) {
+                    onAcceptTrip(pendingTrip.id);
+                  }
                   alert(`¡Has tomado la oferta de carga hacia ${pendingTrip.destination}!`);
                   onNavigateToView('activity');
                 }}

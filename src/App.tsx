@@ -352,6 +352,29 @@ export default function App() {
     }
   };
 
+  const handleAcceptTrip = async (tripId: string) => {
+    // Optimistic local update
+    setTrips(prev => prev.map(t => 
+      t.id === tripId 
+        ? { ...t, status: 'EN CAMINO', conductorId: user.email, conductorName: user.name } 
+        : t
+    ));
+    
+    // Firestore update
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'trips', tripId), {
+        status: 'EN CAMINO',
+        conductorId: user.email,
+        conductorName: user.name,
+      });
+    } catch (e) {
+      console.warn('Could not accept trip in Firestore:', e);
+    }
+  };
+
+
 
   // Listen to new trips in real-time if user is conductor
   useEffect(() => {
@@ -374,6 +397,9 @@ export default function App() {
             if (change.type === 'added') {
               const tripData = change.doc.data() as Trip;
               
+              // Add it locally if it's not already there
+              setTrips(prev => prev.some(t => t.id === tripData.id) ? prev : [tripData, ...prev]);
+
               // Prevent triggering notification on initial page load if the trip is old
               const isRecent = new Date().getTime() - new Date(tripData.date || tripData.createdAt || new Date()).getTime() < 60000;
               
@@ -387,9 +413,6 @@ export default function App() {
                     ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
                     : undefined,
                 });
-                
-                // Add it locally if it's not already there
-                setTrips(prev => prev.some(t => t.id === tripData.id) ? prev : [tripData, ...prev]);
               }
             }
           });
@@ -592,6 +615,7 @@ export default function App() {
               user={user} 
               pendingTrip={trips.find(t => t.status === 'PENDIENTE')}
               onCreateShipment={handleCreateShipment} 
+              onAcceptTrip={handleAcceptTrip}
               onNavigateToView={handleViewChange}
               onUpdateProfile={handleUpdateProfile}
               onLogout={handleLogout}
