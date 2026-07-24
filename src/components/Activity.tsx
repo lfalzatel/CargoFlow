@@ -172,7 +172,7 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                     <div className="mt-2 p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-3">
                       {user.email === trip.clienteId ? (
                         <>
-                          {renderAvatar(trip.conductorPhotoURL, trip.conductorName, "w-10 h-10 text-xs")}
+                          {renderAvatar(trip.conductorPhotoURL || (trip.conductorId === user.email ? user.photoURL : undefined), trip.conductorName, "w-10 h-10 text-xs")}
                           <div className="flex-1">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Conductor Asignado</p>
                             <p className="text-xs font-bold text-slate-700">{trip.conductorName || 'Conductor CargoFlow'}</p>
@@ -184,7 +184,7 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                         </>
                       ) : (
                         <>
-                          {renderAvatar(trip.clientePhotoURL, trip.clienteName, "w-10 h-10 text-xs")}
+                          {renderAvatar(trip.clientePhotoURL || (trip.clienteId === user.email ? user.photoURL : undefined), trip.clienteName, "w-10 h-10 text-xs")}
                           <div className="flex-1">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Cliente Solicitante</p>
                             <p className="text-xs font-bold text-slate-700">{trip.clienteName || 'Cliente CargoFlow'}</p>

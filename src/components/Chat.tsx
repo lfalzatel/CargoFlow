@@ -87,9 +87,15 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
         : `Cliente Flete #${activeTrip.id}`)
     : 'Canal oficial de logística';
 
-  const chatPartnerPhoto = activeTrip
+  const partnerEmail = activeTrip
+    ? (isClientView ? activeTrip.conductorId : activeTrip.clienteId)
+    : undefined;
+
+  const rawPartnerPhoto = activeTrip
     ? (isClientView ? activeTrip.conductorPhotoURL : activeTrip.clientePhotoURL)
     : undefined;
+
+  const chatPartnerPhoto = rawPartnerPhoto || (partnerEmail === user.email ? user.photoURL : undefined);
 
   const chatCollectionPath = activeTrip ? `trips/${activeTrip.id}/chat_messages` : 'global_chat';
   const mainScrollRef = useRef<HTMLDivElement>(null);
@@ -142,6 +148,7 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
               id: doc.id,
               sender: data.senderEmail === user.email ? 'user' : 'driver',
               text: data.text,
+              attachmentUrl: data.attachmentUrl || undefined,
               timestamp: data.timestamp || new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
               isRead: true,
             });
