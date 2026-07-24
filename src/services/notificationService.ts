@@ -82,6 +82,29 @@ export async function notify(payload: NotificationPayload): Promise<void> {
   }
 }
 
+// ── 4b. Save persistent notification to Firestore ───────────
+export async function sendDbNotification(
+  targetUserId: string,
+  title: string,
+  body: string,
+  tag?: string
+): Promise<void> {
+  try {
+    const { db } = await import('../config/firebase');
+    const { collection, addDoc } = await import('firebase/firestore');
+    await addDoc(collection(db, 'notifications'), {
+      userId: targetUserId,
+      title,
+      body,
+      tag: tag || 'general',
+      read: false,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn('Could not save notification to Firestore:', e);
+  }
+}
+
 // ── 5. Scheduled notification via Service Worker ─────────────
 export async function scheduleNotification(
   id:      string,

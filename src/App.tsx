@@ -335,6 +335,14 @@ export default function App() {
         clientePhotoURL: user.photoURL || null,
         createdAt: new Date().toISOString()
       });
+
+      const { sendDbNotification } = await import('./services/notificationService');
+      sendDbNotification(
+        'all_conductors',
+        '📦 ¡Nuevo Flete Disponible!',
+        `${user.name} solicita flete (${newTrip.vehicleType}): ${newTrip.origin} → ${newTrip.destination} por $${newTrip.price.toLocaleString('es-CO')} COP`,
+        `trip-new-${newTrip.id}`
+      );
     } catch (e) {
       console.warn('Could not save trip to Firestore:', e);
     }
@@ -398,6 +406,17 @@ export default function App() {
         conductorVehicleType: user.vehicleType || null,
         conductorPhotoURL: user.photoURL || null
       });
+
+      const targetTrip = trips.find(t => t.id === tripId);
+      if (targetTrip?.clienteId) {
+        const { sendDbNotification } = await import('./services/notificationService');
+        sendDbNotification(
+          targetTrip.clienteId,
+          '🚚 ¡Tu Flete ha sido Aceptado!',
+          `${user.name} (${user.vehicleType || 'Vehículo'} - Placa: ${user.plateNumber || 'asignada'}) aceptó tu servicio de ${targetTrip.origin} a ${targetTrip.destination}.`,
+          `trip-accepted-${tripId}`
+        );
+      }
     } catch (e) {
       console.warn('Could not accept trip in Firestore:', e);
     }
@@ -417,6 +436,17 @@ export default function App() {
       await updateDoc(doc(db, 'trips', tripId), {
         counterOffer: { price, conductorId: user.email, conductorName: user.name }
       });
+
+      const targetTrip = trips.find(t => t.id === tripId);
+      if (targetTrip?.clienteId) {
+        const { sendDbNotification } = await import('./services/notificationService');
+        sendDbNotification(
+          targetTrip.clienteId,
+          '🏷️ ¡Nueva Oferta de Conductor!',
+          `${user.name} propone realizar tu viaje por $${price.toLocaleString('es-CO')} COP.`,
+          `trip-offer-${tripId}`
+        );
+      }
     } catch (e) {
       console.warn('Could not add counter offer:', e);
     }

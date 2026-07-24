@@ -216,6 +216,69 @@ export default function Header({
     return () => window.removeEventListener('cargoflow:notification', handleNotification);
   }, []);
 
+  // Sync notifications from Firestore in real-time
+  useEffect(() => {
+    if (!user.email) return;
+
+    let unsubscribe = () => {};
+    const syncDbNotifications = async () => {
+      try {
+        const { auth, db } = await import('../config/firebase');
+        if (!auth.currentUser) return;
+        const { collection, query, where, onSnapshot } = await import('firebase/firestore');
+
+        const targets = [user.email];
+        if (user.role === 'conductor' || user.role === 'admin') {
+          targets.push('all_conductors');
+        }
+
+        const q = query(collection(db, 'notifications'), where('userId', 'in', targets));
+
+        unsubscribe = onSnapshot(
+          q,
+          (snapshot) => {
+            const dbNotifs: any[] = [];
+            let unread = 0;
+
+            snapshot.forEach((docSnap) => {
+              const data = docSnap.data();
+              const dateObj = data.createdAt ? new Date(data.createdAt) : new Date();
+              const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+              dbNotifs.push({
+                id: docSnap.id,
+                title: data.title,
+                desc: data.body,
+                time: `Hoy, ${timeStr}`,
+                unread: !data.read,
+                createdAt: data.createdAt || '',
+              });
+
+              if (!data.read) unread++;
+            });
+
+            // Sort by createdAt descending
+            dbNotifs.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+            if (dbNotifs.length > 0) {
+              setNotifications(dbNotifs.slice(0, 25));
+              setLocalUnreadCount(unread);
+              try {
+                localStorage.setItem('cf_notifications_history', JSON.stringify(dbNotifs.slice(0, 25)));
+              } catch (_) {}
+            }
+          },
+          (err) => console.warn('Notification snapshot error:', err)
+        );
+      } catch (e) {
+        console.warn('Could not sync DB notifications:', e);
+      }
+    };
+
+    syncDbNotifications();
+    return () => unsubscribe();
+  }, [user.email, user.role]);
+
   const getFirstName = (name?: string) => {
     if (!name) return 'Usuario';
     return name.split(' ')[0];
@@ -343,6 +406,26 @@ export default function Header({
                     } catch (e) {}
                     return marked;
                   });
+
+                  // Mark in Firestore as read
+                  (async () => {
+                    try {
+                      const { auth, db } = await import('../config/firebase');
+                      if (!auth.currentUser || !user.email) return;
+                      const { collection, query, where, getDocs, updateDoc, doc } = await import('firebase/firestore');
+
+                      const targets = [user.email];
+                      if (user.role === 'conductor' || user.role === 'admin') {
+                        targets.push('all_conductors');
+                      }
+
+                      const q = query(collection(db, 'notifications'), where('userId', 'in', targets), where('read', '==', false));
+                      const snap = await getDocs(q);
+                      snap.forEach((docSnap) => {
+                        updateDoc(doc(db, 'notifications', docSnap.id), { read: true }).catch(() => {});
+                      });
+                    } catch (_) {}
+                  })();
                 }
               }}
               className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-all relative active:scale-95"
