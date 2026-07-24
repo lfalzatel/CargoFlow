@@ -321,9 +321,72 @@ export default function App() {
   };
 
   // Create Shipment helper
-  const handleCreateShipment = (newTrip: Trip) => {
+  const handleCreateShipment = async (newTrip: Trip) => {
+    // Optimistic local update
     setTrips(prev => [newTrip, ...prev]);
+    
+    // Save to Firestore so conductors receive it in real-time
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, setDoc } = await import('firebase/firestore');
+      await setDoc(doc(db, 'trips', newTrip.id), {
+        ...newTrip,
+        createdAt: new Date().toISOString()
+      });
+    } catch (e) {
+      console.warn('Could not save trip to Firestore:', e);
+    }
   };
+
+  // Listen to new trips in real-time if user is conductor
+  useEffect(() => {
+    if (user.role !== 'conductor' && user.role !== 'admin') return;
+
+    let unsubscribe = () => {};
+    const listenToTrips = async () => {
+      try {
+        const { db } = await import('./config/firebase');
+        const { collection, query, where, onSnapshot } = await import('firebase/firestore');
+        const { notify } = await import('./services/notificationService');
+
+        const q = query(
+          collection(db, 'trips'),
+          where('status', '==', 'PENDIENTE')
+        );
+
+        unsubscribe = onSnapshot(q, (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'added') {
+              const tripData = change.doc.data() as Trip;
+              
+              // Prevent triggering notification on initial page load if the trip is old
+              const isRecent = new Date().getTime() - new Date(tripData.date || tripData.createdAt || new Date()).getTime() < 60000;
+              
+              if (isRecent) {
+                notify({
+                  title: '¡Nuevo Despacho Solicitado!',
+                  body: `${tripData.origin} → ${tripData.destination} • $${tripData.price.toLocaleString('es-CO')} COP`,
+                  tag: `trip-${tripData.id}`,
+                  url: '/activity',
+                  sound: localStorage.getItem('cf_notif_sound') !== 'false'
+                    ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
+                    : undefined,
+                });
+                
+                // Add it locally if it's not already there
+                setTrips(prev => prev.some(t => t.id === tripData.id) ? prev : [tripData, ...prev]);
+              }
+            }
+          });
+        });
+      } catch (e) {
+        console.warn('Real-time trip listening failed:', e);
+      }
+    };
+    
+    listenToTrips();
+    return () => unsubscribe();
+  }, [user.role]);
 
   // Deposit funds to wallet helper
   const handleDeposit = (amount: number) => {

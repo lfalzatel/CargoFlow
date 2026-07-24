@@ -478,13 +478,17 @@ export default function Home({ user, onCreateShipment, onNavigateToView, onUpdat
       {/* CREATE SHIPMENT MODAL / VIEW */}
       <AnimatePresence>
         {showShipmentModal && (
-          <div className="absolute inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div 
+            className="fixed inset-0 z-50 backdrop-blur-sm bg-black/40 flex items-center justify-center p-4"
+            onClick={() => setShowShipmentModal(false)}
+          >
             <motion.div
-              initial={{ y: '100%', opacity: 0.8 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0.8 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 180 }}
-              className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl overflow-y-auto max-h-[85vh] no-scrollbar border border-surface-container"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl overflow-y-auto max-h-[85vh] no-scrollbar border border-surface-container"
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-black text-on-surface">Nuevo Despacho</h3>

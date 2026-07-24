@@ -155,7 +155,7 @@ export default function Header({
     }
   };
 
-  const sampleNotifications = [
+  const [notifications, setNotifications] = useState([
     {
       id: 'notif-1',
       title: '¡Nueva solicitud asignada!',
@@ -177,7 +177,31 @@ export default function Header({
       time: 'Ayer',
       unread: false,
     },
-  ];
+  ]);
+
+  const [localUnreadCount, setLocalUnreadCount] = useState(unreadCount);
+
+  useEffect(() => {
+    const handleNotification = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const payload = customEvent.detail;
+      
+      setNotifications(prev => [
+        {
+          id: `notif-${Date.now()}`,
+          title: payload.title,
+          desc: payload.body,
+          time: 'Ahora',
+          unread: true,
+        },
+        ...prev,
+      ]);
+      setLocalUnreadCount(prev => prev + 1);
+    };
+
+    window.addEventListener('cargoflow:notification', handleNotification);
+    return () => window.removeEventListener('cargoflow:notification', handleNotification);
+  }, []);
 
   const getFirstName = (name?: string) => {
     if (!name) return 'Usuario';
@@ -265,7 +289,7 @@ export default function Header({
               title="Notificaciones"
             >
               <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-              {unreadCount > 0 && (
+              {localUnreadCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white animate-pulse" />
               )}
             </button>
@@ -273,25 +297,30 @@ export default function Header({
             {/* Notifications Dropdown Panel */}
             <AnimatePresence>
               {isNotificationsOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0px_10px_40px_rgba(0,0,0,0.12)] border border-surface-container overflow-hidden z-[100]"
+                <div 
+                  className="fixed inset-0 z-[100] backdrop-blur-sm bg-black/40 flex items-center justify-center p-4"
+                  onClick={() => setIsNotificationsOpen(false)}
                 >
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-surface-container"
+                  >
                   <div className="p-4 border-b border-surface-container flex items-center justify-between bg-surface-container-lowest">
                     <div className="flex items-center gap-2">
                       <Bell size={18} className="text-primary-container" />
                       <h3 className="font-bold text-sm text-on-surface">Notificaciones</h3>
                     </div>
                     <span className="text-[11px] font-bold bg-blue-50 text-primary-container px-2 py-0.5 rounded-full">
-                      {unreadCount} Nuevas
+                      {localUnreadCount} Nuevas
                     </span>
                   </div>
 
                   <div className="max-h-72 overflow-y-auto divide-y divide-surface-container-low">
-                    {sampleNotifications.map((n) => (
+                    {notifications.map((n) => (
                       <div 
                         key={n.id} 
                         className={`p-3.5 hover:bg-surface-container-low transition-colors cursor-pointer flex gap-3 ${
@@ -320,6 +349,7 @@ export default function Header({
                     </button>
                   </div>
                 </motion.div>
+                </div>
               )}
             </AnimatePresence>
           </div>
