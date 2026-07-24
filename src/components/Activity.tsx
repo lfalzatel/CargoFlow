@@ -149,6 +149,49 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                     </div>
                   )}
 
+                  {/* Participant Info Section (Client or Driver Details) */}
+                  {trip.status !== 'PENDIENTE' && (
+                    <div className="mt-2 p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-3">
+                      {user.email === trip.clienteId ? (
+                        <>
+                          <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                            {trip.conductorPhotoURL ? (
+                              <img src={trip.conductorPhotoURL} alt={trip.conductorName} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                <User size={20} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Conductor Asignado</p>
+                            <p className="text-xs font-bold text-slate-700">{trip.conductorName}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {trip.conductorPlate && <span className="text-[10px] font-bold bg-slate-200 text-slate-600 px-1.5 rounded">{trip.conductorPlate}</span>}
+                              {trip.conductorVehicleType && <span className="text-[10px] text-slate-500 font-medium truncate">{trip.conductorVehicleType}</span>}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                            {trip.clientePhotoURL ? (
+                              <img src={trip.clientePhotoURL} alt={trip.clienteName} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                <User size={20} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Cliente Solicitante</p>
+                            <p className="text-xs font-bold text-slate-700">{trip.clienteName}</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
                   {/* Card Footer with details */}
                   <div className="pt-4 border-t border-surface-container-high flex justify-between items-center">
                     <div className="flex items-center gap-2 text-on-surface-variant font-medium text-xs">
@@ -163,7 +206,7 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                       )}
                       {isActive && (
                         <>
-                          {(trip.status === 'PENDIENTE' && user.role === 'cliente') ? (
+                          {(trip.status === 'PENDIENTE' && trip.clienteId === user.email) ? (
                             <div className="flex gap-2">
                               {onEditTrip && (
                                 <button
@@ -185,19 +228,22 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                               </button>
                             </div>
                           ) : (
-                            <>
-                              <button
-                                onClick={onNavigateToChat}
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-primary hover:bg-blue-100 transition-colors"
-                              >
-                                <MessageSquare size={16} />
-                              </button>
-                              <button
-                                className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-primary-container hover:bg-primary transition-colors"
-                              >
-                                Rastrear
-                              </button>
-                            </>
+                            trip.status === 'EN CAMINO' && (
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={onNavigateToChat}
+                                  className="w-9 h-9 rounded-xl border border-primary-container/20 flex items-center justify-center text-primary-container hover:bg-primary-container/10 transition-colors"
+                                  title="Chatear"
+                                >
+                                  <MessageSquare size={18} />
+                                </button>
+                                {user.email === trip.clienteId && (
+                                  <button className="px-4 py-2 bg-primary text-on-primary rounded-xl font-bold text-xs shadow-md shadow-primary/20 hover:shadow-lg transition-all active:scale-95">
+                                    Rastrear
+                                  </button>
+                                )}
+                              </div>
+                            )
                           )}
                         </>
                       )}

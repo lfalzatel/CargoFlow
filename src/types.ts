@@ -36,8 +36,12 @@ export interface Trip {
   createdAt?: string;
   clienteId?: string;
   clienteName?: string;
+  clientePhotoURL?: string;
   conductorId?: string;
   conductorName?: string;
+  conductorPlate?: string;
+  conductorVehicleType?: string;
+  conductorPhotoURL?: string;
   counterOffer?: {
     price: number;
     conductorId: string;

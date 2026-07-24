@@ -159,27 +159,49 @@ export default function App() {
         }
         // Read the persisted Firestore profile to get isComplete and role-specific fields
         try {
-          for (const role of ['conductor', 'cliente']) {
-            const docRef = doc(db, 'users', `${firebaseUser.uid}_${role}`);
-            const snap = await getDoc(docRef);
-            if (snap.exists()) {
-              const firestoreProfile = snap.data() as UserProfile;
-              // If this role matches the currently selected role, restore the full profile
-              setUser(prev => {
-                if (prev.role === role || role === 'conductor') {
-                  const forcedRole = firebaseUser.email === 'lfalzatel@gmail.com' ? 'admin' : (firestoreProfile.role || prev.role);
-                  return {
-                    ...prev,
-                    ...firestoreProfile,
-                    role: forcedRole,
-                    name: firebaseUser.displayName || firestoreProfile.name || prev.name,
-                    email: firebaseUser.email || firestoreProfile.email || prev.email,
-                    photoURL: firebaseUser.photoURL || firestoreProfile.photoURL || prev.photoURL,
-                  };
+          const lastRole = localStorage.getItem('cf_last_role') || 'cliente';
+          const docRef = doc(db, 'users', `${firebaseUser.uid}_${lastRole}`);
+          const snap = await getDoc(docRef);
+          if (snap.exists()) {
+            const firestoreProfile = snap.data() as UserProfile;
+            const forcedRole = firebaseUser.email === 'lfalzatel@gmail.com' ? 'admin' : (firestoreProfile.role || lastRole as any);
+            setUser(prev => ({
+              ...prev,
+              ...firestoreProfile,
+              role: forcedRole,
+              name: firebaseUser.displayName || firestoreProfile.name || prev.name,
+              email: firebaseUser.email || firestoreProfile.email || prev.email,
+              photoURL: firebaseUser.photoURL || firestoreProfile.photoURL || prev.photoURL,
+            }));
+            if (firestoreProfile.isComplete || forcedRole === 'admin') {
+              setView('home');
+            } else {
+              setView('complete_profile');
+            }
+          } else {
+            // Fallback to checking both if lastRole didn't match (for new devices)
+            for (const role of ['conductor', 'cliente']) {
+              const docRef = doc(db, 'users', `${firebaseUser.uid}_${role}`);
+              const snap = await getDoc(docRef);
+              if (snap.exists()) {
+                const firestoreProfile = snap.data() as UserProfile;
+                const forcedRole = firebaseUser.email === 'lfalzatel@gmail.com' ? 'admin' : (firestoreProfile.role || role as any);
+                localStorage.setItem('cf_last_role', role);
+                setUser(prev => ({
+                  ...prev,
+                  ...firestoreProfile,
+                  role: forcedRole,
+                  name: firebaseUser.displayName || firestoreProfile.name || prev.name,
+                  email: firebaseUser.email || firestoreProfile.email || prev.email,
+                  photoURL: firebaseUser.photoURL || firestoreProfile.photoURL || prev.photoURL,
+                }));
+                if (firestoreProfile.isComplete || forcedRole === 'admin') {
+                  setView('home');
+                } else {
+                  setView('complete_profile');
                 }
-                return prev;
-              });
-              break; // Stop after finding first matching profile
+                break;
+              }
             }
           }
         } catch (e) {
@@ -217,6 +239,7 @@ export default function App() {
   const handleLoginSuccess = (profileData: any) => {
     const role = profileData.role || selectedRole;
     setSelectedRole(role);
+    localStorage.setItem('cf_last_role', role);
     const isProfileComplete = Boolean(profileData.isComplete);
     const updatedUser: UserProfile = {
       ...profileData,
@@ -309,6 +332,7 @@ export default function App() {
         ...newTrip,
         clienteId: user.email,
         clienteName: user.name,
+        clientePhotoURL: user.photoURL || null,
         createdAt: new Date().toISOString()
       });
     } catch (e) {
@@ -350,7 +374,15 @@ export default function App() {
     // Optimistic local update
     setTrips(prev => prev.map(t => 
       t.id === tripId 
-        ? { ...t, status: 'EN CAMINO', conductorId: user.email, conductorName: user.name } 
+        ? { 
+            ...t, 
+            status: 'EN CAMINO', 
+            conductorId: user.email, 
+            conductorName: user.name,
+            conductorPlate: user.plateNumber,
+            conductorVehicleType: user.vehicleType,
+            conductorPhotoURL: user.photoURL || undefined
+          } 
         : t
     ));
     
@@ -362,6 +394,9 @@ export default function App() {
         status: 'EN CAMINO',
         conductorId: user.email,
         conductorName: user.name,
+        conductorPlate: user.plateNumber || null,
+        conductorVehicleType: user.vehicleType || null,
+        conductorPhotoURL: user.photoURL || null
       });
     } catch (e) {
       console.warn('Could not accept trip in Firestore:', e);
@@ -401,6 +436,9 @@ export default function App() {
               price: trip.counterOffer!.price, 
               conductorId: trip.counterOffer!.conductorId, 
               conductorName: trip.counterOffer!.conductorName,
+              conductorPlate: user.plateNumber,
+              conductorVehicleType: user.vehicleType,
+              conductorPhotoURL: user.photoURL,
               counterOffer: undefined 
             } 
           : t
@@ -414,6 +452,9 @@ export default function App() {
           price: trip.counterOffer.price,
           conductorId: trip.counterOffer.conductorId,
           conductorName: trip.counterOffer.conductorName,
+          conductorPlate: user.plateNumber || null,
+          conductorVehicleType: user.vehicleType || null,
+          conductorPhotoURL: user.photoURL || null,
           counterOffer: deleteField()
         });
       } catch (e) {
