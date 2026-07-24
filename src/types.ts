@@ -12,6 +12,7 @@ export interface UserProfile {
   plateNumber?: string;
   vehicleType?: 'furgon' | 'sencillo';
   isComplete?: boolean;
+  isAvailable?: boolean;
   documentsUploaded?: {
     cedula: boolean;
     licencia: boolean;

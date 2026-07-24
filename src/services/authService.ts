@@ -73,7 +73,29 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
     const cred = await signInWithPopup(auth, provider);
     const uid = cred.user.uid;
     
-    // 2. Dual-Role Firestore Key: Allows the exact same Google account to have both Conductor and Cliente profiles!
+    // 2. Dual-Role Firestore Key
+    const docId = `${uid}_${role}`;
+    const docRef = doc(db, 'users', docId);
+
+    // Try to get from Firestore first! Now that rules are fixed, this works instantly.
+    try {
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data() as UserProfile;
+        const profile = {
+          ...data,
+          // Always ensure the lfalzatel@gmail.com logic applies
+          role: cred.user.email === 'lfalzatel@gmail.com' ? 'admin' : data.role || role,
+        };
+        // Update local cache
+        localStorage.setItem(`cf_profile_${docId}`, JSON.stringify(profile));
+        return profile;
+      }
+    } catch (err) {
+      console.warn('Firestore getDoc notice (falling back to cache):', err);
+    }
+    
+    // 3. Fallback to cache or create new
     const baseProfile = {
       name: cred.user.displayName || (role === 'cliente' ? 'Cliente Nuevo' : 'Conductor Nuevo'),
       email: cred.user.email || '',
@@ -85,8 +107,7 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
       photoURL: cred.user.photoURL || undefined,
     };
     
-    // Check localStorage cache as fallback
-    const cachedRaw = (() => { try { return localStorage.getItem(`cf_profile_${uid}_${role}`); } catch(_) { return null; } })();
+    const cachedRaw = (() => { try { return localStorage.getItem(`cf_profile_${docId}`); } catch(_) { return null; } })();
     if (cachedRaw) {
       try {
         const cached = JSON.parse(cachedRaw) as UserProfile;
@@ -111,14 +132,11 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
       photoURL: cred.user.photoURL || undefined,
     };
 
-    // Cache to localStorage so it survives Firestore offline periods
     try {
-      localStorage.setItem(`cf_profile_${uid}_${role}`, JSON.stringify(profile));
+      localStorage.setItem(`cf_profile_${docId}`, JSON.stringify(profile));
     } catch (_) {}
 
     // Save asynchronously to Firestore
-    const docId = `${uid}_${role}`;
-    const docRef = doc(db, 'users', docId);
     setDoc(docRef, profile).catch(err => console.warn('Firestore setDoc notice:', err));
 
     return profile;

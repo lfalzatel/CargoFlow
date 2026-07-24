@@ -469,6 +469,7 @@ export default function App() {
             user={user}
             linkedAccounts={linkedAccounts}
             onNavigateToView={handleViewChange}
+            onUpdateProfile={handleUpdateProfile}
             onLogout={handleLogout}
             onAddAccount={handleAddAccount}
             onSwitchAccount={handleSwitchAccount}

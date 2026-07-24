@@ -28,6 +28,7 @@ interface HeaderProps {
   user: UserProfile;
   linkedAccounts?: UserProfile[];
   onNavigateToView: (view: 'home' | 'activity' | 'chat' | 'profile' | 'settings') => void;
+  onUpdateProfile?: (updates: Partial<UserProfile>) => void;
   onLogout: () => void;
   onAddAccount?: () => void;
   onSwitchAccount?: (acc: UserProfile) => void;
@@ -37,7 +38,8 @@ interface HeaderProps {
 export default function Header({ 
   user, 
   linkedAccounts = [], 
-  onNavigateToView, 
+  onNavigateToView,
+  onUpdateProfile,
   onLogout, 
   onAddAccount, 
   onSwitchAccount, 
@@ -49,6 +51,13 @@ export default function Header({
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [activeTheme, setActiveTheme] = useState<string>('dia');
   const [quickThemes, setQuickThemes] = useState<string[]>(['dia', 'cyber', 'kilo']);
+  // Local state for immediate UI feedback on availability toggle
+  const [isAvailable, setIsAvailable] = useState(user.isAvailable ?? true);
+
+  // Sync state if user prop changes
+  useEffect(() => {
+    setIsAvailable(user.isAvailable ?? true);
+  }, [user.isAvailable]);
 
   useEffect(() => {
     const handleStorage = () => {
@@ -399,6 +408,34 @@ export default function Header({
 
                 {/* Primary Menu Options */}
                 <div className="p-1.5">
+                  {(user.role === 'conductor' || user.role === 'admin') && (
+                    <div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newStatus = !isAvailable;
+                          setIsAvailable(newStatus);
+                          if (onUpdateProfile) {
+                            onUpdateProfile({ isAvailable: newStatus });
+                          }
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)] transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isAvailable ? 'bg-emerald-500/20 text-emerald-600' : 'bg-slate-200 text-slate-500'}`}>
+                            <Truck size={14} />
+                          </div>
+                          <span className="text-sm font-semibold">Estoy Disponible</span>
+                        </div>
+                        
+                        {/* Toggle Switch */}
+                        <div className={`w-8 h-[18px] rounded-full p-0.5 transition-colors duration-200 ${isAvailable ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                          <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${isAvailable ? 'translate-x-3.5' : 'translate-x-0'}`} />
+                        </div>
+                      </button>
+                    </div>
+                  )}
+
                   <div>
                     <button
                       onClick={() => {
