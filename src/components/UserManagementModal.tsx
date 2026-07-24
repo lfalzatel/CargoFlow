@@ -49,6 +49,21 @@ export default function UserManagementModal({ onClose }: UserManagementModalProp
     }
   };
 
+  const handlePhoneChange = async (newPhone: string) => {
+    if (!selectedUser) return;
+    try {
+      const userRef = doc(db, 'users', selectedUser.id);
+      await updateDoc(userRef, { phone: newPhone });
+      
+      setUsers(prev => prev.map(u => 
+        u.id === selectedUser.id ? { ...u, phone: newPhone } : u
+      ));
+      setSelectedUser(prev => prev ? { ...prev, phone: newPhone } : null);
+    } catch (e) {
+      console.error('Error updating phone:', e);
+    }
+  };
+
   const getInitials = (name?: string) => {
     if (!name) return 'US';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -121,13 +136,13 @@ export default function UserManagementModal({ onClose }: UserManagementModalProp
                 )}
                 <h2 className="text-xl font-bold text-slate-800">{selectedUser.name}</h2>
                 <p className="text-sm text-slate-500">{selectedUser.email}</p>
-                {selectedUser.phone && <p className="text-xs text-slate-400 mt-1">{selectedUser.phone}</p>}
 
-                <div className="w-full bg-white rounded-2xl p-4 mt-8 shadow-sm border border-slate-100">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">
-                    ROL DEL SISTEMA
+                <div className="w-full bg-white rounded-2xl p-4 mt-8 shadow-sm border border-slate-100 space-y-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    DATOS DEL USUARIO
                   </p>
-                  <div className="flex justify-between items-center">
+                  
+                  <div className="flex justify-between items-center pb-3 border-b border-slate-100">
                     <span className="text-sm font-semibold text-slate-700">Nivel de acceso</span>
                     <select
                       value={selectedUser.role || 'cliente'}
@@ -138,6 +153,21 @@ export default function UserManagementModal({ onClose }: UserManagementModalProp
                       <option value="conductor">Conductor</option>
                       <option value="admin">Admin</option>
                     </select>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-semibold text-slate-700">Teléfono</span>
+                    <input
+                      type="tel"
+                      value={selectedUser.phone || ''}
+                      onChange={(e) => {
+                        const newPhone = e.target.value;
+                        setSelectedUser(prev => prev ? { ...prev, phone: newPhone } : null);
+                      }}
+                      onBlur={(e) => handlePhoneChange(e.target.value)}
+                      placeholder="+57 300 000 0000"
+                      className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl px-3 py-2 outline-none focus:border-emerald-500 font-medium w-36 text-right"
+                    />
                   </div>
                 </div>
 

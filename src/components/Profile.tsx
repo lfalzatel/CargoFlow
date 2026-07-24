@@ -5,7 +5,7 @@ import { UserProfile } from '../types';
 
 interface ProfileProps {
   user: UserProfile;
-  onUpdateProfile: (name: string, vehiclePlate?: string) => void;
+  onUpdateProfile: (updates: Partial<UserProfile>) => void;
   onDeposit: (amount: number) => void;
   onLogout: () => void;
   onNavigateToSettings: () => void;
@@ -17,6 +17,7 @@ export default function Profile({ user, onUpdateProfile, onDeposit, onLogout, on
   
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState(user.name);
+  const [editPhone, setEditPhone] = useState(user.phone || '');
   const [editPlate, setEditPlate] = useState(user.plateNumber || '');
 
   const handleDepositSubmit = (e: React.FormEvent) => {
@@ -31,7 +32,11 @@ export default function Profile({ user, onUpdateProfile, onDeposit, onLogout, on
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editName.trim()) {
-      onUpdateProfile(editName, editPlate);
+      onUpdateProfile({
+        name: editName,
+        phone: editPhone,
+        plateNumber: editPlate,
+      });
       setShowEditModal(false);
     }
   };
@@ -275,16 +280,37 @@ export default function Profile({ user, onUpdateProfile, onDeposit, onLogout, on
                   />
                 </div>
 
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-outline uppercase tracking-wider">Teléfono</label>
+                  <input
+                    type="tel"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    className="w-full h-11 px-3 bg-surface rounded-xl border border-outline-variant text-sm font-semibold focus:outline-none focus:border-primary-container"
+                    placeholder="+57 300 000 0000"
+                  />
+                </div>
+
                 {user.role === 'conductor' && (
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-bold text-outline uppercase tracking-wider">Placa de Vehículo</label>
-                    <input
-                      type="text"
-                      value={editPlate}
-                      onChange={(e) => setEditPlate(e.target.value.toUpperCase())}
-                      className="w-full h-11 px-3 bg-surface rounded-xl border border-outline-variant text-sm font-bold uppercase focus:outline-none focus:border-primary-container animate-pulse-once"
-                    />
-                  </div>
+                  <>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-outline uppercase tracking-wider">Placa de Vehículo</label>
+                      <input
+                        type="text"
+                        value={editPlate}
+                        onChange={(e) => setEditPlate(e.target.value.toUpperCase())}
+                        className="w-full h-11 px-3 bg-surface rounded-xl border border-outline-variant text-sm font-bold uppercase focus:outline-none focus:border-primary-container"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => alert('Módulo de actualización de SOAT, Tecnomecánica y Licencia en construcción.')}
+                      className="mt-1 flex items-center justify-center gap-2 w-full py-3 border border-dashed border-outline-variant rounded-xl text-sm font-bold text-on-surface-variant hover:bg-surface-container-low transition-colors"
+                    >
+                      <Truck size={16} />
+                      Actualizar Documentos
+                    </button>
+                  </>
                 )}
 
                 <button

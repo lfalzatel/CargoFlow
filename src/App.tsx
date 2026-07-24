@@ -333,12 +333,28 @@ export default function App() {
     }));
   };
 
-  // Update profile details helper
-  const handleUpdateProfile = (name: string, vehiclePlate?: string) => {
+  const handleUpdateProfile = async (updates: Partial<UserProfile>) => {
+    try {
+      const { auth, db } = await import('./config/firebase');
+      const { doc, updateDoc } = await import('firebase/firestore');
+      if (auth.currentUser && user.role) {
+        // Try updating both possible role documents to ensure we catch the correct one
+        // especially for admin users who might be using either a conductor or cliente doc
+        const possibleRoles = ['conductor', 'cliente'];
+        for (const r of possibleRoles) {
+          try {
+            const docRef = doc(db, 'users', `${auth.currentUser.uid}_${r}`);
+            await updateDoc(docRef, updates);
+          } catch(e) {}
+        }
+      }
+    } catch (e) {
+      console.error('Error updating profile in DB:', e);
+    }
+
     setUser(prev => ({
       ...prev,
-      name,
-      plateNumber: vehiclePlate || prev.plateNumber,
+      ...updates
     }));
   };
 

@@ -27,13 +27,24 @@ export default function SplashScreen({
     const playPromise = audio.play();
     if (playPromise !== undefined) {
       playPromise.catch((err) => {
-        // Autoplay policy warning in some browsers if not user interaction yet
         console.warn('Audio play notice (user interaction may be required):', err);
       });
     }
 
-    // Do not pause on unmount. The sound is short and should finish naturally.
-    // This also prevents "play() interrupted by pause()" errors in React Strict Mode.
+    return () => {
+      // Pause the audio safely when splash screen unmounts, avoiding DOMException
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        }).catch(() => {});
+      } else {
+        try {
+          audio.pause();
+          audio.currentTime = 0;
+        } catch(e) {}
+      }
+    };
   }, [soundUrl]);
 
   return (
