@@ -82,6 +82,7 @@ export default function App() {
   // Database of shipments (trips)
   const [trips, setTrips] = useState<Trip[]>(INITIAL_TRIPS);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+  const [activeChatTrip, setActiveChatTrip] = useState<Trip | null>(null);
   
   // Chat messages
   const [chatMessages] = useState<ChatMessage[]>(INITIAL_CHAT_MESSAGES);

@@ -13,5 +13,8 @@ service cloud.firestore {
     match /notifications/{document=**} {
       allow read, write: if request.auth != null;
     }
+    match /global_chat/{document=**} {
+      allow read, write: if request.auth != null;
+    }
   }
 }

@@ -90,6 +90,7 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
     try {
       const { db } = await import('../config/firebase');
       const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { sendDbNotification } = await import('../services/notificationService');
       
       await addDoc(collection(db, chatCollectionPath), {
         senderEmail: user.email,
@@ -97,6 +98,20 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
         timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
         createdAt: serverTimestamp()
       });
+
+      // Send persistent notification to recipient if in a trip chat
+      const targetEmail = activeTrip
+        ? (user.email === activeTrip.clienteId ? activeTrip.conductorId : activeTrip.clienteId)
+        : null;
+
+      if (targetEmail) {
+        sendDbNotification(
+          targetEmail,
+          `💬 Mensaje de ${user.name}`,
+          textToSend,
+          `chat-${activeTrip?.id}`
+        );
+      }
     } catch (e) {
       console.error("Could not send message:", e);
       // Fallback local update
