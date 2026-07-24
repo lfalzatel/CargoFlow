@@ -457,6 +457,21 @@ export default function Home({
                 </span>
               </div>
 
+              {/* Client Requester Info */}
+              <div className="flex items-center gap-2.5 mb-3 p-2 bg-slate-50 border border-slate-100 rounded-xl">
+                {pendingTrip.clientePhotoURL && pendingTrip.clientePhotoURL.startsWith('http') && !pendingTrip.clientePhotoURL.includes('unsplash') ? (
+                  <img src={pendingTrip.clientePhotoURL} alt={pendingTrip.clienteName || 'Cliente'} className="w-8 h-8 rounded-full object-cover border border-white shadow-xs" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 text-white font-extrabold flex items-center justify-center border border-white shadow-xs text-[10px] uppercase">
+                    {(pendingTrip.clienteName || 'Cliente').split(' ').map(n => n[0]).join('').substring(0, 2)}
+                  </div>
+                )}
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Cliente Solicitante</span>
+                  <span className="text-xs font-bold text-slate-700">{pendingTrip.clienteName || 'Cliente CargoFlow'}</span>
+                </div>
+              </div>
+
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex flex-col items-center">
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />

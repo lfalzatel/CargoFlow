@@ -24,6 +24,24 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
     }
   });
 
+  const renderAvatar = (photoURL?: string, name?: string, sizeClass = "w-10 h-10 text-xs") => {
+    if (photoURL && photoURL.startsWith('http') && !photoURL.includes('unsplash')) {
+      return (
+        <img
+          src={photoURL}
+          alt={name || 'Usuario'}
+          className={`${sizeClass} rounded-full object-cover border border-white shadow-xs flex-shrink-0`}
+        />
+      );
+    }
+    const initials = (name || 'Usuario').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    return (
+      <div className={`${sizeClass} rounded-full bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 text-white font-extrabold flex items-center justify-center border border-white shadow-xs flex-shrink-0 uppercase`}>
+        {initials}
+      </div>
+    );
+  };
+
   return (
     <div className="bg-background min-h-screen pb-[88px] pt-20">
       {/* Top App Bar */}
@@ -154,18 +172,10 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                     <div className="mt-2 p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-3">
                       {user.email === trip.clienteId ? (
                         <>
-                          <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
-                            {trip.conductorPhotoURL ? (
-                              <img src={trip.conductorPhotoURL} alt={trip.conductorName} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                <User size={20} />
-                              </div>
-                            )}
-                          </div>
+                          {renderAvatar(trip.conductorPhotoURL, trip.conductorName, "w-10 h-10 text-xs")}
                           <div className="flex-1">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Conductor Asignado</p>
-                            <p className="text-xs font-bold text-slate-700">{trip.conductorName}</p>
+                            <p className="text-xs font-bold text-slate-700">{trip.conductorName || 'Conductor CargoFlow'}</p>
                             <div className="flex items-center gap-2 mt-0.5">
                               {trip.conductorPlate && <span className="text-[10px] font-bold bg-slate-200 text-slate-600 px-1.5 rounded">{trip.conductorPlate}</span>}
                               {trip.conductorVehicleType && <span className="text-[10px] text-slate-500 font-medium truncate">{trip.conductorVehicleType}</span>}
@@ -174,18 +184,10 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                         </>
                       ) : (
                         <>
-                          <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
-                            {trip.clientePhotoURL ? (
-                              <img src={trip.clientePhotoURL} alt={trip.clienteName} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                <User size={20} />
-                              </div>
-                            )}
-                          </div>
+                          {renderAvatar(trip.clientePhotoURL, trip.clienteName, "w-10 h-10 text-xs")}
                           <div className="flex-1">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Cliente Solicitante</p>
-                            <p className="text-xs font-bold text-slate-700">{trip.clienteName}</p>
+                            <p className="text-xs font-bold text-slate-700">{trip.clienteName || 'Cliente CargoFlow'}</p>
                           </div>
                         </>
                       )}
