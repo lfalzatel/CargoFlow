@@ -5,13 +5,14 @@ import { Trip, UserProfile } from '../types';
 
 interface HomeProps {
   user: UserProfile;
+  pendingTrip?: Trip;
   onCreateShipment: (trip: Trip) => void;
   onNavigateToView: (view: 'home' | 'activity' | 'chat' | 'profile') => void;
   onUpdateProfile?: (updates: Partial<UserProfile>) => void;
   onLogout: () => void;
 }
 
-export default function Home({ user, onCreateShipment, onNavigateToView, onUpdateProfile, onLogout }: HomeProps) {
+export default function Home({ user, pendingTrip, onCreateShipment, onNavigateToView, onUpdateProfile, onLogout }: HomeProps) {
   const [showShipmentModal, setShowShipmentModal] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedTruck, setSelectedTruck] = useState<{
@@ -396,40 +397,54 @@ export default function Home({ user, onCreateShipment, onNavigateToView, onUpdat
       <div className="absolute bottom-20 left-4 right-4 z-20">
         {user.role === 'conductor' ? (
           /* DRIVER BOTTOM CARD: OFERTA DE CARGA DISPONIBLE */
-          <div className="bg-white rounded-2xl shadow-[0px_12px_40px_rgba(0,0,0,0.15)] p-5 border border-surface-container">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                OFERTA DE CARGA DISPONIBLE
-              </span>
-              <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                $1.250.000 COP
-              </span>
-            </div>
-
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex flex-col items-center">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <div className="w-0.5 h-7 bg-slate-300 my-1" />
-                <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+          pendingTrip ? (
+            <div className="bg-white rounded-2xl shadow-[0px_12px_40px_rgba(0,0,0,0.15)] p-5 border border-surface-container animate-fade-in-up">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  OFERTA DE CARGA DISPONIBLE
+                </span>
+                <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                  ${pendingTrip.price.toLocaleString('es-CO')} COP
+                </span>
               </div>
-              <div className="flex flex-col justify-between h-14">
-                <span className="text-sm text-on-surface font-extrabold leading-tight">Bogotá, D.C. (Fontibón)</span>
-                <span className="text-sm text-on-surface font-extrabold leading-tight">Medellín, ANT (Guayabal)</span>
+
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex flex-col items-center">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <div className="w-0.5 h-7 bg-slate-300 my-1" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                </div>
+                <div className="flex flex-col justify-between h-14">
+                  <span className="text-sm text-on-surface font-extrabold leading-tight">{pendingTrip.origin}</span>
+                  <span className="text-sm text-on-surface font-extrabold leading-tight">{pendingTrip.destination}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  alert(`¡Has tomado la oferta de carga hacia ${pendingTrip.destination}!`);
+                  onNavigateToView('activity');
+                }}
+                className="w-full h-[50px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <Truck size={18} fill="currentColor" />
+                Aceptar Carga & Tomar Flete
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-[0px_12px_40px_rgba(0,0,0,0.15)] p-5 border border-surface-container animate-pulse">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-primary-container">
+                  <Search size={20} />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-on-surface">Buscando cargas...</h4>
+                  <p className="text-xs text-on-surface-variant">No hay fletes disponibles cerca de ti en este momento.</p>
+                </div>
               </div>
             </div>
-
-            <button
-              onClick={() => {
-                alert('¡Has tomado la oferta de carga! Iniciando ruta hacia Bogotá...');
-                onNavigateToView('activity');
-              }}
-              className="w-full h-[50px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] cursor-pointer"
-            >
-              <Truck size={18} fill="currentColor" />
-              Aceptar Carga & Tomar Flete
-            </button>
-          </div>
+          )
         ) : (
           /* CLIENT BOTTOM CARD: RASTREO DE ENVÍO EN CURSO */
           <div className="bg-white rounded-2xl shadow-[0px_12px_40px_rgba(0,0,0,0.12)] p-5 border border-surface-container">

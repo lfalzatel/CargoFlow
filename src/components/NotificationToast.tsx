@@ -125,7 +125,7 @@ export default function NotificationToast() {
   return (
     <div
       aria-live="polite"
-      className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 items-center pointer-events-none"
+      className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 items-center pointer-events-none"
       style={{ width: 'calc(100% - 24px)', maxWidth: '360px' }}
     >
       <AnimatePresence mode="sync">

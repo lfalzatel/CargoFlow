@@ -575,6 +575,7 @@ export default function App() {
           {view === 'home' && (
             <Home 
               user={user} 
+              pendingTrip={trips.find(t => t.status === 'PENDIENTE')}
               onCreateShipment={handleCreateShipment} 
               onNavigateToView={handleViewChange}
               onUpdateProfile={handleUpdateProfile}
