@@ -846,7 +846,12 @@ export default function App() {
           {view === 'chat' && (
             <Chat 
               user={user}
-              activeTrip={activeChatTrip}
+              activeTrip={
+                activeChatTrip 
+                || trips.find(t => t.status === 'EN CAMINO' && (t.clienteId === user.email || t.conductorId === user.email))
+                || trips.find(t => t.status === 'EN CAMINO')
+                || trips[0]
+              }
               initialMessages={chatMessages} 
               onBack={() => setView('activity')} 
             />
