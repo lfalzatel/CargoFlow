@@ -33,10 +33,31 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
     : undefined;
 
   const chatCollectionPath = activeTrip ? `trips/${activeTrip.id}/chat_messages` : 'global_chat';
+  const mainScrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom of chat
+  const renderAvatar = (photoURL?: string, name?: string, sizeClass = "w-10 h-10 text-xs") => {
+    if (photoURL && typeof photoURL === 'string' && photoURL.startsWith('http') && photoURL.length > 10) {
+      return (
+        <img
+          src={photoURL}
+          alt={name || 'Usuario'}
+          className={`${sizeClass} rounded-full object-cover border border-white shadow-xs flex-shrink-0`}
+        />
+      );
+    }
+    const initials = (name || 'Usuario').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    return (
+      <div className={`${sizeClass} rounded-full bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 text-white font-extrabold flex items-center justify-center border border-white shadow-xs flex-shrink-0 uppercase`}>
+        {initials}
+      </div>
+    );
+  };
+
+  // Auto-scroll ONLY messages container to bottom (without scrolling top header/window)
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTop = mainScrollRef.current.scrollHeight;
+    }
   }, [messages]);
 
   // Listen to Firestore
@@ -145,17 +166,7 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
           
           <div className="flex items-center gap-3">
             <div className="relative">
-              {chatPartnerPhoto ? (
-                <img
-                  className="w-11 h-11 rounded-full object-cover border-2 border-surface-container-low shadow-sm"
-                  alt={chatPartnerName}
-                  src={chatPartnerPhoto}
-                />
-              ) : (
-                <div className="w-11 h-11 rounded-full bg-slate-100 border-2 border-surface-container-low shadow-sm flex items-center justify-center text-slate-400">
-                  <User size={22} />
-                </div>
-              )}
+              {renderAvatar(chatPartnerPhoto, chatPartnerName, "w-11 h-11 text-xs")}
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
             <div className="flex flex-col">
@@ -174,7 +185,7 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
       </header>
 
       {/* Chat Canvas Area */}
-      <main className="flex-1 overflow-y-auto no-scrollbar p-4 pt-24 pb-32 flex flex-col gap-6 bg-background">
+      <main ref={mainScrollRef} className="flex-1 overflow-y-auto no-scrollbar p-4 pt-24 pb-32 flex flex-col gap-6 bg-background">
         {/* Date Separator */}
         <div className="flex justify-center">
           <span className="bg-surface-container text-on-surface-variant font-bold text-[10px] tracking-widest px-3 py-1 rounded-full uppercase">
@@ -200,13 +211,7 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
               key={msg.id}
               className={`flex gap-3 max-w-[85%] ${isUser ? 'self-end flex-row-reverse' : 'self-start'}`}
             >
-              {!isUser && (
-                <img
-                  className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-auto shadow-sm"
-                  alt="Carlos"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBX71K1a1ULIbu3dfFxAFJE6CrZSGCltU7YYeZCRu8Yiy1kQzuY6fkgymarB8JnjL_5IP42oqM8VH5nwLJIK-IYlHSo4Jw960JK8GHhlwFC594r5c7JUl26qnXFLY5rzfM9_OzuaodtSy-x4fP2AdoHTOj_EkbnhF47MRl5LJo6Y4heLwOGJlKDsOsR-uVZffiN3j2KxYEE1qnCG2PfLBgKFdEOWOAttQLOUEthigNlQGayZNcg9Kec"
-                />
-              )}
+              {!isUser && renderAvatar(chatPartnerPhoto, chatPartnerName, "w-8 h-8 text-[10px]")}
               
               <div className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
                 {/* Bubble Container */}
