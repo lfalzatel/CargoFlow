@@ -6,15 +6,23 @@ import { ChatMessage, UserProfile, Trip } from '../types';
 interface ChatProps {
   user: UserProfile;
   activeTrip?: Trip | null;
+  trips?: Trip[];
   initialMessages: ChatMessage[];
   onBack: () => void;
+  onSelectTripChat?: (trip: Trip) => void;
 }
 
-export default function Chat({ user, activeTrip, initialMessages, onBack }: ChatProps) {
+export default function Chat({ user, activeTrip, trips = [], initialMessages, onBack, onSelectTripChat }: ChatProps) {
+  const [selectedTripState, setSelectedTripState] = useState<Trip | null>(activeTrip || null);
+  const [inboxTab, setInboxTab] = useState<'activos' | 'historial'>('activos');
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [inputText, setInputText] = useState('');
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedTripState(activeTrip || null);
+  }, [activeTrip]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -76,28 +84,28 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
     }
   };
 
-  const isClientView = activeTrip ? user.email === activeTrip.clienteId : false;
-  const chatPartnerName = activeTrip
-    ? (isClientView ? activeTrip.conductorName || 'Conductor Asignado' : activeTrip.clienteName || 'Cliente Solicitante')
+  const isClientView = selectedTripState ? user.email === selectedTripState.clienteId : false;
+  const chatPartnerName = selectedTripState
+    ? (isClientView ? selectedTripState.conductorName || 'Conductor Asignado' : selectedTripState.clienteName || 'Cliente Solicitante')
     : 'Soporte CargoFlow';
 
-  const chatPartnerSubtitle = activeTrip
+  const chatPartnerSubtitle = selectedTripState
     ? (isClientView 
-        ? `${activeTrip.conductorVehicleType || activeTrip.vehicleType || 'Vehículo'} • ${activeTrip.conductorPlate || 'Placa asignada'}`
-        : `Cliente Flete #${activeTrip.id}`)
+        ? `${selectedTripState.conductorVehicleType || selectedTripState.vehicleType || 'Vehículo'} • ${selectedTripState.conductorPlate || 'Placa asignada'}`
+        : `Cliente Flete #${selectedTripState.id}`)
     : 'Canal oficial de logística';
 
-  const partnerEmail = activeTrip
-    ? (isClientView ? activeTrip.conductorId : activeTrip.clienteId)
+  const partnerEmail = selectedTripState
+    ? (isClientView ? selectedTripState.conductorId : selectedTripState.clienteId)
     : undefined;
 
-  const rawPartnerPhoto = activeTrip
-    ? (isClientView ? activeTrip.conductorPhotoURL : activeTrip.clientePhotoURL)
+  const rawPartnerPhoto = selectedTripState
+    ? (isClientView ? selectedTripState.conductorPhotoURL : selectedTripState.clientePhotoURL)
     : undefined;
 
   const chatPartnerPhoto = rawPartnerPhoto || (partnerEmail === user.email ? user.photoURL : undefined);
 
-  const chatCollectionPath = activeTrip ? `trips/${activeTrip.id}/chat_messages` : 'global_chat';
+  const chatCollectionPath = selectedTripState ? `trips/${selectedTripState.id}/chat_messages` : 'global_chat';
   const mainScrollRef = useRef<HTMLDivElement>(null);
 
   const renderAvatar = (photoURL?: string, name?: string, sizeClass = "w-10 h-10 text-xs") => {
@@ -194,8 +202,8 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
       });
 
       // Send persistent notification to recipient if in a trip chat
-      const targetEmail = activeTrip
-        ? (user.email === activeTrip.clienteId ? activeTrip.conductorId : activeTrip.clienteId)
+      const targetEmail = selectedTripState
+        ? (user.email === selectedTripState.clienteId ? selectedTripState.conductorId : selectedTripState.clienteId)
         : null;
 
       if (targetEmail) {
@@ -203,7 +211,7 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
           targetEmail,
           `💬 Mensaje de ${user.name}`,
           textToSend || '📷 Imagen adjunta',
-          `chat-${activeTrip?.id}`,
+          `chat-${selectedTripState?.id}`,
           'chat'
         );
       }
@@ -229,14 +237,121 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
     }
   };
 
+  if (!selectedTripState) {
+    const userTrips = (trips || []).filter(t => t.clienteId === user.email || t.conductorId === user.email || user.role === 'admin');
+    const activeInboxTrips = userTrips.filter(t => t.status === 'EN CAMINO' || t.status === 'PENDIENTE');
+    const historyInboxTrips = userTrips.filter(t => t.status === 'COMPLETADO');
+    const displayedTrips = inboxTab === 'activos' ? activeInboxTrips : historyInboxTrips;
+
+    return (
+      <div className="bg-background min-h-screen flex flex-col font-sans pb-28 pt-20">
+        {/* Top Header */}
+        <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm flex items-center justify-between px-4 h-[72px] border-b border-surface-container">
+          <div className="flex items-center gap-3">
+            <button onClick={onBack} className="text-on-surface-variant hover:text-primary p-2 -ml-2 rounded-full cursor-pointer">
+              <ArrowLeft size={20} />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base">
+                💬
+              </div>
+              <div>
+                <h2 className="font-black text-sm text-slate-800">Conversaciones</h2>
+                <p className="text-[10px] font-bold text-slate-400">Canal oficial de mensajería</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Tab Selector: Activos vs Historial */}
+        <div className="px-4 pt-3 pb-2 bg-white border-b border-slate-100 flex gap-2">
+          <button
+            onClick={() => setInboxTab('activos')}
+            className={`flex-1 py-2.5 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              inboxTab === 'activos'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            ● Activos ({activeInboxTrips.length})
+          </button>
+          <button
+            onClick={() => setInboxTab('historial')}
+            className={`flex-1 py-2.5 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              inboxTab === 'historial'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            ✓ Historial ({historyInboxTrips.length})
+          </button>
+        </div>
+
+        {/* Inbox Conversations List */}
+        <div className="p-4 flex flex-col gap-3 flex-1 overflow-y-auto">
+          {displayedTrips.length === 0 ? (
+            <div className="bg-white rounded-2xl p-8 border border-slate-100 text-center flex flex-col items-center justify-center gap-3 mt-4 shadow-xs">
+              <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                💬
+              </div>
+              <h4 className="font-extrabold text-sm text-slate-700">No hay conversaciones en esta sección</h4>
+              <p className="text-xs text-slate-400 max-w-xs">
+                {inboxTab === 'activos'
+                  ? 'Tus fletes en camino o solicitudes de carga aparecerán aquí automáticamente.'
+                  : 'Los mensajes de fletes completados quedarán guardados en tu historial.'}
+              </p>
+            </div>
+          ) : (
+            displayedTrips.map((trip) => {
+              const isClient = user.email === trip.clienteId;
+              const partnerName = isClient ? (trip.conductorName || 'Conductor Asignado') : (trip.clienteName || 'Cliente Solicitante');
+              const partnerPhoto = isClient ? trip.conductorPhotoURL : trip.clientePhotoURL;
+
+              return (
+                <div
+                  key={trip.id}
+                  onClick={() => {
+                    setSelectedTripState(trip);
+                    if (onSelectTripChat) onSelectTripChat(trip);
+                  }}
+                  className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md transition-all flex items-center gap-3.5 cursor-pointer active:scale-98"
+                >
+                  {renderAvatar(partnerPhoto || (partnerName === user.name ? user.photoURL : undefined), partnerName, "w-12 h-12 text-sm")}
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <h4 className="font-extrabold text-xs text-slate-800 truncate">{partnerName}</h4>
+                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                        trip.status === 'EN CAMINO' ? 'bg-blue-100 text-blue-700' :
+                        trip.status === 'PENDIENTE' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {trip.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-bold text-slate-500 truncate mb-0.5">
+                      Flete #{trip.id} • {trip.vehicleType}
+                    </p>
+                    <p className="text-[11px] font-medium text-slate-400 truncate">
+                      📍 {trip.origin} → {trip.destination}
+                    </p>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-background min-h-screen flex flex-col overflow-hidden font-sans antialiased">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm flex items-center justify-between px-4 h-[72px] border-b border-surface-container">
         <div className="flex items-center gap-2">
           <button
-            onClick={onBack}
-            className="text-on-surface-variant hover:text-primary transition-colors p-2 -ml-2 rounded-full active:bg-surface-container-low focus:outline-none"
+            onClick={() => setSelectedTripState(null)}
+            className="text-on-surface-variant hover:text-primary transition-colors p-2 -ml-2 rounded-full active:bg-surface-container-low focus:outline-none cursor-pointer"
           >
             <ArrowLeft size={20} />
           </button>

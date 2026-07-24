@@ -953,14 +953,11 @@ export default function App() {
           {view === 'chat' && (
             <Chat 
               user={user}
-              activeTrip={
-                activeChatTrip 
-                || trips.find(t => t.status === 'EN CAMINO' && (t.clienteId === user.email || t.conductorId === user.email))
-                || trips.find(t => t.status === 'EN CAMINO')
-                || trips[0]
-              }
+              activeTrip={activeChatTrip}
+              trips={trips}
               initialMessages={chatMessages} 
               onBack={() => setView('activity')} 
+              onSelectTripChat={(trip) => setActiveChatTrip(trip)}
             />
           )}
 
