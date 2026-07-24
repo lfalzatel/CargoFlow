@@ -576,6 +576,18 @@ export default function Home({ user, pendingTrip, onCreateShipment, onNavigateTo
                       <option value="Tractomula">Tractomula</option>
                       <option value="Camión Sencillo">Camión Sencillo</option>
                       <option value="Furgón Mediano">Furgón Mediano</option>
+                      <option value="Doble Troque">Doble Troque</option>
+                      <option value="Cuatro Manos">Cuatro Manos</option>
+                      <option value="Minimula">Minimula</option>
+                      <option value="Refrigerado">Refrigerado</option>
+                      <option value="Cama Baja">Cama Baja</option>
+                      <option value="Grúa Planchón">Grúa Planchón</option>
+                      <option value="Niñera">Niñera</option>
+                      <option value="Motocarguera">Motocarguera</option>
+                      <option value="Volqueta">Volqueta</option>
+                      <option value="Jaula">Jaula</option>
+                      <option value="Camioneta">Camioneta (Pick-up)</option>
+                      <option value="Moto con coche">Moto con coche</option>
                     </select>
                   </div>
 

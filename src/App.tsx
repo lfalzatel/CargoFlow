@@ -101,7 +101,7 @@ export default function App() {
     rating: 4.9,
     balance: 1250000,
     plateNumber: 'WYZ-789',
-    vehicleType: 'furgon',
+    vehicleType: 'Furgón Mediano',
   });
 
   // Database of shipments (trips)
@@ -272,7 +272,7 @@ export default function App() {
     fullName: string;
     idNumber: string;
     plateNumber: string;
-    vehicleType: 'furgon' | 'sencillo';
+    vehicleType: string;
   }) => {
     const updatedProfile = {
       name: data.fullName,
@@ -609,6 +609,7 @@ export default function App() {
 
           {view === 'chat' && (
             <Chat 
+              user={user}
               initialMessages={chatMessages} 
               onBack={() => setView('home')} 
             />

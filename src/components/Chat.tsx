@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Phone, Shield, Send, Paperclip, Camera, Check, CheckCheck, Maximize2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChatMessage } from '../types';
+import { ChatMessage, UserProfile } from '../types';
 
 interface ChatProps {
+  user: UserProfile;
   initialMessages: ChatMessage[];
   onBack: () => void;
 }
 
-export default function Chat({ initialMessages, onBack }: ChatProps) {
+export default function Chat({ user, initialMessages, onBack }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [inputText, setInputText] = useState('');
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
@@ -20,42 +21,76 @@ export default function Chat({ initialMessages, onBack }: ChatProps) {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Listen to Firestore
+  useEffect(() => {
+    let unsubscribe: () => void;
+    
+    const loadChat = async () => {
+      try {
+        const { db } = await import('../config/firebase');
+        const { collection, query, orderBy, onSnapshot, limit } = await import('firebase/firestore');
+        
+        const q = query(
+          collection(db, 'global_chat'),
+          orderBy('createdAt', 'asc'),
+          limit(100)
+        );
+        
+        unsubscribe = onSnapshot(q, (snapshot) => {
+          const loadedMessages: ChatMessage[] = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            loadedMessages.push({
+              id: doc.id,
+              // Treat as 'user' if it's sent by this user, else 'driver' 
+              // (Since it's a global chat, anyone else is 'driver' in UI terms)
+              sender: data.senderEmail === user.email ? 'user' : 'driver',
+              text: data.text,
+              timestamp: data.timestamp || new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
+              isRead: true,
+            });
+          });
+          
+          if (loadedMessages.length > 0) {
+            setMessages(loadedMessages);
+          }
+        });
+      } catch (e) {
+        console.warn('Chat sync error', e);
+      }
+    };
+    
+    loadChat();
+    return () => unsubscribe && unsubscribe();
+  }, [user.email]);
+
   // Handle message sending
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputText.trim()) return;
 
-    const userMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      sender: 'user',
-      text: inputText,
-      timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
-      isRead: true,
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
+    const textToSend = inputText;
     setInputText('');
 
-    // Simulated driver response after 2 seconds!
-    setTimeout(() => {
-      const driverReplies = [
-        "Listo, enterado. Voy saliendo para allá.",
-        "Perfecto, ya cargamos todo. Me pongo en marcha de una vez.",
-        "Documentos al día. Cualquier novedad en la autopista te aviso.",
-        "Entendido. Estimo llegar al punto de descarga en unas 3 horas.",
-        "¡Excelente servicio! Muchas gracias por la información.",
-      ];
+    try {
+      const { db } = await import('../config/firebase');
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
       
-      const randomReply = driverReplies[Math.floor(Math.random() * driverReplies.length)];
-      
-      const driverMsg: ChatMessage = {
-        id: `msg-reply-${Date.now()}`,
-        sender: 'driver',
-        text: randomReply,
+      await addDoc(collection(db, 'global_chat'), {
+        senderEmail: user.email,
+        text: textToSend,
         timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
-      };
-
-      setMessages((prev) => [...prev, driverMsg]);
-    }, 2000);
+        createdAt: serverTimestamp()
+      });
+    } catch (e) {
+      console.error("Could not send message:", e);
+      // Fallback local update
+      setMessages(prev => [...prev, {
+        id: `local-${Date.now()}`,
+        sender: 'user',
+        text: textToSend,
+        timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      }]);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

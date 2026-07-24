@@ -23,7 +23,7 @@ export default function CompleteProfile({ initialName, onComplete, onBack }: Com
   const [fullName, setFullName] = useState(initialName || '');
   const [idNumber, setIdNumber] = useState('');
   const [plateNumber, setPlateNumber] = useState('');
-  const [vehicleType, setVehicleType] = useState<'furgon' | 'sencillo'>('furgon');
+  const [vehicleType, setVehicleType] = useState('Furgón Mediano');
   
   // Interactive document uploads!
   const [docs, setDocs] = useState({
@@ -166,48 +166,29 @@ export default function CompleteProfile({ initialName, onComplete, onBack }: Com
             </div>
 
             <div className="flex flex-col gap-2 mt-2">
-              <span className="text-xs font-semibold text-on-surface-variant">Tipo de Vehículo</span>
-              <div className="grid grid-cols-2 gap-4">
-                {/* Vehicle option 1: Furgon */}
-                <label className="cursor-pointer">
-                  <input
-                    type="radio"
-                    name="vehicleType"
-                    checked={vehicleType === 'furgon'}
-                    onChange={() => setVehicleType('furgon')}
-                    className="sr-only"
-                  />
-                  <div className={`border-2 rounded-xl p-4 flex flex-col items-center justify-center gap-2 h-full transition-all ${
-                    vehicleType === 'furgon'
-                      ? 'bg-blue-50 border-primary-container text-primary-container'
-                      : 'bg-white border-outline-variant text-on-surface-variant hover:bg-surface-container-low'
-                  }`}>
-                    <Truck size={28} />
-                    <span className="text-xs font-bold">Furgón</span>
-                  </div>
-                </label>
-
-                {/* Vehicle option 2: Sencillo */}
-                <label className="cursor-pointer">
-                  <input
-                    type="radio"
-                    name="vehicleType"
-                    checked={vehicleType === 'sencillo'}
-                    onChange={() => setVehicleType('sencillo')}
-                    className="sr-only"
-                  />
-                  <div className={`border-2 rounded-xl p-4 flex flex-col items-center justify-center gap-2 h-full transition-all ${
-                    vehicleType === 'sencillo'
-                      ? 'bg-blue-50 border-primary-container text-primary-container'
-                      : 'bg-white border-outline-variant text-on-surface-variant hover:bg-surface-container-low'
-                  }`}>
-                    <div className="p-0.5">
-                      <Truck size={28} className="rotate-y-180" />
-                    </div>
-                    <span className="text-xs font-bold">Camión Sencillo</span>
-                  </div>
-                </label>
-              </div>
+              <label htmlFor="vehicleType" className="text-xs font-semibold text-on-surface-variant">Tipo de Vehículo</label>
+              <select
+                id="vehicleType"
+                value={vehicleType}
+                onChange={(e) => setVehicleType(e.target.value)}
+                className="w-full h-[56px] px-4 bg-white border-2 border-outline-variant rounded-xl text-on-surface focus:outline-none focus:border-primary-container transition-all font-semibold"
+              >
+                <option value="Tractomula">Tractomula</option>
+                <option value="Camión Sencillo">Camión Sencillo</option>
+                <option value="Furgón Mediano">Furgón Mediano</option>
+                <option value="Doble Troque">Doble Troque</option>
+                <option value="Cuatro Manos">Cuatro Manos</option>
+                <option value="Minimula">Minimula</option>
+                <option value="Refrigerado">Refrigerado</option>
+                <option value="Cama Baja">Cama Baja</option>
+                <option value="Grúa Planchón">Grúa Planchón</option>
+                <option value="Niñera">Niñera</option>
+                <option value="Motocarguera">Motocarguera</option>
+                <option value="Volqueta">Volqueta</option>
+                <option value="Jaula">Jaula</option>
+                <option value="Camioneta">Camioneta (Pick-up)</option>
+                <option value="Moto con coche">Moto con coche</option>
+              </select>
             </div>
           </section>
 

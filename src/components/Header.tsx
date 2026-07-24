@@ -155,29 +155,7 @@ export default function Header({
     }
   };
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: 'notif-1',
-      title: '¡Nueva solicitud asignada!',
-      desc: 'Ruta Bogotá -> Medellín (#CF-8842) cargada.',
-      time: 'Hace 5 min',
-      unread: true,
-    },
-    {
-      id: 'notif-2',
-      title: 'Pago Recibido',
-      desc: 'Se abonaron $1.250.000 COP a tu saldo disponible.',
-      time: 'Hace 1 hora',
-      unread: true,
-    },
-    {
-      id: 'notif-3',
-      title: 'Documento Verificado',
-      desc: 'Tu SOAT y Tarjeta de Propiedad fueron aprobados.',
-      time: 'Ayer',
-      unread: false,
-    },
-  ]);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   const [localUnreadCount, setLocalUnreadCount] = useState(unreadCount);
 
@@ -320,29 +298,9 @@ export default function Header({
                 const opening = !isNotificationsOpen;
                 setIsNotificationsOpen(opening);
                 setIsMenuOpen(false);
-
-                if (opening) {
-                  // Fire in-app + OS push + sound on bell click
-                  notify({
-                    title: 'CargoFlow — Notificaciones',
-                    body:  'Tienes 2 ofertas de carga disponibles cerca de tu ubicación.',
-                    tag:   'cargoflow-flete',
-                    url:   '/activity',
-                    sound: localStorage.getItem('cf_notif_sound') !== 'false' 
-                      ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}` 
-                      : undefined,
-                  });
-                  // Demo scheduled push: fires 15s after closing app
-                  scheduleNotification(
-                    'demo-scheduled',
-                    {
-                      title: '¡Nuevo flete disponible!',
-                      body:  'Bogotá → Medellín • $1.250.000 COP • Furgón',
-                      url:   '/activity',
-                    },
-                    15000  // 15 segundos
-                  );
-                }
+                
+                // Set local unread count to 0 when opened
+                if (opening) setLocalUnreadCount(0);
               }}
               className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-all relative active:scale-95"
               title="Notificaciones"

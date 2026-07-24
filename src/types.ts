@@ -10,7 +10,7 @@ export interface UserProfile {
   balance: number; // in COP
   photoURL?: string;
   plateNumber?: string;
-  vehicleType?: 'furgon' | 'sencillo';
+  vehicleType?: string;
   isComplete?: boolean;
   isAvailable?: boolean;
   documentsUploaded?: {

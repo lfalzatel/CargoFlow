@@ -123,7 +123,7 @@ export default function Profile({ user, onUpdateProfile, onDeposit, onLogout, on
                 </div>
                 <div>
                   <p className="text-sm font-extrabold text-on-surface">
-                    {user.vehicleType === 'furgon' ? 'Vehículo Furgón' : 'Camión Sencillo'}
+                    {user.vehicleType ? user.vehicleType : 'Vehículo No Especificado'}
                   </p>
                   <p className="text-[11px] text-outline font-medium">SOAT, Licencia y Cédula Verificados</p>
                 </div>
