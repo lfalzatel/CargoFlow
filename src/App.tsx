@@ -78,7 +78,15 @@ export default function App() {
   const [isSplashActive, setIsSplashActive] = useState<boolean>(true);
   const [splashMessage, setSplashMessage] = useState<string>('Cargando CargoFlow...');
   const [splashSubtext, setSplashSubtext] = useState<string>('Tu solución inteligente de transporte');
-  const [splashSound, setSplashSound] = useState<string | undefined>(undefined);
+  // Helper to get system sounds
+  const getSysTone = (type: 'login' | 'logout') => {
+    if (localStorage.getItem('cf_sys_sound') === 'false') return undefined;
+    const file = localStorage.getItem(`cf_sys_tone_file_${type}`) || 
+      (type === 'login' ? '550332__wax_vibe__cyberpunk-bass.wav' : '73577__cyberpunk64bit__boomstick.mp3');
+    return `/sounds/${file}`;
+  };
+
+  const [splashSound, setSplashSound] = useState<string | undefined>(getSysTone('login'));
 
   // Selected role
   const [selectedRole, setSelectedRole] = useState<UserRole>('conductor');
@@ -206,15 +214,7 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Helper to get system sounds
-  const getSysTone = (type: 'login' | 'logout') => {
-    if (localStorage.getItem('cf_sys_sound') === 'false') return undefined;
-    const file = localStorage.getItem(`cf_sys_tone_file_${type}`) || 
-      (type === 'login' ? '550332__wax_vibe__cyberpunk-bass.wav' : '73577__cyberpunk64bit__boomstick.mp3');
-    return `/sounds/${file}`;
-  };
 
-  // Helper to trigger splash during async actions
   const triggerSplash = (
     msg: string, 
     sub: string, 

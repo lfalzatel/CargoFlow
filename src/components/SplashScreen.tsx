@@ -14,13 +14,10 @@ export default function SplashScreen({
   soundUrl = '/sounds/550332__wax_vibe__cyberpunk-bass.wav'
 }: SplashScreenProps) {
 
-  const hasPlayedRef = React.useRef(false);
-
   // Play audio sound during splash screen animation
   useEffect(() => {
-    if (!soundUrl || hasPlayedRef.current) return;
+    if (!soundUrl) return;
     
-    hasPlayedRef.current = true;
     const audio = new Audio(soundUrl);
     audio.volume = 0.6;
 
