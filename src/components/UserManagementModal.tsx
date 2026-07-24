@@ -13,6 +13,7 @@ export default function UserManagementModal({ onClose }: UserManagementModalProp
   const [users, setUsers] = useState<(UserProfile & { id: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<(UserProfile & { id: string }) | null>(null);
+  const [activeTab, setActiveTab] = useState<'usuarios' | 'conductor' | 'cliente'>('usuarios');
 
   useEffect(() => {
     fetchUsers();
@@ -25,13 +26,28 @@ export default function UserManagementModal({ onClose }: UserManagementModalProp
         id: doc.id,
         ...doc.data()
       })) as (UserProfile & { id: string })[];
-      setUsers(usersList);
+      
+      // Deduplicate by email and role (keep the latest or first found)
+      const seen = new Set();
+      const deduplicated = usersList.filter(u => {
+        const key = `${u.email}_${u.role}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      setUsers(deduplicated);
     } catch (e) {
       console.error('Error fetching users:', e);
     } finally {
       setLoading(false);
     }
   };
+
+  const filteredUsers = users.filter(u => {
+    if (activeTab === 'usuarios') return true;
+    return u.role === activeTab;
+  });
 
   const handleRoleChange = async (newRole: UserRole) => {
     if (!selectedUser) return;
@@ -187,36 +203,66 @@ export default function UserManagementModal({ onClose }: UserManagementModalProp
               </div>
             ) : (
               /* Lista de Usuarios */
-              <div className="space-y-3">
-                {users.map((u) => (
-                  <div 
-                    key={u.id}
-                    onClick={() => setSelectedUser(u)}
-                    className="bg-white p-3 rounded-2xl flex items-center justify-between shadow-sm border border-slate-100 cursor-pointer hover:border-emerald-200 transition-colors"
+              <div className="flex flex-col h-full">
+                {/* Tabs */}
+                <div className="flex bg-slate-100 p-1 rounded-xl mb-4 flex-shrink-0">
+                  <button
+                    onClick={() => setActiveTab('usuarios')}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                      activeTab === 'usuarios' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                    }`}
                   >
-                    <div className="flex items-center gap-3">
-                      {u.photoURL ? (
-                        <img src={u.photoURL} alt={u.name} className="w-10 h-10 rounded-full object-cover" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-pink-100 text-pink-600 font-bold flex items-center justify-center text-xs">
-                          {getInitials(u.name)}
+                    Todos
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('conductor')}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                      activeTab === 'conductor' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Conductores
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('cliente')}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                      activeTab === 'cliente' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Clientes
+                  </button>
+                </div>
+
+                <div className="space-y-3 flex-1 overflow-y-auto pb-4">
+                  {filteredUsers.map((u) => (
+                    <div 
+                      key={u.id}
+                      onClick={() => setSelectedUser(u)}
+                      className="bg-white p-3 rounded-2xl flex items-center justify-between shadow-sm border border-slate-100 cursor-pointer hover:border-emerald-200 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        {u.photoURL ? (
+                          <img src={u.photoURL} alt={u.name} className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-pink-100 text-pink-600 font-bold flex items-center justify-center text-xs">
+                            {getInitials(u.name)}
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">{u.name}</p>
+                          <p className="text-xs text-slate-500">{u.email}</p>
                         </div>
-                      )}
-                      <div>
-                        <p className="text-sm font-bold text-slate-800">{u.name}</p>
-                        <p className="text-xs text-slate-500">{u.email}</p>
+                      </div>
+                      <div className="bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                          {u.role || 'USUARIO'}
+                        </span>
                       </div>
                     </div>
-                    <div className="bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                        {u.role || 'USUARIO'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                {users.length === 0 && !loading && (
-                  <p className="text-center text-sm text-slate-500 mt-10">No se encontraron usuarios.</p>
-                )}
+                  ))}
+                  {filteredUsers.length === 0 && !loading && (
+                    <p className="text-center text-sm text-slate-500 mt-10">No se encontraron usuarios.</p>
+                  )}
+                </div>
               </div>
             )}
           </div>
