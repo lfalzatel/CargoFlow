@@ -74,57 +74,36 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
     const uid = cred.user.uid;
     
     // 2. Dual-Role Firestore Key: Allows the exact same Google account to have both Conductor and Cliente profiles!
-    const docId = `${uid}_${role}`;
-    const docRef = doc(db, 'users', docId);
-
-    // Fast non-blocking Firestore document fetch with 2-second timeout
-    let snap: any = null;
-    try {
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Firestore timeout')), 2000)
-      );
-      snap = await Promise.race([getDoc(docRef), timeoutPromise]);
-    } catch (e) {
-      console.warn('Firestore read notice (proceeding with profile):', e);
-    }
-
-    if (snap && snap.exists()) {
-      const existing = snap.data() as UserProfile;
-      const merged = {
-        ...existing,
-        role: (cred.user.email === 'lfalzatel@gmail.com' || existing.role === 'admin') ? 'admin' : role,
-        photoURL: cred.user.photoURL || existing.photoURL,
-        email: cred.user.email || existing.email,
-        name: cred.user.displayName || existing.name,
-      };
-      // Keep localStorage in sync with Firestore data
-      try { localStorage.setItem(`cf_profile_${uid}_${role}`, JSON.stringify(merged)); } catch (_) {}
-      return merged;
-    }
-
-    // Firestore was offline or doc not found — check localStorage cache
+    const baseProfile = {
+      name: cred.user.displayName || (role === 'cliente' ? 'Cliente Nuevo' : 'Conductor Nuevo'),
+      email: cred.user.email || '',
+      phone: cred.user.phoneNumber || '',
+      role: cred.user.email === 'lfalzatel@gmail.com' ? 'admin' : role,
+      isVerified: true,
+      rating: 5.0,
+      balance: 0,
+      photoURL: cred.user.photoURL || undefined,
+    };
+    
+    // Check localStorage cache as fallback
     const cachedRaw = (() => { try { return localStorage.getItem(`cf_profile_${uid}_${role}`); } catch(_) { return null; } })();
     if (cachedRaw) {
       try {
         const cached = JSON.parse(cachedRaw) as UserProfile;
         return {
           ...cached,
-          role,
-          photoURL: cred.user.photoURL || cached.photoURL,
-          email: cred.user.email || cached.email,
-          name: cred.user.displayName || cached.name,
+          ...baseProfile,
+          role: cred.user.email === 'lfalzatel@gmail.com' ? 'admin' : role,
         };
-      } catch (_) {}
+      } catch (e) {}
     }
 
-    // New profile creation for this specific role
-    // Clients are auto-complete — they don't need vehicle/doc setup
     const isComplete = role === 'cliente' ? true : false;
     const profile: UserProfile = {
       name: cred.user.displayName || 'Usuario CargoFlow',
       email: cred.user.email || 'usuario.google@cargoflow.co',
       phone: cred.user.phoneNumber || '',
-      role: role,
+      role: cred.user.email === 'lfalzatel@gmail.com' ? 'admin' : role,
       isVerified: true,
       isComplete,
       rating: 5.0,
@@ -138,6 +117,8 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
     } catch (_) {}
 
     // Save asynchronously to Firestore
+    const docId = `${uid}_${role}`;
+    const docRef = doc(db, 'users', docId);
     setDoc(docRef, profile).catch(err => console.warn('Firestore setDoc notice:', err));
 
     return profile;

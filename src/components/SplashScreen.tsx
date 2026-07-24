@@ -14,10 +14,13 @@ export default function SplashScreen({
   soundUrl = '/sounds/550332__wax_vibe__cyberpunk-bass.wav'
 }: SplashScreenProps) {
 
+  const hasPlayedRef = React.useRef(false);
+
   // Play audio sound during splash screen animation
   useEffect(() => {
-    if (!soundUrl) return;
+    if (!soundUrl || hasPlayedRef.current) return;
     
+    hasPlayedRef.current = true;
     const audio = new Audio(soundUrl);
     audio.volume = 0.6;
 
@@ -29,14 +32,8 @@ export default function SplashScreen({
       });
     }
 
-    return () => {
-      try {
-        audio.pause();
-        audio.currentTime = 0;
-      } catch (e) {
-        // Safe cleanup on unmount
-      }
-    };
+    // Do not pause on unmount. The sound is short and should finish naturally.
+    // This also prevents "play() interrupted by pause()" errors in React Strict Mode.
   }, [soundUrl]);
 
   return (
