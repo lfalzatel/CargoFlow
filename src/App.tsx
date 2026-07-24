@@ -86,6 +86,94 @@ export default function App() {
   
   // Chat messages
   const [chatMessages] = useState<ChatMessage[]>(INITIAL_CHAT_MESSAGES);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [activeToast, setActiveToast] = useState<{ id: string; title: string; message: string; type?: string } | null>(null);
+
+  // Play pleasant 2-tone chime sound
+  const playNotificationSound = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, now);
+      gain1.gain.setValueAtTime(0.15, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.25);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(880, now + 0.15);
+      gain2.gain.setValueAtTime(0.2, now + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.15);
+      osc2.stop(now + 0.45);
+    } catch (e) {
+      console.warn('Audio sound playback:', e);
+    }
+  }, []);
+
+  // Listen to unread notifications for audio chime + in-app toast + bottom nav badge
+  useEffect(() => {
+    if (!user.email || !['home', 'activity', 'chat', 'profile'].includes(view)) return;
+    let unsubscribe: () => void;
+    let isInitial = true;
+
+    const setupListener = async () => {
+      try {
+        const { db } = await import('./config/firebase');
+        const { collection, query, where, onSnapshot } = await import('firebase/firestore');
+
+        const q = query(
+          collection(db, 'notifications'),
+          where('userId', 'in', [user.email, 'all_conductors'])
+        );
+
+        unsubscribe = onSnapshot(q, (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            const data = change.doc.data();
+            if (change.type === 'added' && !data.read) {
+              if (!isInitial) {
+                playNotificationSound();
+                setActiveToast({
+                  id: change.doc.id,
+                  title: data.title || 'Nueva Notificación',
+                  message: data.message || '',
+                  type: data.type || 'info',
+                });
+              }
+            }
+          });
+
+          const unreadCount = snapshot.docs.filter(d => !d.data().read && d.data().type === 'chat').length;
+          setUnreadChatCount(unreadCount);
+          isInitial = false;
+        });
+      } catch (e) {
+        console.warn('Notification snapshot error:', e);
+      }
+    };
+
+    setupListener();
+    return () => { if (unsubscribe) unsubscribe(); };
+  }, [user.email, view, playNotificationSound]);
+
+  // Clear unread chat badge when entering chat view
+  useEffect(() => {
+    if (view === 'chat') {
+      setUnreadChatCount(0);
+    }
+  }, [view]);
 
   // Splash screen on initial app load / refresh (2.6s duration)
   useEffect(() => {
@@ -891,12 +979,52 @@ export default function App() {
         </motion.div>
       </AnimatePresence>
 
+      {/* Floating In-App Toast Banner */}
+      <AnimatePresence>
+        {activeToast && (
+          <motion.div
+            initial={{ y: -60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -60, opacity: 0 }}
+            className="fixed top-20 left-4 right-4 z-50 bg-slate-900/95 text-white p-3.5 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700 flex items-center justify-between animate-bounce"
+          >
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg flex-shrink-0">
+                {activeToast.type === 'chat' ? '💬' : '🔔'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-black truncate">{activeToast.title}</p>
+                <p className="text-[11px] text-slate-300 truncate">{activeToast.message}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 ml-2">
+              <button
+                onClick={() => {
+                  if (activeToast.type === 'chat') setView('chat');
+                  else setView('activity');
+                  setActiveToast(null);
+                }}
+                className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-[11px] px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
+              >
+                Ver
+              </button>
+              <button
+                onClick={() => setActiveToast(null)}
+                className="text-slate-400 hover:text-white p-1"
+              >
+                ✕
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Render Bottom navigation on main dashboards */}
       {['home', 'activity', 'chat', 'profile', 'settings'].includes(view) && (
         <BottomNav 
           currentView={view as any} 
           onViewChange={handleViewChange} 
-          unreadChatCount={1}
+          unreadChatCount={unreadChatCount}
         />
       )}
     </div>

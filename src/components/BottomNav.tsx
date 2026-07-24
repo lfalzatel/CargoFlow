@@ -67,7 +67,10 @@ export default function BottomNav({ currentView, onViewChange, unreadChatCount =
             >
               {/* Icon — gets micro-bounce 3px when settled (after push-and-settle) */}
               <div className="relative">
-                <div className={isActive && !isPushing ? 'anim-micro-bounce' : ''}>
+                {item.id === 'chat' && unreadChatCount > 0 && (
+                  <span className="absolute -inset-2 rounded-full bg-rose-500/40 animate-ping pointer-events-none" />
+                )}
+                <div className={item.id === 'chat' && unreadChatCount > 0 ? 'animate-bounce text-rose-500' : (isActive && !isPushing ? 'anim-micro-bounce' : '')}>
                   <Icon
                     size={19}
                     fill="none"
@@ -77,7 +80,9 @@ export default function BottomNav({ currentView, onViewChange, unreadChatCount =
 
                 {/* Unread badge */}
                 {item.badge && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 border border-white rounded-full animate-pulse" />
+                  <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-rose-600 text-white text-[9px] font-black rounded-full border border-white shadow-md animate-pulse">
+                    {unreadChatCount > 1 ? unreadChatCount : '•'}
+                  </span>
                 )}
               </div>
 
