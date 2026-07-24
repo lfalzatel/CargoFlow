@@ -21,32 +21,7 @@ import {
   sendInAppNotification,
 } from './services/notificationService';
 
-const INITIAL_TRIPS: Trip[] = [
-  {
-    id: '#CF-8842',
-    status: 'EN CAMINO',
-    price: 1250000,
-    date: 'Hoy, 14:30',
-    origin: 'Bogotá, Cundinamarca',
-    originDetail: 'Centro Logístico Fontibón',
-    destination: 'Medellín, Antioquia',
-    destinationDetail: 'Zona Industrial Guayabal',
-    vehicleType: 'Tractomula',
-    tag: 'REFRIGERADO',
-  },
-  {
-    id: '#CF-8821',
-    status: 'COMPLETADO',
-    price: 850000,
-    date: '12 Oct, 09:15',
-    origin: 'Cali, Valle del Cauca',
-    originDetail: 'Terminal Logística de Cali',
-    destination: 'Buenaventura, Valle del Cauca',
-    destinationDetail: 'Zona Portuaria Sociedad Portuaria',
-    vehicleType: 'Camión Sencillo',
-    tag: 'FRÁGIL',
-  }
-];
+const INITIAL_TRIPS: Trip[] = [];
 
 const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
   {
@@ -331,6 +306,8 @@ export default function App() {
       const { doc, setDoc } = await import('firebase/firestore');
       await setDoc(doc(db, 'trips', newTrip.id), {
         ...newTrip,
+        clienteId: user.email,
+        clienteName: user.name,
         createdAt: new Date().toISOString()
       });
     } catch (e) {
@@ -376,10 +353,8 @@ export default function App() {
 
 
 
-  // Listen to new trips in real-time if user is conductor
+  // Listen to new trips in real-time
   useEffect(() => {
-    if (user.role !== 'conductor' && user.role !== 'admin') return;
-
     let unsubscribe = () => {};
     const listenToTrips = async () => {
       try {
@@ -387,33 +362,47 @@ export default function App() {
         const { collection, query, where, onSnapshot } = await import('firebase/firestore');
         const { notify } = await import('./services/notificationService');
 
-        const q = query(
-          collection(db, 'trips'),
-          where('status', '==', 'PENDIENTE')
-        );
+        let q;
+        if (user.role === 'conductor' || user.role === 'admin') {
+          // Conductors listen to all pending trips or trips accepted by them
+          q = query(collection(db, 'trips')); 
+          // We fetch all and filter locally for simplicity, or we could use multiple queries
+        } else {
+          // Clients listen to their own trips
+          q = query(collection(db, 'trips'), where('clienteId', '==', user.email));
+        }
 
         unsubscribe = onSnapshot(q, (snapshot) => {
           snapshot.docChanges().forEach((change) => {
-            if (change.type === 'added') {
+            if (change.type === 'added' || change.type === 'modified') {
               const tripData = change.doc.data() as Trip;
               
-              // Add it locally if it's not already there
-              setTrips(prev => prev.some(t => t.id === tripData.id) ? prev : [tripData, ...prev]);
+              // Add or update it locally
+              setTrips(prev => {
+                const exists = prev.some(t => t.id === tripData.id);
+                if (exists) {
+                  return prev.map(t => t.id === tripData.id ? tripData : t);
+                }
+                return [tripData, ...prev];
+              });
 
-              // Prevent triggering notification on initial page load if the trip is old
-              const isRecent = new Date().getTime() - new Date(tripData.date || tripData.createdAt || new Date()).getTime() < 60000;
-              
-              if (isRecent) {
-                notify({
-                  title: '¡Nuevo Despacho Solicitado!',
-                  body: `${tripData.origin} → ${tripData.destination} • $${tripData.price.toLocaleString('es-CO')} COP`,
-                  tag: `trip-${tripData.id}`,
-                  url: '/activity',
-                  sound: localStorage.getItem('cf_notif_sound') !== 'false'
-                    ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
-                    : undefined,
-                });
+              if (change.type === 'added' && (user.role === 'conductor' || user.role === 'admin') && tripData.status === 'PENDIENTE') {
+                const isRecent = new Date().getTime() - new Date(tripData.date || tripData.createdAt || new Date()).getTime() < 60000;
+                if (isRecent) {
+                  notify({
+                    title: '¡Nuevo Despacho Solicitado!',
+                    body: `${tripData.origin} → ${tripData.destination} • $${tripData.price.toLocaleString('es-CO')} COP`,
+                    tag: `trip-${tripData.id}`,
+                    url: '/activity',
+                    sound: localStorage.getItem('cf_notif_sound') !== 'false'
+                      ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
+                      : undefined,
+                  });
+                }
               }
+            } else if (change.type === 'removed') {
+              const tripData = change.doc.data() as Trip;
+              setTrips(prev => prev.filter(t => t.id !== tripData.id));
             }
           });
         });
@@ -424,7 +413,7 @@ export default function App() {
     
     listenToTrips();
     return () => unsubscribe();
-  }, [user.role]);
+  }, [user.role, user.email]);
 
   // Deposit funds to wallet helper
   const handleDeposit = (amount: number) => {
