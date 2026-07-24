@@ -10,9 +10,10 @@ interface ActivityProps {
   onCancelTrip: (tripId: string) => void;
   onEditTrip?: (trip: Trip) => void;
   onResolveCounterOffer?: (tripId: string, accept: boolean) => void;
+  onCompleteTrip?: (trip: Trip) => void;
 }
 
-export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, onEditTrip, onResolveCounterOffer }: ActivityProps) {
+export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, onEditTrip, onResolveCounterOffer, onCompleteTrip }: ActivityProps) {
   const [filter, setFilter] = useState<'activos' | 'historial'>('activos');
 
   // Filter trips based on selection
@@ -231,17 +232,24 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                             </div>
                           ) : (
                             trip.status === 'EN CAMINO' && (
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 items-center">
                                 <button
                                   onClick={() => onNavigateToChat(trip)}
-                                  className="w-9 h-9 rounded-xl border border-primary-container/20 flex items-center justify-center text-primary-container hover:bg-primary-container/10 transition-colors"
+                                  className="w-9 h-9 rounded-xl border border-blue-200 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
                                   title="Chatear"
                                 >
                                   <MessageSquare size={18} />
                                 </button>
-                                {user.email === trip.clienteId && (
-                                  <button className="px-4 py-2 bg-primary text-on-primary rounded-xl font-bold text-xs shadow-md shadow-primary/20 hover:shadow-lg transition-all active:scale-95">
-                                    Rastrear
+                                {onCompleteTrip && (
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm('¿Deseas dar por finalizado este servicio de flete?')) {
+                                        onCompleteTrip(trip);
+                                      }
+                                    }}
+                                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs shadow-md transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
+                                  >
+                                    ✓ Finalizar
                                   </button>
                                 )}
                               </div>

@@ -11,6 +11,7 @@ import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import SplashScreen from './components/SplashScreen';
 import NotificationToast from './components/NotificationToast';
+import Rating from './components/Rating';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './config/firebase';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
@@ -88,6 +89,43 @@ export default function App() {
   const [chatMessages] = useState<ChatMessage[]>(INITIAL_CHAT_MESSAGES);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [activeToast, setActiveToast] = useState<{ id: string; title: string; message: string; type?: string } | null>(null);
+  const [ratingTrip, setRatingTrip] = useState<Trip | null>(null);
+
+  const handleCompleteTrip = async (trip: Trip) => {
+    setTrips(prev => prev.map(t => t.id === trip.id ? { ...t, status: 'COMPLETADO' } : t));
+    setRatingTrip(trip);
+
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc, collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'trips', trip.id), {
+        status: 'COMPLETADO',
+        completedAt: new Date().toISOString()
+      });
+
+      await addDoc(collection(db, `trips/${trip.id}/chat_messages`), {
+        senderEmail: 'system@cargoflow.com',
+        senderName: 'CargoFlow System',
+        text: '✅ Servicio Completado con Éxito. ¡Gracias por usar CargoFlow!',
+        timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
+        createdAt: serverTimestamp()
+      });
+
+      const { sendDbNotification } = await import('./services/notificationService');
+      const targetEmail = user.email === trip.clienteId ? trip.conductorId : trip.clienteId;
+      if (targetEmail) {
+        sendDbNotification(
+          targetEmail,
+          '🎉 Servicio Finalizado',
+          `El flete #${trip.id} ha sido completado. ¡Por favor califica la experiencia!`,
+          `trip-completed-${trip.id}`,
+          'info'
+        );
+      }
+    } catch (e) {
+      console.warn('Error completing trip in Firestore:', e);
+    }
+  };
 
   // Play pleasant 2-tone chime sound
   const playNotificationSound = useCallback(() => {
@@ -947,6 +985,26 @@ export default function App() {
                 setView('home');
               }}
               onResolveCounterOffer={handleResolveCounterOffer}
+              onCompleteTrip={handleCompleteTrip}
+            />
+          )}
+
+          {/* Rating Service Modal */}
+          {ratingTrip && (
+            <Rating
+              driverName={user.email === ratingTrip.clienteId ? (ratingTrip.conductorName || 'Conductor Asignado') : (ratingTrip.clienteName || 'Cliente Solicitante')}
+              photoURL={user.email === ratingTrip.clienteId ? ratingTrip.conductorPhotoURL : ratingTrip.clientePhotoURL}
+              tripId={`#CF-${ratingTrip.id}`}
+              onClose={() => setRatingTrip(null)}
+              onSubmit={(stars, comment, tip) => {
+                setRatingTrip(null);
+                setActiveToast({
+                  id: `rating-done-${Date.now()}`,
+                  title: '⭐ ¡Calificación guardada!',
+                  message: tip ? `Gracias por calificar con ${stars} estrellas y $${tip.toLocaleString('es-CO')} de propina.` : `Gracias por calificar con ${stars} estrellas.`,
+                  type: 'info'
+                });
+              }}
             />
           )}
 
