@@ -127,6 +127,47 @@ export default function App() {
     }
   };
 
+  const handleSaveRating = async (stars: number, comment: string, tip?: number) => {
+    if (!ratingTrip) return;
+    const isClient = user.email === ratingTrip.clienteId;
+    const updatedData = isClient
+      ? { ratedByCliente: true, clienteRating: { stars, comment, tip: tip || 0 } }
+      : { ratedByConductor: true, conductorRating: { stars, comment } };
+
+    // Optimistic update
+    setTrips(prev => prev.map(t => t.id === ratingTrip.id ? { ...t, ...updatedData } : t));
+
+    const currentTrip = ratingTrip;
+    setRatingTrip(null);
+
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'trips', currentTrip.id), updatedData);
+
+      const recipientEmail = isClient ? currentTrip.conductorId : currentTrip.clienteId;
+      if (recipientEmail) {
+        const { sendDbNotification } = await import('./services/notificationService');
+        sendDbNotification(
+          recipientEmail,
+          '⭐ ¡Tienes una calificación recibida!',
+          `${user.name} te ha calificado con ${stars} estrellas. Toca aquí para calificar la experiencia.`,
+          `rate-trip-${currentTrip.id}`,
+          'rating'
+        );
+      }
+
+      setActiveToast({
+        id: `rating-done-${Date.now()}`,
+        title: '⭐ ¡Calificación guardada!',
+        message: tip ? `Calificaste con ${stars}★ y $${tip.toLocaleString('es-CO')} de propina.` : `Calificaste con ${stars}★.`,
+        type: 'info'
+      });
+    } catch (e) {
+      console.warn('Error saving rating:', e);
+    }
+  };
+
   // Play pleasant 2-tone chime sound
   const playNotificationSound = useCallback(() => {
     try {
@@ -986,6 +1027,7 @@ export default function App() {
               }}
               onResolveCounterOffer={handleResolveCounterOffer}
               onCompleteTrip={handleCompleteTrip}
+              onOpenRating={(trip) => setRatingTrip(trip)}
             />
           )}
 
@@ -996,15 +1038,7 @@ export default function App() {
               photoURL={user.email === ratingTrip.clienteId ? ratingTrip.conductorPhotoURL : ratingTrip.clientePhotoURL}
               tripId={`#CF-${ratingTrip.id}`}
               onClose={() => setRatingTrip(null)}
-              onSubmit={(stars, comment, tip) => {
-                setRatingTrip(null);
-                setActiveToast({
-                  id: `rating-done-${Date.now()}`,
-                  title: '⭐ ¡Calificación guardada!',
-                  message: tip ? `Gracias por calificar con ${stars} estrellas y $${tip.toLocaleString('es-CO')} de propina.` : `Gracias por calificar con ${stars} estrellas.`,
-                  type: 'info'
-                });
-              }}
+              onSubmit={(stars, comment, tip) => handleSaveRating(stars, comment, tip)}
             />
           )}
 
@@ -1062,6 +1096,13 @@ export default function App() {
             onClick={() => {
               if (activeToast.type === 'chat' || activeToast.title.includes('Mensaje')) {
                 setView('chat');
+              } else if (activeToast.type === 'rating' || activeToast.title.includes('Calific')) {
+                const unratedTrip = trips.find(t => 
+                  t.status === 'COMPLETADO' && 
+                  ((user.email === t.clienteId && !t.ratedByCliente) || (user.email === t.conductorId && !t.ratedByConductor))
+                );
+                if (unratedTrip) setRatingTrip(unratedTrip);
+                else setView('activity');
               } else {
                 setView('activity');
               }

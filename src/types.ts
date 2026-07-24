@@ -47,6 +47,10 @@ export interface Trip {
     conductorId: string;
     conductorName: string;
   };
+  ratedByCliente?: boolean;
+  ratedByConductor?: boolean;
+  clienteRating?: { stars: number; comment?: string; tip?: number };
+  conductorRating?: { stars: number; comment?: string };
 }
 
 export interface ChatMessage {

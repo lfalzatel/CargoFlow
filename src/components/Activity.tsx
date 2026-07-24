@@ -11,9 +11,10 @@ interface ActivityProps {
   onEditTrip?: (trip: Trip) => void;
   onResolveCounterOffer?: (tripId: string, accept: boolean) => void;
   onCompleteTrip?: (trip: Trip) => void;
+  onOpenRating?: (trip: Trip) => void;
 }
 
-export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, onEditTrip, onResolveCounterOffer, onCompleteTrip }: ActivityProps) {
+export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, onEditTrip, onResolveCounterOffer, onCompleteTrip, onOpenRating }: ActivityProps) {
   const [filter, setFilter] = useState<'activos' | 'historial'>('activos');
 
   // Filter trips based on selection
@@ -256,6 +257,26 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                             )
                           )}
                         </>
+                      ) : (
+                        /* Completed Trip Rating Status */
+                        (() => {
+                          const isClient = user.email === trip.clienteId;
+                          const needsRating = isClient ? !trip.ratedByCliente : !trip.ratedByConductor;
+                          const myRating = isClient ? trip.clienteRating : trip.conductorRating;
+
+                          return needsRating ? (
+                            <button
+                              onClick={() => onOpenRating && onOpenRating(trip)}
+                              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-1 cursor-pointer animate-pulse"
+                            >
+                              ⭐ Calificar {isClient ? 'Conductor' : 'Cliente'}
+                            </button>
+                          ) : (
+                            <span className="text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl flex items-center gap-1">
+                              ✓ Calificado ({myRating?.stars || 5}★)
+                            </span>
+                          );
+                        })()
                       )}
                     </div>
                   </div>
