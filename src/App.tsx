@@ -550,9 +550,9 @@ export default function App() {
           exit={{ opacity: 0, x: -10 }}
           transition={{ duration: 0.15 }}
           className={`flex flex-col ${
-            view === 'home'
+            ['home', 'settings'].includes(view)
               ? 'flex-1 overflow-hidden'
-              : ['activity', 'chat', 'profile', 'settings'].includes(view)
+              : ['activity', 'chat', 'profile'].includes(view)
               ? 'flex-1 overflow-y-auto pb-28'
               : 'min-h-screen'
           }`}
