@@ -148,14 +148,14 @@ export default function App() {
                 setActiveToast({
                   id: change.doc.id,
                   title: data.title || 'Nueva Notificación',
-                  message: data.message || '',
-                  type: data.type || 'info',
+                  message: data.body || data.message || '',
+                  type: data.type || (data.tag?.includes('chat') || data.title?.includes('Mensaje') ? 'chat' : 'info'),
                 });
               }
             }
           });
 
-          const unreadCount = snapshot.docs.filter(d => !d.data().read && d.data().type === 'chat').length;
+          const unreadCount = snapshot.docs.filter(d => !d.data().read && (d.data().type === 'chat' || d.data().tag?.includes('chat') || d.data().title?.includes('Mensaje'))).length;
           setUnreadChatCount(unreadCount);
           isInitial = false;
         });
@@ -986,30 +986,34 @@ export default function App() {
             initial={{ y: -60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -60, opacity: 0 }}
-            className="fixed top-20 left-4 right-4 z-50 bg-slate-900/95 text-white p-3.5 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700 flex items-center justify-between animate-bounce"
+            onClick={() => {
+              if (activeToast.type === 'chat' || activeToast.title.includes('Mensaje')) {
+                setView('chat');
+              } else {
+                setView('activity');
+              }
+              setActiveToast(null);
+            }}
+            className="fixed top-16 left-4 right-4 z-50 bg-slate-900/95 text-white p-3.5 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700 flex items-center justify-between cursor-pointer active:scale-98 transition-all"
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg flex-shrink-0">
-                {activeToast.type === 'chat' ? '💬' : '🔔'}
+              <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl flex-shrink-0">
+                💬
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-black truncate">{activeToast.title}</p>
-                <p className="text-[11px] text-slate-300 truncate">{activeToast.message}</p>
+                <p className="text-xs font-black text-emerald-400 truncate">{activeToast.title}</p>
+                <p className="text-xs font-bold text-slate-100 truncate">{activeToast.message}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 ml-2">
+            <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+              <span className="bg-emerald-500 text-slate-950 font-extrabold text-[11px] px-3 py-1.5 rounded-xl shadow-xs">
+                Responder
+              </span>
               <button
-                onClick={() => {
-                  if (activeToast.type === 'chat') setView('chat');
-                  else setView('activity');
+                onClick={(e) => {
+                  e.stopPropagation();
                   setActiveToast(null);
                 }}
-                className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-[11px] px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
-              >
-                Ver
-              </button>
-              <button
-                onClick={() => setActiveToast(null)}
                 className="text-slate-400 hover:text-white p-1"
               >
                 ✕

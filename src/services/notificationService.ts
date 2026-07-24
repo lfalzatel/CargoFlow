@@ -87,7 +87,8 @@ export async function sendDbNotification(
   targetUserId: string,
   title: string,
   body: string,
-  tag?: string
+  tag?: string,
+  type?: string
 ): Promise<void> {
   try {
     const { db } = await import('../config/firebase');
@@ -97,6 +98,7 @@ export async function sendDbNotification(
       title,
       body,
       tag: tag || 'general',
+      type: type || (tag?.includes('chat') || title.includes('Mensaje') ? 'chat' : 'info'),
       read: false,
       createdAt: new Date().toISOString(),
     });
