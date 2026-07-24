@@ -43,9 +43,10 @@ export default function Home({
   // Form State for creating a custom shipment
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
-  const [cargoType, setCargoType] = useState('Alimentos');
-  const [tag, setTag] = useState<'REFRIGERADO' | 'FRÁGIL' | ''>('REFRIGERADO');
-  const [vehicle, setVehicle] = useState('Tractomula');
+  const [cargoType, setCargoType] = useState('General');
+  const [tag, setTag] = useState<string>('');
+  const [vehicle, setVehicle] = useState('Camión Sencillo');
+  const [notes, setNotes] = useState('');
   const [customPrice, setCustomPrice] = useState(1250000);
   const [isCounterOffering, setIsCounterOffering] = useState(false);
   const [counterOfferPrice, setCounterOfferPrice] = useState(pendingTrip?.price || 1250000);
@@ -56,7 +57,8 @@ export default function Home({
       setOrigin(editingTrip.origin);
       setDestination(editingTrip.destination);
       setVehicle(editingTrip.vehicleType);
-      setTag(editingTrip.tag as any || 'REFRIGERADO');
+      setTag(editingTrip.tag || '');
+      setNotes(editingTrip.notes || '');
       setCustomPrice(editingTrip.price);
       setShowShipmentModal(true);
     }
@@ -108,6 +110,7 @@ export default function Home({
         destination,
         vehicleType: vehicle,
         ...(tag ? { tag } : {}),
+        ...(notes ? { notes } : {}),
       };
       onEditShipment(updatedTrip);
       if (onCloseEditing) onCloseEditing();
@@ -123,6 +126,7 @@ export default function Home({
         destinationDetail: 'Entrega en Centro Ciudad',
         vehicleType: vehicle,
         ...(tag ? { tag } : {}),
+        ...(notes ? { notes } : {}),
       };
       onCreateShipment(newTrip);
     }
@@ -465,6 +469,27 @@ export default function Home({
                 </div>
               </div>
 
+              {/* Tag & Notes inside Driver Card */}
+              <div className="flex flex-col gap-2 mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 text-on-surface-variant font-medium text-[11px]">
+                    <Truck size={12} className="text-outline" />
+                    <span>{pendingTrip.vehicleType}</span>
+                  </div>
+                  {pendingTrip.tag && (
+                    <span className="bg-surface-container-low text-on-surface-variant font-bold text-[9px] tracking-widest px-2 py-0.5 rounded-sm">
+                      {pendingTrip.tag}
+                    </span>
+                  )}
+                </div>
+                {pendingTrip.notes && (
+                  <div className="p-2 bg-amber-50/50 border border-amber-100 rounded-lg">
+                    <p className="text-[9px] font-extrabold text-amber-600 uppercase tracking-wider mb-0.5">Notas</p>
+                    <p className="text-[11px] text-amber-800 font-medium leading-tight">{pendingTrip.notes}</p>
+                  </div>
+                )}
+              </div>
+
               {isCounterOffering ? (
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2">
@@ -696,14 +721,30 @@ export default function Home({
                     <label className="text-xs font-bold text-outline uppercase tracking-wider">Especialidad</label>
                     <select
                       value={tag}
-                      onChange={(e) => setTag(e.target.value as any)}
+                      onChange={(e) => setTag(e.target.value)}
                       className="w-full h-11 px-3 bg-surface rounded-xl border border-outline-variant text-sm focus:outline-none focus:border-primary-container font-semibold"
                     >
+                      <option value="">Ninguna</option>
                       <option value="REFRIGERADO">REFRIGERADO</option>
                       <option value="FRÁGIL">FRÁGIL</option>
-                      <option value="">Ninguna</option>
+                      <option value="LÍQUIDOS">LÍQUIDOS</option>
+                      <option value="QUÍMICOS">QUÍMICOS</option>
+                      <option value="SOBREDIMENSIONADA">SOBREDIMENSIONADA</option>
+                      <option value="ANIMALES VIVOS">ANIMALES VIVOS</option>
+                      <option value="VALORES">VALORES</option>
                     </select>
                   </div>
+                </div>
+
+                {/* Notas / Observaciones */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-outline uppercase tracking-wider">Notas / Observaciones (Opcional)</label>
+                  <textarea
+                    placeholder="Ej. Entregar en la puerta 3, cuidado con el perro..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="w-full h-20 p-3 bg-surface rounded-xl border border-outline-variant text-sm focus:outline-none focus:border-primary-container font-semibold resize-none"
+                  />
                 </div>
 
                 {/* Precio Deseado */}

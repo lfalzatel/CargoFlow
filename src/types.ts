@@ -32,6 +32,7 @@ export interface Trip {
   destinationDetail?: string;
   vehicleType: string;
   tag?: string; // e.g. "REFRIGERADO", "FRÁGIL"
+  notes?: string; // Additional details for the trip
   createdAt?: string;
   clienteId?: string;
   clienteName?: string;

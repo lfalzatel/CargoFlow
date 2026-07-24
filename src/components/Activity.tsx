@@ -142,6 +142,13 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                     </div>
                   </div>
 
+                  {trip.notes && (
+                    <div className="mt-3 p-3 bg-amber-50/50 border border-amber-100 rounded-xl">
+                      <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-wider mb-1">Notas del cliente</p>
+                      <p className="text-xs text-amber-800 font-medium">{trip.notes}</p>
+                    </div>
+                  )}
+
                   {/* Card Footer with details */}
                   <div className="pt-4 border-t border-surface-container-high flex justify-between items-center">
                     <div className="flex items-center gap-2 text-on-surface-variant font-medium text-xs">
