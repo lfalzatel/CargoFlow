@@ -514,6 +514,7 @@ export default function App() {
               user={user} 
               onCreateShipment={handleCreateShipment} 
               onNavigateToView={handleViewChange}
+              onUpdateProfile={handleUpdateProfile}
               onLogout={handleLogout}
             />
           )}

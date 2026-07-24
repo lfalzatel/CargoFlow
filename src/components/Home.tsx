@@ -7,10 +7,11 @@ interface HomeProps {
   user: UserProfile;
   onCreateShipment: (trip: Trip) => void;
   onNavigateToView: (view: 'home' | 'activity' | 'chat' | 'profile') => void;
+  onUpdateProfile?: (updates: Partial<UserProfile>) => void;
   onLogout: () => void;
 }
 
-export default function Home({ user, onCreateShipment, onNavigateToView, onLogout }: HomeProps) {
+export default function Home({ user, onCreateShipment, onNavigateToView, onUpdateProfile, onLogout }: HomeProps) {
   const [showShipmentModal, setShowShipmentModal] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedTruck, setSelectedTruck] = useState<{
@@ -225,6 +226,32 @@ export default function Home({ user, onCreateShipment, onNavigateToView, onLogou
           />
         </button>
       </header>
+
+      {/* Floating Availability Toggle for Conductors */}
+      {user.role === 'conductor' && (
+        <div className="absolute top-20 right-4 z-20 flex flex-col items-end animate-fade-in-up">
+          <button
+            onClick={() => {
+              const newStatus = !(user.isAvailable ?? true);
+              if (onUpdateProfile) {
+                onUpdateProfile({ isAvailable: newStatus });
+              }
+            }}
+            className={`flex items-center gap-2 px-3 py-2 rounded-full shadow-lg border backdrop-blur-md transition-all active:scale-95 ${
+              (user.isAvailable ?? true) 
+                ? 'bg-emerald-500/90 text-white border-emerald-400 shadow-emerald-500/20' 
+                : 'bg-white/90 text-slate-500 border-slate-200 shadow-black/10'
+            }`}
+          >
+            <div className={`w-2.5 h-2.5 rounded-full ${
+              (user.isAvailable ?? true) ? 'bg-white animate-pulse' : 'bg-slate-400'
+            }`} />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              {(user.isAvailable ?? true) ? 'Activo' : 'Inactivo'}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Map Layer Container */}
       <div className="absolute inset-0 z-0">
