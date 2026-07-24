@@ -52,6 +52,8 @@ export interface Trip {
 export interface ChatMessage {
   id: string;
   sender: 'driver' | 'user' | 'system';
+  senderName?: string;
+  senderPhotoURL?: string;
   text: string;
   timestamp: string;
   attachmentUrl?: string;

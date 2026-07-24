@@ -147,6 +147,8 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
             loadedMessages.push({
               id: doc.id,
               sender: data.senderEmail === user.email ? 'user' : 'driver',
+              senderName: data.senderName || undefined,
+              senderPhotoURL: data.senderPhotoURL || undefined,
               text: data.text,
               attachmentUrl: data.attachmentUrl || undefined,
               timestamp: data.timestamp || new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
@@ -183,6 +185,8 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
       
       await addDoc(collection(db, chatCollectionPath), {
         senderEmail: user.email,
+        senderName: user.name,
+        senderPhotoURL: user.photoURL || null,
         text: textToSend || (attachmentToSend ? '📷 [Imagen adjunta]' : ''),
         attachmentUrl: attachmentToSend || null,
         timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
@@ -199,7 +203,8 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
           targetEmail,
           `💬 Mensaje de ${user.name}`,
           textToSend || '📷 Imagen adjunta',
-          `chat-${activeTrip?.id}`
+          `chat-${activeTrip?.id}`,
+          'chat'
         );
       }
     } catch (e) {
@@ -208,6 +213,8 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
       setMessages(prev => [...prev, {
         id: `local-${Date.now()}`,
         sender: 'user',
+        senderName: user.name,
+        senderPhotoURL: user.photoURL,
         text: textToSend,
         attachmentUrl: attachmentToSend || undefined,
         timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
@@ -275,15 +282,22 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
         {messages.map((msg) => {
           if (msg.sender === 'system') return null;
           const isUser = msg.sender === 'user';
+          const msgSenderPhoto = msg.senderPhotoURL || (isUser ? user.photoURL : chatPartnerPhoto);
+          const msgSenderName = msg.senderName || (isUser ? user.name : chatPartnerName);
           
           return (
             <div
               key={msg.id}
-              className={`flex gap-3 max-w-[85%] ${isUser ? 'self-end flex-row-reverse' : 'self-start'}`}
+              className={`flex gap-2.5 max-w-[85%] ${isUser ? 'self-end flex-row-reverse' : 'self-start'}`}
             >
-              {!isUser && renderAvatar(chatPartnerPhoto, chatPartnerName, "w-8 h-8 text-[10px]")}
+              {!isUser && renderAvatar(msgSenderPhoto, msgSenderName, "w-8 h-8 text-[10px]")}
               
-              <div className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
+              <div className={`flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'}`}>
+                {!isUser && (
+                  <span className="text-[10px] font-black text-slate-500 ml-1">
+                    {msgSenderName}
+                  </span>
+                )}
                 {/* Bubble Container */}
                 <div
                   className={`p-3.5 rounded-2xl shadow-[0px_2px_8px_rgba(0,0,0,0.02)] border ${
