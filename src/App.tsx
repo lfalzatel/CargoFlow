@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { UserProfile, Trip, ChatMessage, UserRole } from './types';
 import Login from './components/Login';
 import CompleteProfile from './components/CompleteProfile';
