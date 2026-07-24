@@ -829,7 +829,10 @@ export default function App() {
             <Activity 
               user={user}
               trips={trips} 
-              onNavigateToChat={() => setView('chat')} 
+              onNavigateToChat={(trip) => {
+                setActiveChatTrip(trip || null);
+                setView('chat');
+              }} 
               onCancelTrip={handleCancelTrip}
               onEditTrip={(trip) => {
                 setEditingTrip(trip);
@@ -842,8 +845,9 @@ export default function App() {
           {view === 'chat' && (
             <Chat 
               user={user}
+              activeTrip={activeChatTrip}
               initialMessages={chatMessages} 
-              onBack={() => setView('home')} 
+              onBack={() => setView('activity')} 
             />
           )}
 

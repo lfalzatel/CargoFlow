@@ -1,20 +1,38 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Phone, Shield, Send, Paperclip, Camera, Check, CheckCheck, Maximize2, X } from 'lucide-react';
+import { ArrowLeft, Phone, Shield, Send, Paperclip, Camera, Check, CheckCheck, Maximize2, X, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChatMessage, UserProfile } from '../types';
+import { ChatMessage, UserProfile, Trip } from '../types';
 
 interface ChatProps {
   user: UserProfile;
+  activeTrip?: Trip | null;
   initialMessages: ChatMessage[];
   onBack: () => void;
 }
 
-export default function Chat({ user, initialMessages, onBack }: ChatProps) {
+export default function Chat({ user, activeTrip, initialMessages, onBack }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [inputText, setInputText] = useState('');
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const isClientView = activeTrip ? user.email === activeTrip.clienteId : false;
+  const chatPartnerName = activeTrip
+    ? (isClientView ? activeTrip.conductorName || 'Conductor Asignado' : activeTrip.clienteName || 'Cliente Solicitante')
+    : 'Soporte CargoFlow';
+
+  const chatPartnerSubtitle = activeTrip
+    ? (isClientView 
+        ? `${activeTrip.conductorVehicleType || activeTrip.vehicleType || 'Vehículo'} • ${activeTrip.conductorPlate || 'Placa asignada'}`
+        : `Cliente Flete #${activeTrip.id}`)
+    : 'Canal oficial de logística';
+
+  const chatPartnerPhoto = activeTrip
+    ? (isClientView ? activeTrip.conductorPhotoURL : activeTrip.clientePhotoURL)
+    : undefined;
+
+  const chatCollectionPath = activeTrip ? `trips/${activeTrip.id}/chat_messages` : 'global_chat';
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -31,7 +49,7 @@ export default function Chat({ user, initialMessages, onBack }: ChatProps) {
         const { collection, query, orderBy, onSnapshot, limit } = await import('firebase/firestore');
         
         const q = query(
-          collection(db, 'global_chat'),
+          collection(db, chatCollectionPath),
           orderBy('createdAt', 'asc'),
           limit(100)
         );
@@ -42,8 +60,6 @@ export default function Chat({ user, initialMessages, onBack }: ChatProps) {
             const data = doc.data();
             loadedMessages.push({
               id: doc.id,
-              // Treat as 'user' if it's sent by this user, else 'driver' 
-              // (Since it's a global chat, anyone else is 'driver' in UI terms)
               sender: data.senderEmail === user.email ? 'user' : 'driver',
               text: data.text,
               timestamp: data.timestamp || new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
@@ -62,7 +78,7 @@ export default function Chat({ user, initialMessages, onBack }: ChatProps) {
     
     loadChat();
     return () => unsubscribe && unsubscribe();
-  }, [user.email]);
+  }, [user.email, chatCollectionPath]);
 
   // Handle message sending
   const handleSend = async () => {
@@ -75,7 +91,7 @@ export default function Chat({ user, initialMessages, onBack }: ChatProps) {
       const { db } = await import('../config/firebase');
       const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
       
-      await addDoc(collection(db, 'global_chat'), {
+      await addDoc(collection(db, chatCollectionPath), {
         senderEmail: user.email,
         text: textToSend,
         timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
@@ -114,22 +130,28 @@ export default function Chat({ user, initialMessages, onBack }: ChatProps) {
           
           <div className="flex items-center gap-3">
             <div className="relative">
-              <img
-                className="w-11 h-11 rounded-full object-cover border-2 border-surface-container-low shadow-sm"
-                alt="Carlos Rodríguez"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBX71K1a1ULIbu3dfFxAFJE6CrZSGCltU7YYeZCRu8Yiy1kQzuY6fkgymarB8JnjL_5IP42oqM8VH5nwLJIK-IYlHSo4Jw960JK8GHhlwFC594r5c7JUl26qnXFLY5rzfM9_OzuaodtSy-x4fP2AdoHTOj_EkbnhF47MRl5LJo6Y4heLwOGJlKDsOsR-uVZffiN3j2KxYEE1qnCG2PfLBgKFdEOWOAttQLOUEthigNlQGayZNcg9Kec"
-              />
+              {chatPartnerPhoto ? (
+                <img
+                  className="w-11 h-11 rounded-full object-cover border-2 border-surface-container-low shadow-sm"
+                  alt={chatPartnerName}
+                  src={chatPartnerPhoto}
+                />
+              ) : (
+                <div className="w-11 h-11 rounded-full bg-slate-100 border-2 border-surface-container-low shadow-sm flex items-center justify-center text-slate-400">
+                  <User size={22} />
+                </div>
+              )}
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-sm text-on-surface">Carlos Rodríguez</span>
-              <span className="text-[11px] text-on-surface-variant font-medium">Kenworth T800 • WYZ-789</span>
+              <span className="font-extrabold text-sm text-on-surface">{chatPartnerName}</span>
+              <span className="text-[11px] text-on-surface-variant font-medium">{chatPartnerSubtitle}</span>
             </div>
           </div>
         </div>
 
         <button 
-          onClick={() => alert('Simulando llamada a Carlos Rodríguez (+57 300 123 4567)...')}
+          onClick={() => alert(`Llamando a ${chatPartnerName}...`)}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high text-primary-container transition-colors active:scale-95 focus:outline-none"
         >
           <Phone size={18} fill="currentColor" />

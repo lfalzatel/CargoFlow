@@ -6,7 +6,7 @@ import { UserProfile, Trip } from '../types';
 interface ActivityProps {
   user: UserProfile;
   trips: Trip[];
-  onNavigateToChat: () => void;
+  onNavigateToChat: (trip?: Trip) => void;
   onCancelTrip: (tripId: string) => void;
   onEditTrip?: (trip: Trip) => void;
   onResolveCounterOffer?: (tripId: string, accept: boolean) => void;
@@ -231,7 +231,7 @@ export default function Activity({ user, trips, onNavigateToChat, onCancelTrip, 
                             trip.status === 'EN CAMINO' && (
                               <div className="flex gap-2">
                                 <button
-                                  onClick={onNavigateToChat}
+                                  onClick={() => onNavigateToChat(trip)}
                                   className="w-9 h-9 rounded-xl border border-primary-container/20 flex items-center justify-center text-primary-container hover:bg-primary-container/10 transition-colors"
                                   title="Chatear"
                                 >
