@@ -14,8 +14,67 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [inputText, setInputText] = useState('');
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
-  
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Compress image to lightweight JPEG Base64 Data URL (0-cost client-side processing)
+  const compressAndConvertImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.65);
+            resolve(dataUrl);
+          } else {
+            resolve(event.target?.result as string);
+          }
+        };
+        img.onerror = reject;
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const base64 = await compressAndConvertImage(file);
+        setAttachedImage(base64);
+      } catch (err) {
+        console.error('Image compression error:', err);
+      }
+    }
+  };
 
   const isClientView = activeTrip ? user.email === activeTrip.clienteId : false;
   const chatPartnerName = activeTrip
@@ -103,10 +162,12 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
 
   // Handle message sending
   const handleSend = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() && !attachedImage) return;
 
     const textToSend = inputText;
+    const attachmentToSend = attachedImage;
     setInputText('');
+    setAttachedImage(null);
 
     try {
       const { db } = await import('../config/firebase');
@@ -115,7 +176,8 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
       
       await addDoc(collection(db, chatCollectionPath), {
         senderEmail: user.email,
-        text: textToSend,
+        text: textToSend || (attachmentToSend ? '📷 [Imagen adjunta]' : ''),
+        attachmentUrl: attachmentToSend || null,
         timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
         createdAt: serverTimestamp()
       });
@@ -129,17 +191,18 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
         sendDbNotification(
           targetEmail,
           `💬 Mensaje de ${user.name}`,
-          textToSend,
+          textToSend || '📷 Imagen adjunta',
           `chat-${activeTrip?.id}`
         );
       }
     } catch (e) {
-      console.error("Could not send message:", e);
+      console.warn('Error sending message:', e);
       // Fallback local update
       setMessages(prev => [...prev, {
         id: `local-${Date.now()}`,
         sender: 'user',
         text: textToSend,
+        attachmentUrl: attachmentToSend || undefined,
         timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
       }]);
     }
@@ -255,43 +318,64 @@ export default function Chat({ user, activeTrip, initialMessages, onBack }: Chat
         <div ref={chatEndRef} />
       </main>
 
-      {/* Input Area */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-surface-container-highest p-3 flex items-end gap-2 z-40 pb-5 shadow-[0px_-4px_20px_rgba(0,0,0,0.02)]">
-        <button
-          onClick={() => alert('Adjuntar archivo...')}
-          className="w-10 h-10 flex items-center justify-center text-outline hover:text-primary-container hover:bg-surface-container rounded-full transition-colors flex-shrink-0 active:scale-95 focus:outline-none"
-        >
-          <Paperclip size={20} />
-        </button>
-        <button
-          onClick={() => alert('Abrir cámara...')}
-          className="w-10 h-10 flex items-center justify-center text-outline hover:text-primary-container hover:bg-surface-container rounded-full transition-colors flex-shrink-0 -ml-1 active:scale-95 focus:outline-none"
-        >
-          <Camera size={20} />
-        </button>
-        
-        <div className="flex-1 bg-surface-container-low rounded-xl flex items-center min-h-[44px] border border-transparent focus-within:border-primary-container transition-colors px-1">
-          <textarea
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Escribe un mensaje..."
-            className="w-full bg-transparent border-none focus:ring-0 text-sm text-on-surface resize-none py-2.5 px-3 max-h-[100px] placeholder:text-outline focus:outline-none font-semibold"
-            rows={1}
-          />
-        </div>
+      {/* Hidden file inputs */}
+      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />
 
-        <button
-          onClick={handleSend}
-          disabled={!inputText.trim()}
-          className={`w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-full shadow-sm transition-all active:scale-95 ${
-            inputText.trim() 
-              ? 'bg-primary-container text-white cursor-pointer hover:shadow-md' 
-              : 'bg-surface-container text-outline opacity-55 cursor-not-allowed'
-          }`}
-        >
-          <Send size={18} fill={inputText.trim() ? "white" : "none"} />
-        </button>
+      {/* Input Area */}
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-surface-container-highest p-3 flex flex-col gap-2 z-40 pb-5 shadow-[0px_-4px_20px_rgba(0,0,0,0.02)]">
+        {/* Attached Image Preview */}
+        {attachedImage && (
+          <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-emerald-500 shadow-md self-start ml-2 group">
+            <img src={attachedImage} alt="Attachment preview" className="w-full h-full object-cover" />
+            <button
+              onClick={() => setAttachedImage(null)}
+              className="absolute top-1 right-1 bg-black/70 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-end gap-2 w-full">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            title="Adjuntar imagen de la galería"
+            className="w-10 h-10 flex items-center justify-center text-outline hover:text-primary-container hover:bg-surface-container rounded-full transition-colors flex-shrink-0 active:scale-95 focus:outline-none cursor-pointer"
+          >
+            <Paperclip size={20} />
+          </button>
+          <button
+            onClick={() => cameraInputRef.current?.click()}
+            title="Tomar foto con la cámara"
+            className="w-10 h-10 flex items-center justify-center text-outline hover:text-primary-container hover:bg-surface-container rounded-full transition-colors flex-shrink-0 -ml-1 active:scale-95 focus:outline-none cursor-pointer"
+          >
+            <Camera size={20} />
+          </button>
+          
+          <div className="flex-1 bg-surface-container-low rounded-xl flex items-center min-h-[44px] border border-transparent focus-within:border-primary-container transition-colors px-1">
+            <textarea
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder={attachedImage ? "Añade un comentario opcional..." : "Escribe un mensaje..."}
+              className="w-full bg-transparent border-none focus:ring-0 text-sm text-on-surface resize-none py-2.5 px-3 max-h-[100px] placeholder:text-outline focus:outline-none font-semibold"
+              rows={1}
+            />
+          </div>
+
+          <button
+            onClick={handleSend}
+            disabled={!inputText.trim() && !attachedImage}
+            className={`w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-full shadow-sm transition-all active:scale-95 ${
+              inputText.trim() || attachedImage
+                ? 'bg-primary-container text-white cursor-pointer hover:shadow-md' 
+                : 'bg-surface-container text-outline opacity-55 cursor-not-allowed'
+            }`}
+          >
+            <Send size={18} fill={inputText.trim() || attachedImage ? "white" : "none"} />
+          </button>
+        </div>
       </div>
 
       {/* Fullscreen Image Preview Modal */}

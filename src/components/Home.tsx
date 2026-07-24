@@ -19,6 +19,7 @@ interface HomeProps {
 
 export default function Home({ 
   user, 
+  trips = [],
   pendingTrip, 
   editingTrip,
   onCloseEditing,
