@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Edit2, Star, Plus, CreditCard, HelpCircle, Settings, LogOut, 
   Check, X, Truck, FileText, Camera, Calendar, AlertCircle, 
@@ -345,13 +345,35 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
   // Test Rating Animation State (for admin testing)
   const [showTestRatingAnimation, setShowTestRatingAnimation] = useState(false);
   const [testRatingStars, setTestRatingStars] = useState(5);
+  const [profileCapsuleCoords, setProfileCapsuleCoords] = useState<{ x: number; y: number } | null>(null);
+  const profileCapsuleRef = useRef<HTMLDivElement>(null);
+
+  // Handle test rating animation click
+  const handleTestRatingClick = (stars: number) => {
+    if (profileCapsuleRef.current) {
+      const rect = profileCapsuleRef.current.getBoundingClientRect();
+      const capsuleX = rect.left + rect.width / 2;
+      const capsuleY = rect.top + rect.height / 2;
+      setProfileCapsuleCoords({ x: capsuleX, y: capsuleY });
+    }
+    setTestRatingStars(stars);
+    setShowTestRatingAnimation(true);
+  };
+
+  // Handle test rating animation completion
+  const handleTestRatingComplete = () => {
+    setShowTestRatingAnimation(false);
+    // Increment rating by 0.1
+    const newRating = Math.min(5, parseFloat((user.rating + 0.1).toFixed(1)));
+    onUpdateProfile({ rating: newRating });
+  };
 
   return (<>
     <div className="bg-background min-h-screen pt-20 font-sans antialiased">
       <main className="px-6 max-w-lg mx-auto flex flex-col gap-6">
         
         {/* Profile Header Section */}
-        <section className="flex flex-col items-center justify-center pt-6 pb-4">
+        <section ref={profileCapsuleRef} className="flex flex-col items-center justify-center pt-6 pb-4">
           <div className="relative">
             {user.photoURL && !photoError ? (
               <img
@@ -799,10 +821,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                 {[1, 2, 3, 4, 5].map((stars) => (
                   <button
                     key={stars}
-                    onClick={() => {
-                      setTestRatingStars(stars);
-                      setShowTestRatingAnimation(true);
-                    }}
+                    onClick={() => handleTestRatingClick(stars)}
                     className="px-3 py-1.5 bg-white hover:bg-purple-600 text-purple-600 hover:text-white rounded-lg text-xs font-black transition-all active:scale-95 border border-purple-200 hover:border-purple-600 cursor-pointer flex items-center gap-1"
                   >
                     {stars}
@@ -1318,10 +1337,12 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
     />
 
     {/* Test Rating Burst Animation (Admin Only) */}
-    {showTestRatingAnimation && (
+    {showTestRatingAnimation && profileCapsuleCoords && (
       <RatingBurstAnimation 
         stars={testRatingStars} 
-        onComplete={() => setShowTestRatingAnimation(false)} 
+        onComplete={handleTestRatingComplete}
+        targetX={profileCapsuleCoords.x}
+        targetY={profileCapsuleCoords.y}
       />
     )}
   </>);

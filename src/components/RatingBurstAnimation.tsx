@@ -3,9 +3,11 @@ import { useEffect, useRef } from 'react';
 interface RatingBurstAnimationProps {
   stars: number;        // 1–5 rating given
   onComplete: () => void;
+  targetX?: number;     // X position of profile capsule (optional)
+  targetY?: number;     // Y position of profile capsule (optional)
 }
 
-export default function RatingBurstAnimation({ stars, onComplete }: RatingBurstAnimationProps) {
+export default function RatingBurstAnimation({ stars, onComplete, targetX, targetY }: RatingBurstAnimationProps) {
   const ranRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
 
@@ -77,6 +79,10 @@ export default function RatingBurstAnimation({ stars, onComplete }: RatingBurstA
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight * 0.5;
 
+    // Destination coordinates (profile capsule or center)
+    const destX = targetX ?? cx;
+    const destY = targetY ?? cy;
+
     // 1. White flash
     const flash = document.createElement('div');
     Object.assign(flash.style, {
@@ -129,7 +135,7 @@ export default function RatingBurstAnimation({ stars, onComplete }: RatingBurstA
         position: 'fixed', left: '0', top: '0', zIndex: '9999',
         color: '#fbbf24', fontSize: '28px', lineHeight: '1',
         textShadow: '0 0 10px rgba(251,191,36,.9),0 0 20px rgba(251,146,60,.7)',
-        transform: `translate3d(${cx}px,${cy}px,0) translate(-50%,-50%) scale(0.15) rotate(0deg)`,
+        transform: `translate3d(${destX}px,${destY}px,0) translate(-50%,-50%) scale(0.15) rotate(0deg)`,
         opacity: '0', willChange: 'transform,opacity',
         WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
         transition: 'transform 900ms cubic-bezier(.22,1.6,.4,1), opacity 900ms ease',
@@ -160,7 +166,7 @@ export default function RatingBurstAnimation({ stars, onComplete }: RatingBurstA
       }, 250 + i * 95));
 
       timers.push(setTimeout(() => {
-        starEl.style.transform = `translate3d(${cx}px,${cy}px,0) translate(-50%,-50%) scale(0.3) rotate(540deg)`;
+        starEl.style.transform = `translate3d(${destX}px,${destY}px,0) translate(-50%,-50%) scale(0.3) rotate(540deg)`;
         starEl.style.opacity = '0.85';
       }, 750 + i * 95));
 
