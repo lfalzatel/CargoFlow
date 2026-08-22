@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Edit2, Star, Plus, CreditCard, HelpCircle, Settings, LogOut, 
   Check, X, Truck, FileText, Camera, Calendar, AlertCircle, 
-  Trash2, CheckCircle2, Eye, Image, UserCheck 
+  Trash2, CheckCircle2, Eye, Image, UserCheck, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, Vehicle, Trip } from '../types';
 import { ConfirmModal } from './ConfirmModal';
+import RatingBurstAnimation from './RatingBurstAnimation';
 
 interface ProfileProps {
   user: UserProfile;
@@ -341,12 +342,38 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
   });
   const closeConfirm = () => setConfirmModal(m => ({ ...m, open: false }));
 
+  // Test Rating Animation State (for admin testing)
+  const [showTestRatingAnimation, setShowTestRatingAnimation] = useState(false);
+  const [testRatingStars, setTestRatingStars] = useState(5);
+  const [profileCapsuleCoords, setProfileCapsuleCoords] = useState<{ x: number; y: number } | null>(null);
+  const profileCapsuleRef = useRef<HTMLDivElement>(null);
+
+  // Handle test rating animation click
+  const handleTestRatingClick = (stars: number) => {
+    if (profileCapsuleRef.current) {
+      const rect = profileCapsuleRef.current.getBoundingClientRect();
+      const capsuleX = rect.left + rect.width / 2;
+      const capsuleY = rect.top + rect.height / 2;
+      setProfileCapsuleCoords({ x: capsuleX, y: capsuleY });
+    }
+    setTestRatingStars(stars);
+    setShowTestRatingAnimation(true);
+  };
+
+  // Handle test rating animation completion
+  const handleTestRatingComplete = () => {
+    setShowTestRatingAnimation(false);
+    // Increment rating by 0.1
+    const newRating = Math.min(5, parseFloat((user.rating + 0.1).toFixed(1)));
+    onUpdateProfile({ rating: newRating });
+  };
+
   return (<>
     <div className="bg-background min-h-screen pt-20 font-sans antialiased">
       <main className="px-6 max-w-lg mx-auto flex flex-col gap-6">
         
         {/* Profile Header Section */}
-        <section className="flex flex-col items-center justify-center pt-6 pb-4">
+        <section ref={profileCapsuleRef} className="flex flex-col items-center justify-center pt-6 pb-4">
           <div className="relative">
             {user.photoURL && !photoError ? (
               <img
@@ -778,6 +805,33 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
             </div>
           </button>
         </section>
+
+        {/* TEST RATING ANIMATION SECTION (Admin Only) */}
+        {user.role === 'admin' && (
+          <section className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-5 border-2 border-dashed border-purple-200 shadow-[0px_4px_20px_rgba(147,51,234,0.08)] flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Sparkles size={18} className="text-purple-600" />
+              <h3 className="text-xs font-black text-purple-900 uppercase tracking-wider">Prueba de Animaciones</h3>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <p className="text-xs text-purple-700 font-semibold">Prueba la animación de ganancia de puntos:</p>
+              
+              <div className="flex gap-2 flex-wrap">
+                {[1, 2, 3, 4, 5].map((stars) => (
+                  <button
+                    key={stars}
+                    onClick={() => handleTestRatingClick(stars)}
+                    className="px-3 py-1.5 bg-white hover:bg-purple-600 text-purple-600 hover:text-white rounded-lg text-xs font-black transition-all active:scale-95 border border-purple-200 hover:border-purple-600 cursor-pointer flex items-center gap-1"
+                  >
+                    {stars}
+                    <Star size={12} className="text-amber-500" fill="currentColor" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         <div className="h-1" aria-hidden="true" />
 
@@ -1281,5 +1335,15 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
       onConfirm={confirmModal.onConfirm}
       onCancel={closeConfirm}
     />
+
+    {/* Test Rating Burst Animation (Admin Only) */}
+    {showTestRatingAnimation && profileCapsuleCoords && (
+      <RatingBurstAnimation 
+        stars={testRatingStars} 
+        onComplete={handleTestRatingComplete}
+        targetX={profileCapsuleCoords.x}
+        targetY={profileCapsuleCoords.y}
+      />
+    )}
   </>);
 }
