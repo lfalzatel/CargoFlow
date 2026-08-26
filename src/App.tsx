@@ -17,7 +17,7 @@ import NotificationToast from './components/NotificationToast';
 import Rating from './components/Rating';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './config/firebase';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, deleteField } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   requestNotificationPermission,
@@ -175,6 +175,10 @@ export default function App() {
 
   // ── Mutual Confirmation Completion Handlers ───────────────────────
   const handleRequestCompletion = async (trip: Trip) => {
+    if (user.role !== 'conductor' || user.email !== trip.conductorId || trip.status !== 'EN CAMINO' || trip.completionRequestedBy) {
+      return;
+    }
+
     const nowIso = new Date().toISOString();
     setTrips(prev => prev.map(t => t.id === trip.id ? { ...t, completionRequestedBy: user.email, completionRequestedAt: nowIso } : t));
 
@@ -210,6 +214,10 @@ export default function App() {
   };
 
   const handleConfirmCompletion = async (trip: Trip) => {
+    if (user.role !== 'cliente' || user.email !== trip.clienteId || trip.status !== 'EN CAMINO' || trip.completionRequestedBy !== trip.conductorId) {
+      return;
+    }
+
     await handleCompleteTrip(trip);
   };
 
@@ -264,7 +272,9 @@ export default function App() {
       const { doc, updateDoc, collection, addDoc, serverTimestamp } = await import('firebase/firestore');
       await updateDoc(doc(db, 'trips', trip.id), {
         status: 'COMPLETADO',
-        completedAt: new Date().toISOString()
+        completedAt: new Date().toISOString(),
+        completionRequestedBy: deleteField(),
+        completionRequestedAt: deleteField()
       });
 
       // Transaction: Deduct client, credit driver (minus 10% platform fee)
@@ -1309,6 +1319,7 @@ export default function App() {
               onEditShipment={handleEditTrip}
               onAcceptTrip={handleAcceptTrip}
               onCounterOfferTrip={handleCounterOffer}
+              onRequestCompletion={handleRequestCompletion}
               onNavigateToView={handleViewChange}
               onUpdateProfile={handleUpdateProfile}
               onLogout={handleLogout}
