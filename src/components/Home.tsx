@@ -17,6 +17,7 @@ interface HomeProps {
   onEditShipment?: (trip: Trip) => void;
   onAcceptTrip?: (tripId: string, assignedPlate?: string, assignedType?: string) => void;
   onCounterOfferTrip?: (tripId: string, price: number, assignedPlate?: string, assignedType?: string) => void;
+  onRequestCompletion?: (trip: Trip) => void;
   onNavigateToView: (view: 'home' | 'activity' | 'chat' | 'dashboard' | 'profile' | 'settings') => void;
   onUpdateProfile?: (updates: Partial<UserProfile>) => void;
   onLogout: () => void;
@@ -33,6 +34,7 @@ export default function Home({
   onEditShipment,
   onAcceptTrip,
   onCounterOfferTrip,
+  onRequestCompletion,
   onNavigateToView, 
   onUpdateProfile, 
   onLogout 
@@ -1232,7 +1234,9 @@ export default function Home({
               ) : (
                 <button
                   onClick={() => {
-                    // Complete the trip
+                    if (activeTrip && onRequestCompletion && !activeTrip.completionRequestedBy) {
+                      onRequestCompletion(activeTrip);
+                    }
                     onNavigateToView('activity');
                     setShowRatingReminder(true);
                     setTimeout(() => setShowRatingReminder(false), 30000);
@@ -1240,7 +1244,9 @@ export default function Home({
                   className="w-full h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm flex items-center justify-center gap-3 shadow-xl transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <Flag size={22} />
-                  Entregar y Finalizar Servicio 🏁
+                  {activeTrip?.completionRequestedBy
+                    ? 'Esperando confirmación del cliente'
+                    : 'Solicitar confirmación de entrega'}
                 </button>
               )}
 

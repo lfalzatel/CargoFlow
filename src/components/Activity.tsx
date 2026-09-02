@@ -370,7 +370,7 @@ export default function Activity({
                                   </button>
 
                                   {/* 1. No request yet -> Request Completion */}
-                                  {!hasRequest && isParticipant && onRequestCompletion && (
+                                  {!hasRequest && user.role === 'conductor' && onRequestCompletion && (
                                     <button
                                       onClick={() => {
                                         setConfirmModal({
@@ -396,7 +396,7 @@ export default function Activity({
                                   )}
 
                                   {/* 3. Counterpart requested -> Confirm / Reject Buttons */}
-                                  {hasRequest && !iRequested && isParticipant && (
+                                  {hasRequest && trip.completionRequestedBy === trip.conductorId && user.role === 'cliente' && (
                                     <div className="flex gap-1.5 items-center">
                                       <button
                                         onClick={() => onRejectCompletion?.(trip)}
