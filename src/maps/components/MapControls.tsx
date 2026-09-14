@@ -392,20 +392,26 @@ export const MapControls: React.FC<MapControlsProps> = ({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
-                className={`absolute ${getPopoverPositionClass()} bg-slate-900/95 border border-slate-700/90 backdrop-blur-xl p-2.5 rounded-3xl shadow-2xl min-w-[170px] z-50`}
+                className={`absolute ${getPopoverPositionClass()} bg-slate-900/95 border border-slate-700/90 backdrop-blur-xl p-2 rounded-3xl shadow-2xl z-50 ${
+                  !isVertical 
+                    ? 'max-w-[calc(100vw-75px)] overflow-x-auto no-scrollbar' 
+                    : 'min-w-[170px]'
+                }`}
               >
-                <div className={`flex ${!isVertical ? 'flex-row items-center gap-2' : 'flex-col gap-2'}`}>
+                <div className={`flex ${!isVertical ? 'flex-row items-center gap-1.5 flex-nowrap' : 'flex-col gap-2'}`}>
                   {/* 1. Recenter GPS Location Button */}
                   <button
                     onClick={() => {
                       onCenterUserLocation();
                       setIsMenuOpen(false);
                     }}
-                    className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white border border-emerald-400/40 rounded-2xl p-2.5 shadow-md transition flex items-center gap-2 text-xs font-black active:scale-95 cursor-pointer whitespace-nowrap w-full justify-start"
+                    className={`bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white border border-emerald-400/40 rounded-2xl shadow-md transition flex items-center gap-1.5 text-xs font-black active:scale-95 cursor-pointer whitespace-nowrap ${
+                      !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
+                    }`}
                     title="Centrar en mi ubicación GPS"
                   >
-                    <Compass size={17} className="text-white flex-shrink-0" />
-                    <span className="text-xs font-extrabold">Mi Posición</span>
+                    <Compass size={16} className="text-white flex-shrink-0" />
+                    <span className="text-[11px] font-extrabold">{!isVertical ? 'GPS' : 'Mi Posición'}</span>
                   </button>
 
                   {/* 2. Toggle Route Simulator / Search */}
@@ -414,15 +420,17 @@ export const MapControls: React.FC<MapControlsProps> = ({
                       setIsExpanded(!isExpanded);
                       setIsMenuOpen(false);
                     }}
-                    className={`rounded-2xl p-2.5 shadow-md border text-xs font-black transition flex items-center gap-2 active:scale-95 cursor-pointer whitespace-nowrap w-full justify-start ${
+                    className={`rounded-2xl shadow-md border text-xs font-black transition flex items-center gap-1.5 active:scale-95 cursor-pointer whitespace-nowrap ${
+                      !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
+                    } ${
                       isExpanded 
                         ? 'bg-white text-emerald-800 border-white' 
                         : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400/40 hover:opacity-95'
                     }`}
                     title="Trazar y Calcular Ruta"
                   >
-                    <RouteIcon size={16} className="flex-shrink-0" />
-                    <span className="text-xs font-extrabold">Trazar Ruta</span>
+                    <RouteIcon size={15} className="flex-shrink-0" />
+                    <span className="text-[11px] font-extrabold">Ruta</span>
                   </button>
 
                   {/* 3. Offline Region Manager Download */}
@@ -432,11 +440,13 @@ export const MapControls: React.FC<MapControlsProps> = ({
                         onOpenRegionManager();
                         setIsMenuOpen(false);
                       }}
-                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white border border-emerald-400/40 rounded-2xl p-2.5 shadow-md transition flex items-center gap-2 text-xs font-black active:scale-95 cursor-pointer whitespace-nowrap w-full justify-start"
+                      className={`bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white border border-emerald-400/40 rounded-2xl shadow-md transition flex items-center gap-1.5 text-xs font-black active:scale-95 cursor-pointer whitespace-nowrap ${
+                        !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
+                      }`}
                       title="Descargar Mapas Offline"
                     >
-                      <Download size={16} className="text-white flex-shrink-0" />
-                      <span className="text-xs font-extrabold">Mapas Offline</span>
+                      <Download size={15} className="text-white flex-shrink-0" />
+                      <span className="text-[11px] font-extrabold">Offline</span>
                     </button>
                   )}
 
@@ -449,20 +459,24 @@ export const MapControls: React.FC<MapControlsProps> = ({
                         onToggleTraffic(next);
                         setIsMenuOpen(false);
                       }}
-                      className={`rounded-2xl p-2.5 shadow-md border text-xs font-black transition flex items-center gap-2 active:scale-95 cursor-pointer whitespace-nowrap w-full justify-start ${
+                      className={`rounded-2xl shadow-md border text-xs font-black transition flex items-center gap-1.5 active:scale-95 cursor-pointer whitespace-nowrap ${
+                        !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
+                      } ${
                         trafficEnabled
                           ? 'bg-amber-400 text-slate-950 border-amber-300'
                           : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400/40 hover:opacity-95'
                       }`}
                       title="Tráfico en Tiempo Real"
                     >
-                      <Layers size={16} className="flex-shrink-0" />
-                      <span className="text-xs font-extrabold">Tráfico</span>
+                      <Layers size={15} className="flex-shrink-0" />
+                      <span className="text-[11px] font-extrabold">Tráfico</span>
                     </button>
                   )}
 
                   {/* 5. Provider Selector Toggle */}
-                  <div className="flex bg-slate-800 border border-slate-700 rounded-2xl p-1 shadow-md text-xs w-full">
+                  <div className={`flex bg-slate-800 border border-slate-700 rounded-2xl p-1 shadow-md text-xs ${
+                    !isVertical ? 'flex-shrink-0' : 'w-full'
+                  }`}>
                     <button
                       onClick={() => {
                         onToggleAutoSwitch(false);
@@ -470,7 +484,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
                         setIsMenuOpen(false);
                       }}
                       disabled={!isOnline}
-                      className={`flex-1 px-2.5 py-1.5 rounded-xl font-black transition text-center cursor-pointer ${
+                      className={`px-2 py-1 rounded-xl font-black transition text-center cursor-pointer text-[10px] ${
                         activeProvider === 'google'
                           ? 'bg-white text-emerald-800 shadow-md'
                           : 'text-slate-300 hover:text-white disabled:opacity-40'
@@ -484,7 +498,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
                         onToggleProvider('osm_offline');
                         setIsMenuOpen(false);
                       }}
-                      className={`flex-1 px-2.5 py-1.5 rounded-xl font-black transition text-center cursor-pointer ${
+                      className={`px-2 py-1 rounded-xl font-black transition text-center cursor-pointer text-[10px] ${
                         activeProvider === 'osm_offline'
                           ? 'bg-white text-emerald-800 shadow-md'
                           : 'text-slate-300 hover:text-white'
