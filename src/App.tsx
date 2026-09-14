@@ -189,9 +189,14 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  // Helper for case-insensitive email comparison
+  const sameEmail = (a?: string, b?: string) => Boolean(a && b && a.trim().toLowerCase() === b.trim().toLowerCase());
+
   // ── Mutual Confirmation & Phase Handlers ───────────────────────
   const handleDriverArrivedAtOrigin = async (trip: Trip) => {
-    if (user.role !== 'conductor' || user.email !== trip.conductorId || trip.status !== 'EN CAMINO' || trip.driverArrivedAtOrigin) {
+    const isAllowedRole = user.role === 'conductor' || user.role === 'admin';
+    const isConductor = sameEmail(user.email, trip.conductorId) || isAllowedRole;
+    if (!isConductor || trip.status !== 'EN CAMINO' || trip.driverArrivedAtOrigin) {
       return;
     }
 
@@ -230,20 +235,46 @@ export default function App() {
   };
 
   const handleClientConfirmArrivalAtOrigin = async (trip: Trip) => {
-    if (user.role !== 'cliente' || user.email !== trip.clienteId || trip.status !== 'EN CAMINO' || trip.clientConfirmedArrivalAtOrigin) {
+    const isAllowedRole = user.role === 'cliente' || user.role === 'admin';
+    const isClient = sameEmail(user.email, trip.clienteId) || isAllowedRole;
+    if (!isClient || trip.status !== 'EN CAMINO' || trip.clientConfirmedArrivalAtOrigin) {
       return;
     }
 
     const nowIso = new Date().toISOString();
-    setTrips(prev => prev.map(t => t.id === trip.id ? { ...t, clientConfirmedArrivalAtOrigin: true, clientConfirmedArrivalAtOriginAt: nowIso } : t));
+    setTrips(prev => prev.map(t => {
+      if (t.id === trip.id) {
+        const updated = {
+          ...t,
+          driverArrivedAtOrigin: true,
+          driverArrivedAtOriginAt: t.driverArrivedAtOriginAt || nowIso,
+          clientConfirmedArrivalAtOrigin: true,
+          clientConfirmedArrivalAtOriginAt: nowIso
+        };
+        delete updated.completionRequestedBy;
+        delete updated.completionRequestedAt;
+        return updated;
+      }
+      return t;
+    }));
 
     try {
       const { db } = await import('./config/firebase');
-      const { doc, updateDoc } = await import('firebase/firestore');
-      await updateDoc(doc(db, 'trips', trip.id), {
+      const { doc, updateDoc, deleteField } = await import('firebase/firestore');
+      
+      const updateData: Record<string, any> = {
+        driverArrivedAtOrigin: true,
+        driverArrivedAtOriginAt: trip.driverArrivedAtOriginAt || nowIso,
         clientConfirmedArrivalAtOrigin: true,
         clientConfirmedArrivalAtOriginAt: nowIso
-      });
+      };
+
+      if (trip.completionRequestedBy) {
+        updateData.completionRequestedBy = deleteField();
+        updateData.completionRequestedAt = deleteField();
+      }
+
+      await updateDoc(doc(db, 'trips', trip.id), updateData);
 
       if (trip.conductorId) {
         const { sendDbNotification } = await import('./services/notificationService');
@@ -269,7 +300,9 @@ export default function App() {
   };
 
   const handleRequestCompletion = async (trip: Trip) => {
-    if (user.role !== 'conductor' || user.email !== trip.conductorId || trip.status !== 'EN CAMINO' || trip.completionRequestedBy) {
+    const isAllowedRole = user.role === 'conductor' || user.role === 'admin';
+    const isConductor = sameEmail(user.email, trip.conductorId) || isAllowedRole;
+    if (!isConductor || trip.status !== 'EN CAMINO' || trip.completionRequestedBy) {
       return;
     }
 
@@ -285,7 +318,7 @@ export default function App() {
       });
 
       const { sendDbNotification } = await import('./services/notificationService');
-      const counterpartEmail = user.email === trip.clienteId ? trip.conductorId : trip.clienteId;
+      const counterpartEmail = sameEmail(user.email, trip.clienteId) ? trip.conductorId : trip.clienteId;
       if (counterpartEmail) {
         const requesterRoleName = user.role === 'conductor' ? 'El conductor' : 'El cliente';
         sendDbNotification(
@@ -308,7 +341,9 @@ export default function App() {
   };
 
   const handleConfirmCompletion = async (trip: Trip) => {
-    if (user.role !== 'cliente' || user.email !== trip.clienteId || trip.status !== 'EN CAMINO' || trip.completionRequestedBy !== trip.conductorId) {
+    const isAllowedRole = user.role === 'cliente' || user.role === 'admin';
+    const isClient = sameEmail(user.email, trip.clienteId) || isAllowedRole;
+    if (!isClient || trip.status !== 'EN CAMINO' || (trip.completionRequestedBy && !sameEmail(trip.completionRequestedBy, trip.conductorId) && user.role !== 'admin')) {
       return;
     }
 

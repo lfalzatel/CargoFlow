@@ -1182,38 +1182,50 @@ export default function Home({
               className="absolute top-16 left-3 right-3 z-30"
             >
               <div className={`rounded-3xl p-3.5 shadow-2xl border backdrop-blur-md flex flex-col gap-2.5 ${
-                (user.role === 'conductor' ? tripPhase === 'cargue' : !activeTrip.driverArrivedAtOrigin)
+                (!activeTrip.driverArrivedAtOrigin || (activeTrip.driverArrivedAtOrigin && !activeTrip.clientConfirmedArrivalAtOrigin))
                   ? 'bg-[#09152b]/95 border-blue-500/30 text-white'
                   : 'bg-emerald-950/95 border-emerald-400/30 text-white'
               }`}>
                 {/* Upper summary row */}
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${
-                    (user.role === 'conductor' ? tripPhase === 'cargue' : !activeTrip.driverArrivedAtOrigin)
+                    (!activeTrip.driverArrivedAtOrigin || (activeTrip.driverArrivedAtOrigin && !activeTrip.clientConfirmedArrivalAtOrigin))
                       ? 'bg-blue-500/20 text-blue-300'
                       : 'bg-emerald-500/20 text-emerald-300'
                   }`}>
                     {user.role === 'conductor' ? (
-                      tripPhase === 'cargue' ? <MapPinned size={20} /> : <Flag size={20} />
+                      !activeTrip.clientConfirmedArrivalAtOrigin ? <MapPinned size={20} /> : <Flag size={20} />
                     ) : (
                       activeTrip.driverArrivedAtOrigin ? <MapPinned size={20} /> : <Truck size={20} />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${
-                      (user.role === 'conductor' ? tripPhase === 'cargue' : !activeTrip.driverArrivedAtOrigin)
+                      (!activeTrip.driverArrivedAtOrigin || (activeTrip.driverArrivedAtOrigin && !activeTrip.clientConfirmedArrivalAtOrigin))
                         ? 'text-blue-400'
                         : 'text-emerald-400'
                     }`}>
                       {user.role === 'conductor' ? (
-                        tripPhase === 'cargue' ? '📦 FASE 1 — IR AL CARGUE' : '🏁 FASE 2 — ENTREGAR'
+                        !activeTrip.driverArrivedAtOrigin
+                          ? '📦 FASE 1 — IR AL CARGUE'
+                          : !activeTrip.clientConfirmedArrivalAtOrigin
+                          ? '📍 EN CARGUE (ESPERANDO CLIENTE)'
+                          : activeTrip.completionRequestedBy
+                          ? '🏁 FASE 2 — ENTREGA SOLICITADA'
+                          : '🏁 FASE 2 — ENTREGAR EN DESTINO'
                       ) : (
-                        activeTrip.driverArrivedAtOrigin ? '📍 CONDUCTOR EN PUNTO DE CARGUE' : '🚚 CONDUCTOR EN CAMINO AL CARGUE'
+                        !activeTrip.driverArrivedAtOrigin
+                          ? '🚚 CONDUCTOR EN CAMINO AL CARGUE'
+                          : !activeTrip.clientConfirmedArrivalAtOrigin
+                          ? '📍 CONDUCTOR EN PUNTO DE CARGUE'
+                          : activeTrip.completionRequestedBy
+                          ? '🏁 SOLICITUD DE ENTREGA EN DESTINO'
+                          : '🚚 VEHÍCULO EN TRAYECTO / EN CARGUE'
                       )}
                     </p>
                     <p className="text-white font-black text-sm truncate">
                       {user.role === 'conductor' ? (
-                        tripPhase === 'cargue' ? activeTrip.origin : activeTrip.destination
+                        !activeTrip.clientConfirmedArrivalAtOrigin ? activeTrip.origin : activeTrip.destination
                       ) : (
                         activeTrip.driverArrivedAtOrigin 
                           ? `${activeTrip.conductorName || 'El conductor'} ha llegado a ${activeTrip.origin}` 
@@ -1232,13 +1244,12 @@ export default function Home({
                   </div>
                 </div>
 
-                {/* Botones en la MISMA LÍNEA (Side-by-Side) */}
+                {/* Botones para CONDUCTOR vs CLIENTE */}
                 {user.role === 'conductor' ? (
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
-                    {tripPhase === 'cargue' ? (
+                    {!activeTrip.driverArrivedAtOrigin ? (
                       <button
                         onClick={async () => {
-                          setTripPhase('descargue');
                           if (onDriverArrivedAtOrigin) {
                             onDriverArrivedAtOrigin(activeTrip);
                           }
@@ -1248,8 +1259,16 @@ export default function Home({
                         <PackageCheck size={16} className="flex-shrink-0" />
                         <span className="truncate">Llegué al Cargue ✓</span>
                       </button>
+                    ) : !activeTrip.clientConfirmedArrivalAtOrigin ? (
+                      <button
+                        disabled
+                        className="py-2.5 px-2 rounded-2xl bg-amber-500/80 text-white font-black text-[10px] flex items-center justify-center gap-1.5 opacity-95 cursor-default truncate"
+                      >
+                        <span className="truncate">⏳ Esperando cliente...</span>
+                      </button>
                     ) : (
                       <button
+                        disabled={Boolean(activeTrip?.completionRequestedBy)}
                         onClick={() => {
                           if (activeTrip && onRequestCompletion && !activeTrip.completionRequestedBy) {
                             onRequestCompletion(activeTrip);
@@ -1258,12 +1277,16 @@ export default function Home({
                           setShowRatingReminder(true);
                           setTimeout(() => setShowRatingReminder(false), 30000);
                         }}
-                        className="py-2.5 px-2 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-black text-[11px] flex items-center justify-center gap-1.5 shadow-lg transition-all cursor-pointer truncate"
+                        className={`py-2.5 px-2 rounded-2xl font-black text-[11px] flex items-center justify-center gap-1.5 shadow-lg transition-all truncate ${
+                          activeTrip?.completionRequestedBy
+                            ? 'bg-emerald-600/80 text-white cursor-default opacity-90'
+                            : 'bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white cursor-pointer'
+                        }`}
                       >
                         <Flag size={16} className="flex-shrink-0" />
                         <span className="truncate">
                           {activeTrip?.completionRequestedBy
-                            ? 'Esperando cliente...'
+                            ? '⏳ Esperando confirmación...'
                             : 'Solicitar entrega'}
                         </span>
                       </button>

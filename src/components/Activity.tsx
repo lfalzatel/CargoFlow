@@ -421,8 +421,8 @@ export default function Activity({
                                     </span>
                                   )}
 
-                                  {/* 1. No request yet -> Request Completion */}
-                                  {!hasRequest && user.role === 'conductor' && onRequestCompletion && (
+                                  {/* 1. No request yet -> Request Completion (only after arrival confirmation) */}
+                                  {!hasRequest && trip.clientConfirmedArrivalAtOrigin && user.role === 'conductor' && onRequestCompletion && (
                                     <button
                                       onClick={() => {
                                         setConfirmModal({

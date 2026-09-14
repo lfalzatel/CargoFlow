@@ -125,11 +125,12 @@ export const MapControls: React.FC<MapControlsProps> = ({
     }
   };
 
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const isRight = config.position === 'right';
   const isVertical = config.direction === 'vertical';
 
   return (
-    <div className="w-full h-full relative z-10 pointer-events-none flex flex-col justify-between p-3 select-none">
+    <div ref={containerRef} className="w-full h-full relative z-10 pointer-events-none flex flex-col justify-between p-3 select-none">
       
       {/* Top Section: Active Route Details Card & Route Input Box */}
       <div className="w-full max-w-md mx-auto pointer-events-auto flex flex-col gap-2">
@@ -314,9 +315,14 @@ export const MapControls: React.FC<MapControlsProps> = ({
         )}
       </div>
 
-      {/* Floating Hamburger / Layers Button & Expandable Menu Container */}
-      <div 
-        className={`pointer-events-auto absolute bottom-20 z-40 ${
+      {/* Floating Hamburger / Layers Button & Expandable Menu Container (Draggable) */}
+      <motion.div 
+        drag
+        dragConstraints={containerRef}
+        dragElastic={0.05}
+        dragMomentum={false}
+        whileDrag={{ scale: 1.08 }}
+        className={`pointer-events-auto absolute bottom-20 z-40 touch-none cursor-grab active:cursor-grabbing ${
           isRight ? 'right-3' : 'left-3'
         }`}
       >
@@ -452,7 +458,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
             )}
           </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
