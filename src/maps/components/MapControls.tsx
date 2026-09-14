@@ -393,10 +393,10 @@ export const MapControls: React.FC<MapControlsProps> = ({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
-                className={`absolute ${getPopoverPositionClass()} bg-slate-900/95 border border-slate-700/90 backdrop-blur-xl p-2 rounded-3xl shadow-2xl z-50 ${
+                className={`absolute ${getPopoverPositionClass()} bg-slate-900/95 border border-slate-700/90 backdrop-blur-xl p-2.5 rounded-3xl shadow-2xl z-50 ${
                   !isVertical 
                     ? 'max-w-[calc(100vw-75px)] overflow-x-auto no-scrollbar' 
-                    : 'min-w-[170px]'
+                    : 'w-max'
                 }`}
               >
                 <div className={`flex ${!isVertical ? 'flex-row items-center gap-1.5 flex-nowrap' : 'flex-col gap-2'}`}>
@@ -406,13 +406,13 @@ export const MapControls: React.FC<MapControlsProps> = ({
                       onCenterUserLocation();
                       setIsMenuOpen(false);
                     }}
-                    className={`bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white border border-emerald-400/40 rounded-2xl shadow-md transition flex items-center gap-1.5 text-xs font-black active:scale-95 cursor-pointer whitespace-nowrap ${
+                    className={`bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white border border-emerald-400/40 rounded-2xl shadow-md transition flex items-center gap-2 text-xs font-black active:scale-95 cursor-pointer whitespace-nowrap ${
                       !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
                     }`}
                     title="Centrar en mi ubicación GPS"
                   >
                     <Compass size={16} className="text-white flex-shrink-0" />
-                    <span className="text-[11px] font-extrabold">{!isVertical ? 'GPS' : 'Mi Posición'}</span>
+                    <span className="text-xs font-extrabold">{!isVertical ? 'GPS' : 'Mi Posición'}</span>
                   </button>
 
                   {/* 2. Toggle Route Simulator / Search */}
@@ -421,7 +421,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
                       setIsExpanded(!isExpanded);
                       setIsMenuOpen(false);
                     }}
-                    className={`rounded-2xl shadow-md border text-xs font-black transition flex items-center gap-1.5 active:scale-95 cursor-pointer whitespace-nowrap ${
+                    className={`rounded-2xl shadow-md border text-xs font-black transition flex items-center gap-2 active:scale-95 cursor-pointer whitespace-nowrap ${
                       !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
                     } ${
                       isExpanded 
@@ -431,7 +431,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
                     title="Trazar y Calcular Ruta"
                   >
                     <RouteIcon size={15} className="flex-shrink-0" />
-                    <span className="text-[11px] font-extrabold">Ruta</span>
+                    <span className="text-xs font-extrabold">{!isVertical ? 'Ruta' : 'Trazar Ruta'}</span>
                   </button>
 
                   {/* 3. Offline Region Manager Download */}
@@ -441,13 +441,13 @@ export const MapControls: React.FC<MapControlsProps> = ({
                         onOpenRegionManager();
                         setIsMenuOpen(false);
                       }}
-                      className={`bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white border border-emerald-400/40 rounded-2xl shadow-md transition flex items-center gap-1.5 text-xs font-black active:scale-95 cursor-pointer whitespace-nowrap ${
+                      className={`bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white border border-emerald-400/40 rounded-2xl shadow-md transition flex items-center gap-2 text-xs font-black active:scale-95 cursor-pointer whitespace-nowrap ${
                         !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
                       }`}
                       title="Descargar Mapas Offline"
                     >
                       <Download size={15} className="text-white flex-shrink-0" />
-                      <span className="text-[11px] font-extrabold">Offline</span>
+                      <span className="text-xs font-extrabold">{!isVertical ? 'Offline' : 'Mapas Offline'}</span>
                     </button>
                   )}
 
@@ -460,7 +460,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
                         onToggleTraffic(next);
                         setIsMenuOpen(false);
                       }}
-                      className={`rounded-2xl shadow-md border text-xs font-black transition flex items-center gap-1.5 active:scale-95 cursor-pointer whitespace-nowrap ${
+                      className={`rounded-2xl shadow-md border text-xs font-black transition flex items-center gap-2 active:scale-95 cursor-pointer whitespace-nowrap ${
                         !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
                       } ${
                         trafficEnabled
@@ -470,7 +470,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
                       title="Tráfico en Tiempo Real"
                     >
                       <Layers size={15} className="flex-shrink-0" />
-                      <span className="text-[11px] font-extrabold">Tráfico</span>
+                      <span className="text-xs font-extrabold">Tráfico</span>
                     </button>
                   )}
 
