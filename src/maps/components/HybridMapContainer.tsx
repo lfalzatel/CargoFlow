@@ -8,11 +8,13 @@ import { RegionDownloadModal } from './RegionDownloadModal';
 interface HybridMapContainerProps {
   className?: string;
   initialHeight?: string;
+  hideControls?: boolean;
 }
 
 export const HybridMapContainer: React.FC<HybridMapContainerProps> = ({
   className = '',
   initialHeight = 'h-[500px]',
+  hideControls = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isRegionModalOpen, setIsRegionModalOpen] = useState(false);
@@ -123,24 +125,26 @@ export const HybridMapContainer: React.FC<HybridMapContainerProps> = ({
       )}
 
       {/* Bottom Overlay: Search & Route Controls */}
-      <div className="absolute bottom-4 left-4 right-4 z-10 pointer-events-none flex justify-center">
-        <MapControls
-          activeProvider={mapState.activeProvider}
-          isOnline={mapState.isOnline}
-          isAutoSwitch={mapState.isAutoSwitch}
-          activeRoute={mapState.activeRoute}
-          onSearch={handleSearch}
-          onSelectPlace={handleSelectPlace}
-          onCalculateRoute={handleCalculateRoute}
-          onClearRoute={handleClearRoute}
-          onCenterUserLocation={handleCenterUserLocation}
-          onToggleProvider={handleToggleProvider}
-          onToggleAutoSwitch={handleToggleAutoSwitch}
-          onToggleTraffic={handleToggleTraffic}
-          userLocation={mapState.userLocation}
-          onOpenRegionManager={() => setIsRegionModalOpen(true)}
-        />
-      </div>
+      {!hideControls && (
+        <div className="absolute bottom-4 left-4 right-4 z-10 pointer-events-none flex justify-center">
+          <MapControls
+            activeProvider={mapState.activeProvider}
+            isOnline={mapState.isOnline}
+            isAutoSwitch={mapState.isAutoSwitch}
+            activeRoute={mapState.activeRoute}
+            onSearch={handleSearch}
+            onSelectPlace={handleSelectPlace}
+            onCalculateRoute={handleCalculateRoute}
+            onClearRoute={handleClearRoute}
+            onCenterUserLocation={handleCenterUserLocation}
+            onToggleProvider={handleToggleProvider}
+            onToggleAutoSwitch={handleToggleAutoSwitch}
+            onToggleTraffic={handleToggleTraffic}
+            userLocation={mapState.userLocation}
+            onOpenRegionManager={() => setIsRegionModalOpen(true)}
+          />
+        </div>
+      )}
 
       {/* Offline Regions Manager Modal */}
       <RegionDownloadModal

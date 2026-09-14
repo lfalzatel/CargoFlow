@@ -366,6 +366,22 @@ export default function Header({
                 {notifications.map((n) => (
                   <div 
                     key={n.id} 
+                    onClick={async () => {
+                      setIsNotificationsOpen(false);
+                      try {
+                        const { db } = await import('../config/firebase');
+                        const { doc, updateDoc } = await import('firebase/firestore');
+                        await updateDoc(doc(db, 'notifications', n.id), { read: true });
+                      } catch (_) {}
+
+                      const tLower = (n.title || '').toLowerCase();
+                      const dLower = (n.desc || '').toLowerCase();
+                      if (tLower.includes('mensaje') || dLower.includes('chat')) {
+                        onNavigateToView('chat');
+                      } else {
+                        onNavigateToView('activity');
+                      }
+                    }}
                     className={`p-3.5 hover:bg-surface-container-low transition-colors cursor-pointer flex gap-3 ${
                       n.unread ? 'bg-blue-50/30' : ''
                     }`}

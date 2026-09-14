@@ -57,7 +57,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [trafficEnabled, setTrafficEnabled] = useState(false);
-  const [showSteps, setShowSteps] = useState(false);
+  const [isRouteCardExpanded, setIsRouteCardExpanded] = useState(false);
 
   const handleInputChange = async (type: 'origin' | 'dest', text: string) => {
     if (type === 'origin') {
@@ -221,73 +221,100 @@ export const MapControls: React.FC<MapControlsProps> = ({
         </div>
       )}
 
-      {/* Active Route Details Card & Turn-by-Turn Steps */}
+      {/* Active Route Details Card & Turn-by-Turn Steps (Collapsed by default) */}
       {activeRoute && (
-        <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 border border-emerald-400/40 rounded-3xl p-4 shadow-[0px_15px_40px_rgba(16,185,129,0.35)] text-white flex flex-col gap-3 backdrop-blur-md animate-slide-down">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center font-bold">
-                <Navigation size={16} />
+        !isRouteCardExpanded ? (
+          <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 border border-emerald-400/40 rounded-2xl px-3.5 py-2 shadow-lg text-white flex items-center justify-between gap-2 backdrop-blur-md animate-slide-down">
+            <div 
+              onClick={() => setIsRouteCardExpanded(true)}
+              className="flex items-center gap-2 cursor-pointer min-w-0 flex-1"
+            >
+              <Navigation size={15} className="text-emerald-200 flex-shrink-0" />
+              <span className="text-xs font-black text-white truncate">
+                Ruta Calculada ({activeRoute.distanceKm} km • <span className="text-amber-300">{activeRoute.durationMin} min</span>)
               </span>
-              <div>
-                <h4 className="text-xs font-black text-white">Ruta Calculada con Éxito</h4>
-                <p className="text-[10px] text-emerald-100 font-medium">
-                  {activeRoute.isOffline ? 'Ruta procesada offline (Haversine)' : 'Ruta OSRM Online'}
-                </p>
-              </div>
+              <ChevronDown size={16} className="text-emerald-200 flex-shrink-0" />
             </div>
             <button
               onClick={onClearRoute}
-              className="text-emerald-800 font-black text-xs bg-white hover:bg-slate-100 px-3 py-1 rounded-xl shadow-xs transition cursor-pointer"
+              className="text-emerald-900 font-bold text-[11px] bg-white hover:bg-slate-100 px-2.5 py-1 rounded-xl shadow-xs transition cursor-pointer flex-shrink-0"
             >
               Limpiar
             </button>
           </div>
-
-          <div className="grid grid-cols-2 gap-2 bg-white/20 border border-white/30 p-2.5 rounded-2xl text-center backdrop-blur-xs">
-            <div>
-              <p className="text-[10px] text-emerald-100 uppercase font-extrabold tracking-wider">Distancia Total</p>
-              <p className="text-base font-black text-white">{activeRoute.distanceKm} km</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-emerald-100 uppercase font-extrabold tracking-wider">Tiempo Estimado</p>
-              <p className="text-base font-black text-amber-300">{activeRoute.durationMin} min</p>
-            </div>
-          </div>
-
-          {activeRoute.steps && activeRoute.steps.length > 0 && (
-            <div>
-              <button
-                onClick={() => setShowSteps(!showSteps)}
-                className="w-full flex items-center justify-between text-xs text-white py-1 font-bold cursor-pointer"
+        ) : (
+          <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 border border-emerald-400/40 rounded-3xl p-4 shadow-[0px_15px_40px_rgba(16,185,129,0.35)] text-white flex flex-col gap-3 backdrop-blur-md animate-slide-down">
+            <div className="flex items-center justify-between">
+              <div 
+                onClick={() => setIsRouteCardExpanded(false)}
+                className="flex items-center gap-2 cursor-pointer"
               >
-                <span>Itinerario paso a paso ({activeRoute.steps.length} instrucciones)</span>
-                {showSteps ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-
-              {showSteps && (
-                <div className="mt-2 space-y-2 max-h-40 overflow-y-auto no-scrollbar pr-1">
-                  {activeRoute.steps.map((step, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-white/15 p-2 rounded-xl text-[11px] flex items-start justify-between border border-white/20"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-white text-emerald-700 flex items-center justify-center font-black text-[10px] flex-shrink-0">
-                          {idx + 1}
-                        </span>
-                        <span className="text-white font-medium">{step.instruction}</span>
-                      </div>
-                      <span className="text-amber-300 font-mono font-bold text-[10px] flex-shrink-0">
-                        {step.distanceKm} km
-                      </span>
-                    </div>
-                  ))}
+                <span className="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center font-bold">
+                  <Navigation size={16} />
+                </span>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="text-xs font-black text-white">Ruta Calculada con Éxito</h4>
+                    <ChevronUp size={16} className="text-emerald-200" />
+                  </div>
+                  <p className="text-[10px] text-emerald-100 font-medium">
+                    {activeRoute.isOffline ? 'Ruta procesada offline (Haversine)' : 'Ruta OSRM Online'}
+                  </p>
                 </div>
-              )}
+              </div>
+              <button
+                onClick={onClearRoute}
+                className="text-emerald-800 font-black text-xs bg-white hover:bg-slate-100 px-3 py-1 rounded-xl shadow-xs transition cursor-pointer"
+              >
+                Limpiar
+              </button>
             </div>
-          )}
-        </div>
+
+            <div className="grid grid-cols-2 gap-2 bg-white/20 border border-white/30 p-2.5 rounded-2xl text-center backdrop-blur-xs">
+              <div>
+                <p className="text-[10px] text-emerald-100 uppercase font-extrabold tracking-wider">Distancia Total</p>
+                <p className="text-base font-black text-white">{activeRoute.distanceKm} km</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-emerald-100 uppercase font-extrabold tracking-wider">Tiempo Estimado</p>
+                <p className="text-base font-black text-amber-300">{activeRoute.durationMin} min</p>
+              </div>
+            </div>
+
+            {activeRoute.steps && activeRoute.steps.length > 0 && (
+              <div>
+                <button
+                  onClick={() => setShowSteps(!showSteps)}
+                  className="w-full flex items-center justify-between text-xs text-white py-1 font-bold cursor-pointer"
+                >
+                  <span>Itinerario paso a paso ({activeRoute.steps.length} instrucciones)</span>
+                  {showSteps ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+
+                {showSteps && (
+                  <div className="mt-2 space-y-2 max-h-40 overflow-y-auto no-scrollbar pr-1">
+                    {activeRoute.steps.map((step, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-white/15 p-2 rounded-xl text-[11px] flex items-start justify-between border border-white/20"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-white text-emerald-700 flex items-center justify-center font-black text-[10px] flex-shrink-0">
+                            {idx + 1}
+                          </span>
+                          <span className="text-white font-medium">{step.instruction}</span>
+                        </div>
+                        <span className="text-amber-300 font-mono font-bold text-[10px] flex-shrink-0">
+                          {step.distanceKm} km
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
       )}
 
       {/* Floating Toolbar Controls — Matching Panel Cliente Green Gradient Style */}

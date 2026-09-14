@@ -18,23 +18,23 @@ interface SimulatedTruck {
 }
 
 const DRIVER_CATALOG = [
-  { name: 'Carlos Rodríguez', vehicle: 'Kenworth T800', plate: 'WYZ-789', city: 'Medellín' },
-  { name: 'Andrés López', vehicle: 'Chevrolet NPR', plate: 'SQR-456', city: 'Bogotá' },
-  { name: 'Mauricio Gómez', vehicle: 'Foton Super', plate: 'KLO-123', city: 'Barranquilla' },
-  { name: 'Javier Mendoza', vehicle: 'Hino 500 Sencillo', plate: 'TRX-889', city: 'Cali' },
-  { name: 'Diana Morales', vehicle: 'JAC KR-10', plate: 'MNB-654', city: 'Bucaramanga' },
-  { name: 'Jorge Vargas', vehicle: 'International Pro', plate: 'PLM-321', city: 'Pereira / Eje Cafetero' },
-  { name: 'Hernán Castro', vehicle: 'Volvo FH16', plate: 'VBN-774', city: 'Cartagena' },
-  { name: 'Mateo Ramírez', vehicle: 'Foton Turbo Light', plate: 'GHJ-902', city: 'Ibagué' },
-  { name: 'Felipe Zapata', vehicle: 'Chevrolet FVR', plate: 'ZXC-512', city: 'Cúcuta' },
+  { name: 'Carlos Rodríguez', vehicle: 'Moto Carguero AKT 200', plate: 'WYZ-789', city: 'Medellín' },
+  { name: 'Andrés López', vehicle: 'Camioneta Pickup Hilux', plate: 'SQR-456', city: 'Bogotá' },
+  { name: 'Mauricio Gómez', vehicle: 'Furgón Mediano Chevrolet', plate: 'KLO-123', city: 'Barranquilla' },
+  { name: 'Javier Mendoza', vehicle: 'Camión Sencillo Hino 500', plate: 'TRX-889', city: 'Cali' },
+  { name: 'Diana Morales', vehicle: 'Moto Carguero Ayco 250', plate: 'MNB-654', city: 'Bucaramanga' },
+  { name: 'Jorge Vargas', vehicle: 'Turbo Light Foton', plate: 'PLM-321', city: 'Pereira / Eje Cafetero' },
+  { name: 'Hernán Castro', vehicle: 'Tractomula Kenworth', plate: 'VBN-774', city: 'Cartagena' },
+  { name: 'Mateo Ramírez', vehicle: 'Camioneta Nissan Frontier', plate: 'GHJ-902', city: 'Ibagué' },
+  { name: 'Felipe Zapata', vehicle: 'Furgón JAC KR-10', plate: 'ZXC-512', city: 'Cúcuta' },
 ];
 
 const STATUS_OPTIONS = [
   'En tránsito',
   'Cargando mercancía',
-  'En ruta logistica',
+  'En ruta logística',
   'Descargando en destino',
-  'Esperando planilla de despacho',
+  'Disponible para fletes',
 ];
 
 class FleetSimulationService {
@@ -52,7 +52,7 @@ class FleetSimulationService {
       await this.spawnTruck();
     }
 
-    // Ticker 1: Step movement along OSRM street polylines (every 1.6s)
+    // Ticker 1: Step movement along interpolated waypoints (every 1.6s)
     this.movementTimer = setInterval(() => {
       this.stepFleet();
     }, 1600);
@@ -85,26 +85,16 @@ class FleetSimulationService {
     const destination = place2.position;
     const status = STATUS_OPTIONS[Math.floor(Math.random() * STATUS_OPTIONS.length)];
 
-    let routePoints: LatLng[] = [];
-    try {
-      const route: RouteInfo = await mapService.calculateRoute(origin, destination);
-      if (route.points && route.points.length > 0) {
-        routePoints = route.points;
-      }
-    } catch (err) {
-      console.warn(`Could not calculate OSRM route for ${id}:`, err);
-    }
-
-    // Fallback straight line if route calculation failed
-    if (routePoints.length === 0) {
-      const steps = 18;
-      for (let i = 0; i <= steps; i++) {
-        const ratio = i / steps;
-        routePoints.push({
-          lat: origin.lat + (destination.lat - origin.lat) * ratio,
-          lng: origin.lng + (destination.lng - origin.lng) * ratio,
-        });
-      }
+    // Generate smooth interpolated waypoints without calling mapService.calculateRoute
+    // so no auto-generated map polylines or route popups clutter the screen
+    const routePoints: LatLng[] = [];
+    const steps = 24;
+    for (let i = 0; i <= steps; i++) {
+      const ratio = i / steps;
+      routePoints.push({
+        lat: origin.lat + (destination.lat - origin.lat) * ratio,
+        lng: origin.lng + (destination.lng - origin.lng) * ratio,
+      });
     }
 
     const truck: SimulatedTruck = {

@@ -50,21 +50,26 @@ export default function Activity({
 
   const closeConfirm = () => setConfirmModal(m => ({ ...m, open: false }));
 
+  const matchesEmail = (a?: string, b?: string) => Boolean(a && b && a.trim().toLowerCase() === b.trim().toLowerCase());
+
   // Filter trips based on selection and user role permissions
   const filteredTrips = trips.filter((trip) => {
+    const isMyClientTrip = matchesEmail(trip.clienteId, user.email);
+    const isMyConductorTrip = matchesEmail(trip.conductorId, user.email);
+
     // 1. Role-based visibility check
-    if (user.role === 'cliente') {
-      // A client ONLY sees trips they created
-      if (trip.clienteId !== user.email) return false;
+    if (user.role === 'admin') {
+      // Admin sees everything
+    } else if (isMyClientTrip || isMyConductorTrip) {
+      // User ALWAYS sees trips where they are the client or assigned conductor
     } else if (user.role === 'conductor') {
-      const isAssignedToMe = trip.conductorId === user.email;
       const isAvailable = user.isAvailable ?? true;
-      // Can see PENDIENTE trips (to potentially accept), but NOT other clients' trips
-      const isPending = trip.status === 'PENDIENTE' && isAvailable && trip.clienteId !== user.email;
-      // Can see trips that are EN CAMINO or further ONLY if assigned to them
-      if (!isPending && !isAssignedToMe) return false;
+      // Conductor can see available PENDIENTE trips from other clients to accept
+      const isPendingForOthers = trip.status === 'PENDIENTE' && isAvailable && !isMyClientTrip;
+      if (!isPendingForOthers) return false;
+    } else if (user.role === 'cliente') {
+      if (!isMyClientTrip) return false;
     }
-    // Admin sees everything
 
     // 2. Tab filter check
     if (filter === 'activos') {

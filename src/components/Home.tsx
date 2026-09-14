@@ -572,7 +572,10 @@ export default function Home({
         ) : (
           /* CLIENT BOTTOM CARD: RASTREO DE ENVÍO EN CURSO */
           (() => {
-            const clientActiveTrip = (trips || []).find(t => t.clienteId === user.email && (t.status === 'EN CAMINO' || t.status === 'PENDIENTE'));
+            const clientActiveTrip = (trips || []).find(t => 
+              t.clienteId && user.email && t.clienteId.trim().toLowerCase() === user.email.trim().toLowerCase() && 
+              (t.status === 'EN CAMINO' || t.status === 'PENDIENTE')
+            );
 
             if (!clientActiveTrip) {
               return null;
@@ -1129,11 +1132,11 @@ export default function Home({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex flex-col bg-[#09152b]"
+            className="fixed inset-0 z-30 flex flex-col bg-[#09152b]"
           >
             {/* Map fullscreen */}
             <div className="absolute inset-0 z-0">
-              <HybridMapContainer className="!rounded-none" initialHeight="h-full" />
+              <HybridMapContainer className="!rounded-none" initialHeight="h-full" hideControls={true} />
             </div>
 
             {/* Top minimal header */}
@@ -1212,7 +1215,7 @@ export default function Home({
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-[#09152b] via-[#09152b]/95 to-transparent px-4 pt-8 pb-8"
+              className="absolute bottom-20 left-0 right-0 z-10 bg-gradient-to-t from-[#09152b] via-[#09152b]/95 to-transparent px-4 pt-6 pb-2"
             >
               {/* Route info row */}
               <div className="flex items-center gap-3 mb-4">
