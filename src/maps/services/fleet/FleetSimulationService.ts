@@ -1,4 +1,4 @@
-import { LatLng, RouteInfo } from '../../models/mapTypes';
+import { LatLng } from '../../models/mapTypes';
 import { mapService } from '../../core/MapService';
 import { COLOMBIA_LOGISTICS_PLACES } from '../search/SearchCatalog';
 
@@ -23,7 +23,7 @@ const DRIVER_CATALOG = [
   { name: 'Mauricio Gómez', vehicle: 'Furgón Mediano Chevrolet', plate: 'KLO-123', city: 'Barranquilla' },
   { name: 'Javier Mendoza', vehicle: 'Camión Sencillo Hino 500', plate: 'TRX-889', city: 'Cali' },
   { name: 'Diana Morales', vehicle: 'Moto Carguero Ayco 250', plate: 'MNB-654', city: 'Bucaramanga' },
-  { name: 'Jorge Vargas', vehicle: 'Turbo Light Foton', plate: 'PLM-321', city: 'Pereira / Eje Cafetero' },
+  { name: 'Jorge Vargas', vehicle: 'Turbo Light Foton', plate: 'PLM-321', city: 'Pereira' },
   { name: 'Hernán Castro', vehicle: 'Tractomula Kenworth', plate: 'VBN-774', city: 'Cartagena' },
   { name: 'Mateo Ramírez', vehicle: 'Camioneta Nissan Frontier', plate: 'GHJ-902', city: 'Ibagué' },
   { name: 'Felipe Zapata', vehicle: 'Furgón JAC KR-10', plate: 'ZXC-512', city: 'Cúcuta' },
@@ -37,6 +37,78 @@ const STATUS_OPTIONS = [
   'Disponible para fletes',
 ];
 
+// Helper to compute distance in meters between two lat/lng points
+function getDistanceInMeters(p1: LatLng, p2: LatLng): number {
+  const R = 6371000;
+  const dLat = ((p2.lat - p1.lat) * Math.PI) / 180;
+  const dLng = ((p2.lng - p1.lng) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((p1.lat * Math.PI) / 180) *
+      Math.cos((p2.lat * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Resample street coordinates so waypoints are smoothly spaced every ~40-70 meters
+function resampleWaypoints(rawPoints: LatLng[], stepMeters: number = 50): LatLng[] {
+  if (rawPoints.length <= 1) return rawPoints;
+  const result: LatLng[] = [rawPoints[0]];
+  let prev = rawPoints[0];
+
+  for (let i = 1; i < rawPoints.length; i++) {
+    const curr = rawPoints[i];
+    const dist = getDistanceInMeters(prev, curr);
+    if (dist > stepMeters) {
+      const steps = Math.ceil(dist / stepMeters);
+      for (let s = 1; s <= steps; s++) {
+        const ratio = s / steps;
+        result.push({
+          lat: prev.lat + (curr.lat - prev.lat) * ratio,
+          lng: prev.lng + (curr.lng - prev.lng) * ratio,
+        });
+      }
+    } else {
+      result.push(curr);
+    }
+    prev = curr;
+  }
+  return result;
+}
+
+// Fetch real driving route from OSRM along actual roads and streets
+async function fetchRealStreetRoute(origin: LatLng, destination: LatLng): Promise<LatLng[]> {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (response.ok) {
+      const data = await response.json();
+      if (data.routes && data.routes.length > 0 && data.routes[0].geometry) {
+        const coords: [number, number][] = data.routes[0].geometry.coordinates;
+        const streetPoints: LatLng[] = coords.map(([lng, lat]) => ({ lat, lng }));
+        return resampleWaypoints(streetPoints, 50);
+      }
+    }
+  } catch (err) {
+    console.warn('OSRM street route fetch failed, using curved fallback path', err);
+  }
+
+  // Fallback path if OSRM request fails: generate curved sub-sampled road nodes
+  const fallbackPoints: LatLng[] = [];
+  const steps = 30;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const curveOffset = Math.sin(t * Math.PI) * 0.008;
+    fallbackPoints.push({
+      lat: origin.lat + (destination.lat - origin.lat) * t + curveOffset,
+      lng: origin.lng + (destination.lng - origin.lng) * t - curveOffset * 0.5,
+    });
+  }
+  return resampleWaypoints(fallbackPoints, 40);
+}
+
 class FleetSimulationService {
   private trucks: Map<string, SimulatedTruck> = new Map();
   private movementTimer: ReturnType<typeof setInterval> | null = null;
@@ -47,35 +119,42 @@ class FleetSimulationService {
     if (this.isRunning) return;
     this.isRunning = true;
 
-    // Start with 4-5 active trucks across different Colombian regions
-    for (let i = 0; i < 4; i++) {
+    // Start with 5 active diverse vehicles across major Colombian logistics hubs
+    for (let i = 0; i < 5; i++) {
       await this.spawnTruck();
     }
 
-    // Ticker 1: Step movement along interpolated waypoints (every 1.6s)
+    // Ticker 1: Step movement along street waypoints every 1.5s
     this.movementTimer = setInterval(() => {
       this.stepFleet();
-    }, 1600);
+    }, 1500);
 
-    // Ticker 2: Dynamic Lifecycle (every 35s - spawn/despawn drivers coming online/offline)
+    // Ticker 2: Lifecycle management (every 30s)
     this.lifecycleTimer = setInterval(() => {
       this.manageLifecycle();
-    }, 35000);
+    }, 30000);
   }
 
   private async spawnTruck(): Promise<void> {
-    // Pick an inactive driver profile
-    const availableDrivers = DRIVER_CATALOG.filter(
-      d => !Array.from(this.trucks.values()).some(t => t.driverName === d.name)
-    );
+    // Pick an available driver from the catalog
+    const activeDriverNames = new Set(Array.from(this.trucks.values()).map(t => t.driverName));
+    const availableDrivers = DRIVER_CATALOG.filter(d => !activeDriverNames.has(d.name));
 
     if (availableDrivers.length === 0) return;
 
     const driverSpec = availableDrivers[Math.floor(Math.random() * availableDrivers.length)];
     const id = `truck-sim-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
 
-    // Pick 2 distinct logistics places in Colombia
-    const place1 = COLOMBIA_LOGISTICS_PLACES[Math.floor(Math.random() * COLOMBIA_LOGISTICS_PLACES.length)];
+    // Select realistic origin & destination places
+    const cityPlaces = COLOMBIA_LOGISTICS_PLACES.filter(p =>
+      p.address.toLowerCase().includes(driverSpec.city.toLowerCase().split(' ')[0]) ||
+      p.title.toLowerCase().includes(driverSpec.city.toLowerCase().split(' ')[0])
+    );
+
+    let place1 = cityPlaces.length >= 2
+      ? cityPlaces[Math.floor(Math.random() * cityPlaces.length)]
+      : COLOMBIA_LOGISTICS_PLACES[Math.floor(Math.random() * COLOMBIA_LOGISTICS_PLACES.length)];
+
     let place2 = COLOMBIA_LOGISTICS_PLACES[Math.floor(Math.random() * COLOMBIA_LOGISTICS_PLACES.length)];
     while (place2.id === place1.id) {
       place2 = COLOMBIA_LOGISTICS_PLACES[Math.floor(Math.random() * COLOMBIA_LOGISTICS_PLACES.length)];
@@ -85,17 +164,8 @@ class FleetSimulationService {
     const destination = place2.position;
     const status = STATUS_OPTIONS[Math.floor(Math.random() * STATUS_OPTIONS.length)];
 
-    // Generate smooth interpolated waypoints without calling mapService.calculateRoute
-    // so no auto-generated map polylines or route popups clutter the screen
-    const routePoints: LatLng[] = [];
-    const steps = 24;
-    for (let i = 0; i <= steps; i++) {
-      const ratio = i / steps;
-      routePoints.push({
-        lat: origin.lat + (destination.lat - origin.lat) * ratio,
-        lng: origin.lng + (destination.lng - origin.lng) * ratio,
-      });
-    }
+    // Fetch real street geometry for vehicle navigation
+    const routePoints = await fetchRealStreetRoute(origin, destination);
 
     const truck: SimulatedTruck = {
       id,
@@ -114,13 +184,14 @@ class FleetSimulationService {
 
     this.trucks.set(id, truck);
 
-    // Add native Leaflet marker
+    // Add marker with vehicleType to map
     mapService.addMarker({
       id: truck.id,
       position: truck.points[0],
       title: `${truck.driverName} (${truck.plate})`,
       subtitle: `${truck.vehicle} • ${truck.city} (${truck.status})`,
       type: 'driver',
+      vehicleType: truck.vehicle,
     });
   }
 
@@ -128,7 +199,6 @@ class FleetSimulationService {
     const truck = this.trucks.get(id);
     if (!truck) return;
 
-    // Remove Leaflet marker from map safely
     try {
       mapService.removeMarker(id);
     } catch (e) {
@@ -143,7 +213,7 @@ class FleetSimulationService {
 
       let nextIndex = truck.currentIndex + truck.direction;
 
-      // Reverse direction at ends
+      // Reverse direction at route ends
       if (nextIndex >= truck.points.length) {
         truck.direction = -1;
         nextIndex = truck.points.length - 2;
@@ -157,7 +227,6 @@ class FleetSimulationService {
       truck.currentIndex = nextIndex;
       const currentPos = truck.points[nextIndex];
 
-      // Update Leaflet marker on map
       try {
         mapService.addMarker({
           id: truck.id,
@@ -165,6 +234,7 @@ class FleetSimulationService {
           title: `${truck.driverName} (${truck.plate})`,
           subtitle: `${truck.vehicle} • ${truck.city} (${truck.status})`,
           type: 'driver',
+          vehicleType: truck.vehicle,
         });
       } catch (e) {
         console.warn('stepFleet: could not update marker', truck.id, e);
@@ -173,15 +243,15 @@ class FleetSimulationService {
   }
 
   private manageLifecycle(): void {
-    // 1. Remove trucks that completed full round trips (simulating going offline / ending shift)
+    // 1. Remove trucks that completed full round trips
     for (const [id, truck] of Array.from(this.trucks.entries())) {
-      if (truck.completedCycles >= 1 && this.trucks.size > 3) {
+      if (truck.completedCycles >= 1 && this.trucks.size > 4) {
         this.despawnTruck(id);
-        break; // Despawn 1 truck at a time
+        break;
       }
     }
 
-    // 2. Spawn a new truck if total is below desired target (e.g. 5 active drivers)
+    // 2. Maintain target fleet size (5-6 active drivers)
     if (this.trucks.size < 6) {
       this.spawnTruck();
     }
@@ -197,7 +267,6 @@ class FleetSimulationService {
       this.lifecycleTimer = null;
     }
 
-    // Clean up all simulation markers on map safely
     for (const id of this.trucks.keys()) {
       try {
         mapService.removeMarker(id);

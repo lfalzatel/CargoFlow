@@ -154,7 +154,7 @@ export class OfflineMapsProvider implements IMapProvider {
       if (existing) {
         existing.setLatLng([m.position.lat, m.position.lng]);
       } else {
-        const customIcon = this.createCustomIcon(m.type);
+        const customIcon = this.createCustomIcon(m.type, m.vehicleType);
         const markerInst = L.marker([m.position.lat, m.position.lng], { icon: customIcon });
         markerInst.bindPopup(`<b>${m.title} (Offline)</b>${m.subtitle ? `<br/>${m.subtitle}` : ''}`);
         markerInst.addTo(this.map!);
@@ -290,44 +290,101 @@ export class OfflineMapsProvider implements IMapProvider {
     this.mapClickCallback = callback;
   }
 
-  private createCustomIcon(type: string): L.DivIcon {
+  private createCustomIcon(type: string, vehicleType?: string): L.DivIcon {
     let bg = '#10B981';
     let iconSymbol = '📍';
+    let label = '';
 
-    if (type === 'user' || type === 'driver') {
+    if (type === 'user') {
       bg = '#00E5A0';
-      iconSymbol = '🚚';
+      iconSymbol = '📍';
+      label = 'Mi Ubicación';
     } else if (type === 'origin') {
       bg = '#059669';
       iconSymbol = '🟢';
+      label = 'Origen';
     } else if (type === 'destination') {
       bg = '#DC2626';
       iconSymbol = '🏁';
+      label = 'Destino';
+    } else if (type === 'driver') {
+      const vt = (vehicleType || '').toLowerCase();
+      if (vt.includes('moto') || vt.includes('trimoto')) {
+        iconSymbol = '🛺';
+        bg = '#F59E0B';
+        label = 'Moto Carguero';
+      } else if (vt.includes('pickup') || vt.includes('camioneta')) {
+        iconSymbol = '🛻';
+        bg = '#06B6D4';
+        label = 'Camioneta';
+      } else if (vt.includes('furgon') || vt.includes('furgón')) {
+        iconSymbol = '🚐';
+        bg = '#10B981';
+        label = 'Furgón';
+      } else if (vt.includes('tractomula') || vt.includes('mula') || vt.includes('kenworth')) {
+        iconSymbol = '🚛';
+        bg = '#EF4444';
+        label = 'Tractomula';
+      } else {
+        iconSymbol = '🚚';
+        bg = '#6366F1';
+        label = 'Camión';
+      }
     }
 
+    const isVehicle = type === 'driver' || type === 'user';
+    const size = isVehicle ? 42 : 36;
+    const anchor = size / 2;
+
     const html = `
-      <div style="
-        background: ${bg};
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
+      <div class="cargoflow-marker-wrapper" style="
+        position: relative;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        border: 2px solid white;
-        font-size: 18px;
-        cursor: pointer;
       ">
-        ${iconSymbol}
+        <div style="
+          background: ${bg};
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+          border: 2.5px solid #ffffff;
+          font-size: ${isVehicle ? 20 : 16}px;
+          cursor: pointer;
+        ">
+          ${iconSymbol}
+        </div>
+        ${
+          isVehicle && label
+            ? `<span style="
+                position: absolute;
+                bottom: -18px;
+                background: #0f172a;
+                color: #ffffff;
+                font-size: 9px;
+                font-weight: 700;
+                padding: 1px 5px;
+                border-radius: 4px;
+                white-space: nowrap;
+                border: 1px solid ${bg};
+                box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+                pointer-events: none;
+              ">${label}</span>`
+            : ''
+        }
       </div>
     `;
 
     return L.divIcon({
       html,
       className: 'custom-map-icon-offline',
-      iconSize: [38, 38],
-      iconAnchor: [19, 19],
+      iconSize: [size, size + 18],
+      iconAnchor: [anchor, anchor],
     });
   }
 }

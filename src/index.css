@@ -168,3 +168,9 @@ body {
   animation: slideDown 0.15s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 
+/* Smooth Leaflet Vehicle Marker Gliding Animation */
+.leaflet-marker-icon.custom-map-icon,
+.leaflet-marker-icon.custom-map-icon-offline {
+  transition: transform 1.4s linear, left 1.4s linear, top 1.4s linear !important;
+}
+
