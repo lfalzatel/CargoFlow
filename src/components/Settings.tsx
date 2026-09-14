@@ -21,6 +21,13 @@ import {
   SoundProfileId 
 } from '../lib/soundEffects';
 
+import { 
+  getMapControlsConfig, 
+  setMapControlsConfig, 
+  MapControlsPosition, 
+  MapControlsDirection 
+} from '../maps/services/mapSettings';
+
 // ── Types ────────────────────────────────────────────────────
 interface SettingsProps {
   user: UserProfile;
@@ -30,7 +37,7 @@ interface SettingsProps {
   onShareApp: () => void;
 }
 
-type SectionKey = 'cuenta' | 'notificaciones' | 'sonidos' | 'vehiculo' | 'apariencia' | 'info' | 'privacidad' | 'gestion';
+type SectionKey = 'cuenta' | 'notificaciones' | 'sonidos' | 'vehiculo' | 'apariencia' | 'info' | 'privacidad' | 'gestion' | 'mapa';
 
 // ── Toggle component ─────────────────────────────────────────
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -495,6 +502,20 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
     playGeneralUiSound(id);
   };
 
+  // Map Controls position & direction preferences
+  const [mapControlsPos, setMapControlsPos] = useState<MapControlsPosition>(() => getMapControlsConfig().position);
+  const [mapControlsDir, setMapControlsDir] = useState<MapControlsDirection>(() => getMapControlsConfig().direction);
+
+  const handleMapPosChange = (pos: MapControlsPosition) => {
+    setMapControlsPos(pos);
+    setMapControlsConfig({ position: pos });
+  };
+
+  const handleMapDirChange = (dir: MapControlsDirection) => {
+    setMapControlsDir(dir);
+    setMapControlsConfig({ direction: dir });
+  };
+
   // Theme
   const [activeTheme, setActiveTheme] = useState(() => localStorage.getItem('cf_theme') || 'dia');
   const [showThemeModal, setShowThemeModal] = useState(false);
@@ -867,6 +888,81 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
               disabled
               action={<ProntoBadge />}
             />
+          </Section>
+
+          {/* ── 3.5. Controles del Mapa ─────────────────────── */}
+          <Section title="Controles del Mapa" open={openSection === 'mapa'} onToggle={() => toggle('mapa')}>
+            {/* Ubicación del botón flotante */}
+            <div className="px-4 py-3.5 border-b border-slate-50">
+              <p className="text-sm font-semibold text-slate-800 flex items-center gap-1.5 mb-0.5">
+                <span>📍</span> Ubicación del Menú Flotante
+              </p>
+              <p className="text-[11px] text-slate-400 mb-2.5">
+                Lado de la pantalla donde se sitúa el botón del mapa
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleMapPosChange('right')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                    mapControlsPos === 'right'
+                      ? 'bg-[#0b224d] text-white border-[#0b224d] shadow-sm'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <span>Lado Derecho</span>
+                  {mapControlsPos === 'right' && <Check size={14} />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMapPosChange('left')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                    mapControlsPos === 'left'
+                      ? 'bg-[#0b224d] text-white border-[#0b224d] shadow-sm'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <span>Lado Izquierdo</span>
+                  {mapControlsPos === 'left' && <Check size={14} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Dirección de despliegue */}
+            <div className="px-4 py-3.5">
+              <p className="text-sm font-semibold text-slate-800 flex items-center gap-1.5 mb-0.5">
+                <span>↕️</span> Dirección de Despliegue
+              </p>
+              <p className="text-[11px] text-slate-400 mb-2.5">
+                Orientación del menú al presionar el botón flotante
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleMapDirChange('vertical')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                    mapControlsDir === 'vertical'
+                      ? 'bg-[#0b224d] text-white border-[#0b224d] shadow-sm'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <span>Vertical (Columna)</span>
+                  {mapControlsDir === 'vertical' && <Check size={14} />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMapDirChange('horizontal')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                    mapControlsDir === 'horizontal'
+                      ? 'bg-[#0b224d] text-white border-[#0b224d] shadow-sm'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <span>Horizontal (Fila)</span>
+                  {mapControlsDir === 'horizontal' && <Check size={14} />}
+                </button>
+              </div>
+            </div>
           </Section>
 
           {/* ── 4. Información y Soporte ───────────────────── */}
