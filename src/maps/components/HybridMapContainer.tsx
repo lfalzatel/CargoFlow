@@ -126,7 +126,7 @@ export const HybridMapContainer: React.FC<HybridMapContainerProps> = ({
 
       {/* Bottom Overlay: Search & Route Controls */}
       {!hideControls && (
-        <div className="absolute bottom-4 left-4 right-4 z-10 pointer-events-none flex justify-center">
+        <div className="absolute bottom-20 left-4 right-4 z-10 pointer-events-none flex justify-center">
           <MapControls
             activeProvider={mapState.activeProvider}
             isOnline={mapState.isOnline}

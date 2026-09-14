@@ -229,6 +229,45 @@ export default function App() {
     }
   };
 
+  const handleClientConfirmArrivalAtOrigin = async (trip: Trip) => {
+    if (user.role !== 'cliente' || user.email !== trip.clienteId || trip.status !== 'EN CAMINO' || trip.clientConfirmedArrivalAtOrigin) {
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+    setTrips(prev => prev.map(t => t.id === trip.id ? { ...t, clientConfirmedArrivalAtOrigin: true, clientConfirmedArrivalAtOriginAt: nowIso } : t));
+
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'trips', trip.id), {
+        clientConfirmedArrivalAtOrigin: true,
+        clientConfirmedArrivalAtOriginAt: nowIso
+      });
+
+      if (trip.conductorId) {
+        const { sendDbNotification } = await import('./services/notificationService');
+        const cleanTripId = trip.id.startsWith('#') ? trip.id : `#${trip.id}`;
+        sendDbNotification(
+          trip.conductorId,
+          '✅ Llegada Confirmada por Cliente',
+          `El cliente (${user.name}) ha confirmado tu llegada al punto de cargue en ${trip.origin} para el flete ${cleanTripId}.`,
+          `arrival-confirmed-${trip.id}`,
+          'info'
+        );
+      }
+
+      setActiveToast({
+        id: `conf-arr-${Date.now()}`,
+        title: '✓ Llegada Confirmada',
+        message: 'Has confirmado la llegada del vehículo al punto de cargue.',
+        type: 'info'
+      });
+    } catch (e) {
+      console.warn('Error confirming arrival at origin:', e);
+    }
+  };
+
   const handleRequestCompletion = async (trip: Trip) => {
     if (user.role !== 'conductor' || user.email !== trip.conductorId || trip.status !== 'EN CAMINO' || trip.completionRequestedBy) {
       return;
@@ -643,12 +682,12 @@ export default function App() {
 
         // Read the persisted Firestore profile to get isComplete and role-specific fields
         try {
-          const lastRole = localStorage.getItem('cf_last_role') || 'cliente';
+          const lastRole = (localStorage.getItem('cf_last_role') as UserRole) || 'cliente';
           const docRef = doc(db, 'users', `${firebaseUser.uid}_${lastRole}`);
           const snap = await getDoc(docRef);
           if (snap.exists()) {
             const firestoreProfile = snap.data() as UserProfile;
-            const activeRole = firestoreProfile.role || lastRole as any;
+            const activeRole = (firestoreProfile.role === 'admin' ? 'admin' : lastRole) as UserRole;
             setUser(prev => ({
               ...prev,
               ...firestoreProfile,
@@ -1179,15 +1218,11 @@ export default function App() {
       const { auth, db } = await import('./config/firebase');
       const { doc, updateDoc } = await import('firebase/firestore');
       if (auth.currentUser && user.role) {
-        // Try updating both possible role documents to ensure we catch the correct one
-        // especially for admin users who might be using either a conductor or cliente doc
-        const possibleRoles = ['conductor', 'cliente'];
-        for (const r of possibleRoles) {
-          try {
-            const docRef = doc(db, 'users', `${auth.currentUser.uid}_${r}`);
-            await updateDoc(docRef, updates);
-          } catch(e) {}
-        }
+        // Update only the current active role document to prevent cross-role field pollution
+        const targetRole = user.role;
+        const docRef = doc(db, 'users', `${auth.currentUser.uid}_${targetRole}`);
+        const sanitizedUpdates = { ...updates, role: targetRole };
+        await updateDoc(docRef, sanitizedUpdates);
       }
     } catch (e) {
       console.error('Error updating profile in DB:', e);
@@ -1403,6 +1438,7 @@ export default function App() {
               onAcceptTrip={handleAcceptTrip}
               onCounterOfferTrip={handleCounterOffer}
               onDriverArrivedAtOrigin={handleDriverArrivedAtOrigin}
+              onClientConfirmArrivalAtOrigin={handleClientConfirmArrivalAtOrigin}
               onRequestCompletion={handleRequestCompletion}
               onNavigateToView={handleViewChange}
               onUpdateProfile={handleUpdateProfile}
@@ -1427,6 +1463,7 @@ export default function App() {
               onResolveCounterOffer={handleResolveCounterOffer}
               onCompleteTrip={handleCompleteTrip}
               onDriverArrivedAtOrigin={handleDriverArrivedAtOrigin}
+              onClientConfirmArrivalAtOrigin={handleClientConfirmArrivalAtOrigin}
               onRequestCompletion={handleRequestCompletion}
               onConfirmCompletion={handleConfirmCompletion}
               onRejectCompletion={handleRejectCompletion}

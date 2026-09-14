@@ -13,6 +13,8 @@ interface ActivityProps {
   onEditTrip?: (trip: Trip) => void;
   onResolveCounterOffer?: (tripId: string, accept: boolean) => void;
   onCompleteTrip?: (trip: Trip) => void;
+  onDriverArrivedAtOrigin?: (trip: Trip) => void;
+  onClientConfirmArrivalAtOrigin?: (trip: Trip) => void;
   onRequestCompletion?: (trip: Trip) => void;
   onConfirmCompletion?: (trip: Trip) => void;
   onRejectCompletion?: (trip: Trip) => void;
@@ -28,6 +30,8 @@ export default function Activity({
   onEditTrip,
   onResolveCounterOffer,
   onCompleteTrip,
+  onDriverArrivedAtOrigin,
+  onClientConfirmArrivalAtOrigin,
   onRequestCompletion,
   onConfirmCompletion,
   onRejectCompletion,
@@ -373,6 +377,49 @@ export default function Activity({
                                   >
                                     <MessageSquare size={18} />
                                   </button>
+
+                                  {/* 0. Driver arrived at origin status & actions */}
+                                  {!trip.driverArrivedAtOrigin && user.role === 'conductor' && onDriverArrivedAtOrigin && (
+                                    <button
+                                      onClick={() => {
+                                        setConfirmModal({
+                                          open: true,
+                                          title: 'Notificar Llegada',
+                                          message: `¿Confirmas que has llegado al punto de cargue en ${trip.origin}?`,
+                                          confirmLabel: 'Sí, he llegado',
+                                          variant: 'info',
+                                          onConfirm: () => { onDriverArrivedAtOrigin(trip); closeConfirm(); }
+                                        });
+                                      }}
+                                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1"
+                                    >
+                                      📍 He llegado al cargue
+                                    </button>
+                                  )}
+
+                                  {trip.driverArrivedAtOrigin && !trip.clientConfirmedArrivalAtOrigin && user.role === 'cliente' && onClientConfirmArrivalAtOrigin && (
+                                    <button
+                                      onClick={() => {
+                                        setConfirmModal({
+                                          open: true,
+                                          title: 'Confirmar Llegada de Conductor',
+                                          message: `¿Confirmas que el conductor ha llegado al punto de cargue en ${trip.origin}?`,
+                                          confirmLabel: '✓ Confirmar Llegada',
+                                          variant: 'success',
+                                          onConfirm: () => { onClientConfirmArrivalAtOrigin(trip); closeConfirm(); }
+                                        });
+                                      }}
+                                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1 animate-pulse"
+                                    >
+                                      ✓ Confirmar llegada
+                                    </button>
+                                  )}
+
+                                  {trip.driverArrivedAtOrigin && (
+                                    <span className="text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-xl flex items-center gap-1">
+                                      📍 En cargue {trip.clientConfirmedArrivalAtOrigin ? '(Confirmado)' : ''}
+                                    </span>
+                                  )}
 
                                   {/* 1. No request yet -> Request Completion */}
                                   {!hasRequest && user.role === 'conductor' && onRequestCompletion && (

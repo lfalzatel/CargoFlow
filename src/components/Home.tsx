@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, History, Menu, Truck, Star, Info, X, Navigation, RefreshCw, CheckCircle2, Navigation2, Phone, Flag, PackageCheck, MapPinned, Compass, Map, Crosshair, Eye } from 'lucide-react';
+import { Search, MapPin, History, Menu, Truck, Star, Info, X, Navigation, RefreshCw, CheckCircle2, Navigation2, Phone, Flag, PackageCheck, MapPinned, Compass, Map, Crosshair, Eye, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trip, UserProfile } from '../types';
 import { HybridMapContainer } from '../maps/components/HybridMapContainer';
@@ -18,6 +18,7 @@ interface HomeProps {
   onAcceptTrip?: (tripId: string, assignedPlate?: string, assignedType?: string) => void;
   onCounterOfferTrip?: (tripId: string, price: number, assignedPlate?: string, assignedType?: string) => void;
   onDriverArrivedAtOrigin?: (trip: Trip) => void;
+  onClientConfirmArrivalAtOrigin?: (trip: Trip) => void;
   onRequestCompletion?: (trip: Trip) => void;
   onNavigateToView: (view: 'home' | 'activity' | 'chat' | 'dashboard' | 'profile' | 'settings') => void;
   onUpdateProfile?: (updates: Partial<UserProfile>) => void;
@@ -36,6 +37,7 @@ export default function Home({
   onAcceptTrip,
   onCounterOfferTrip,
   onDriverArrivedAtOrigin,
+  onClientConfirmArrivalAtOrigin,
   onRequestCompletion,
   onNavigateToView, 
   onUpdateProfile, 
@@ -1180,28 +1182,47 @@ export default function Home({
               className="absolute top-16 left-3 right-3 z-30"
             >
               <div className={`rounded-3xl p-3.5 shadow-2xl border backdrop-blur-md flex flex-col gap-2.5 ${
-                tripPhase === 'cargue'
+                (user.role === 'conductor' ? tripPhase === 'cargue' : !activeTrip.driverArrivedAtOrigin)
                   ? 'bg-[#09152b]/95 border-blue-500/30 text-white'
                   : 'bg-emerald-950/95 border-emerald-400/30 text-white'
               }`}>
                 {/* Upper summary row */}
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${
-                    tripPhase === 'cargue' ? 'bg-blue-500/20 text-blue-300' : 'bg-emerald-500/20 text-emerald-300'
+                    (user.role === 'conductor' ? tripPhase === 'cargue' : !activeTrip.driverArrivedAtOrigin)
+                      ? 'bg-blue-500/20 text-blue-300'
+                      : 'bg-emerald-500/20 text-emerald-300'
                   }`}>
-                    {tripPhase === 'cargue' ? <MapPinned size={20} /> : <Flag size={20} />}
+                    {user.role === 'conductor' ? (
+                      tripPhase === 'cargue' ? <MapPinned size={20} /> : <Flag size={20} />
+                    ) : (
+                      activeTrip.driverArrivedAtOrigin ? <MapPinned size={20} /> : <Truck size={20} />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${
-                      tripPhase === 'cargue' ? 'text-blue-400' : 'text-emerald-400'
+                      (user.role === 'conductor' ? tripPhase === 'cargue' : !activeTrip.driverArrivedAtOrigin)
+                        ? 'text-blue-400'
+                        : 'text-emerald-400'
                     }`}>
-                      {tripPhase === 'cargue' ? '📦 FASE 1 — IR AL CARGUE' : '🏁 FASE 2 — ENTREGAR'}
+                      {user.role === 'conductor' ? (
+                        tripPhase === 'cargue' ? '📦 FASE 1 — IR AL CARGUE' : '🏁 FASE 2 — ENTREGAR'
+                      ) : (
+                        activeTrip.driverArrivedAtOrigin ? '📍 CONDUCTOR EN PUNTO DE CARGUE' : '🚚 CONDUCTOR EN CAMINO AL CARGUE'
+                      )}
                     </p>
                     <p className="text-white font-black text-sm truncate">
-                      {tripPhase === 'cargue' ? activeTrip.origin : activeTrip.destination}
+                      {user.role === 'conductor' ? (
+                        tripPhase === 'cargue' ? activeTrip.origin : activeTrip.destination
+                      ) : (
+                        activeTrip.driverArrivedAtOrigin 
+                          ? `${activeTrip.conductorName || 'El conductor'} ha llegado a ${activeTrip.origin}` 
+                          : `${activeTrip.conductorName || 'El conductor'} va en camino a ${activeTrip.origin}`
+                      )}
                     </p>
                     <p className="text-slate-400 text-[10px] font-medium truncate">
                       #{activeTrip.id} • {activeTrip.vehicleType}
+                      {user.role === 'cliente' && activeTrip.conductorPlate && ` • Placa: ${activeTrip.conductorPlate}`}
                       {activeTrip.tag && ` • ${activeTrip.tag}`}
                     </p>
                   </div>
@@ -1211,62 +1232,89 @@ export default function Home({
                   </div>
                 </div>
 
-                {/* Dos botones en la MISMA LÍNEA (Side-by-Side) */}
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
-                  {tripPhase === 'cargue' ? (
-                    <button
-                      onClick={async () => {
-                        setTripPhase('descargue');
-                        if (activeTrip?.clienteId) {
-                          try {
-                            const { sendDbNotification } = await import('../services/notificationService');
-                            const cleanTripId = activeTrip.id.startsWith('#') ? activeTrip.id : `#${activeTrip.id}`;
-                            sendDbNotification(
-                              activeTrip.clienteId,
-                              '📍 Conductor en Punto de Cargue',
-                              `El conductor (${user.name}) ha llegado al punto de recolección en ${activeTrip.origin} para el flete ${cleanTripId}.`,
-                              `trip-arrived-${activeTrip.id}`,
-                              'info'
-                            );
-                          } catch (e) {
-                            console.warn('Could not send arrival notification:', e);
+                {/* Botones en la MISMA LÍNEA (Side-by-Side) */}
+                {user.role === 'conductor' ? (
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                    {tripPhase === 'cargue' ? (
+                      <button
+                        onClick={async () => {
+                          setTripPhase('descargue');
+                          if (onDriverArrivedAtOrigin) {
+                            onDriverArrivedAtOrigin(activeTrip);
                           }
-                        }
-                      }}
-                      className="py-2.5 px-2 rounded-2xl bg-blue-500 hover:bg-blue-600 active:scale-[0.98] text-white font-black text-[11px] flex items-center justify-center gap-1.5 shadow-lg transition-all cursor-pointer truncate"
-                    >
-                      <PackageCheck size={16} className="flex-shrink-0" />
-                      <span className="truncate">Llegué al Cargue ✓</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        if (activeTrip && onRequestCompletion && !activeTrip.completionRequestedBy) {
-                          onRequestCompletion(activeTrip);
-                        }
-                        onNavigateToView('activity');
-                        setShowRatingReminder(true);
-                        setTimeout(() => setShowRatingReminder(false), 30000);
-                      }}
-                      className="py-2.5 px-2 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-black text-[11px] flex items-center justify-center gap-1.5 shadow-lg transition-all cursor-pointer truncate"
-                    >
-                      <Flag size={16} className="flex-shrink-0" />
-                      <span className="truncate">
-                        {activeTrip?.completionRequestedBy
-                          ? 'Esperando cliente...'
-                          : 'Solicitar entrega'}
-                      </span>
-                    </button>
-                  )}
+                        }}
+                        className="py-2.5 px-2 rounded-2xl bg-blue-500 hover:bg-blue-600 active:scale-[0.98] text-white font-black text-[11px] flex items-center justify-center gap-1.5 shadow-lg transition-all cursor-pointer truncate"
+                      >
+                        <PackageCheck size={16} className="flex-shrink-0" />
+                        <span className="truncate">Llegué al Cargue ✓</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          if (activeTrip && onRequestCompletion && !activeTrip.completionRequestedBy) {
+                            onRequestCompletion(activeTrip);
+                          }
+                          onNavigateToView('activity');
+                          setShowRatingReminder(true);
+                          setTimeout(() => setShowRatingReminder(false), 30000);
+                        }}
+                        className="py-2.5 px-2 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-black text-[11px] flex items-center justify-center gap-1.5 shadow-lg transition-all cursor-pointer truncate"
+                      >
+                        <Flag size={16} className="flex-shrink-0" />
+                        <span className="truncate">
+                          {activeTrip?.completionRequestedBy
+                            ? 'Esperando cliente...'
+                            : 'Solicitar entrega'}
+                        </span>
+                      </button>
+                    )}
 
-                  <button
-                    onClick={() => onNavigateToView('activity')}
-                    className="py-2.5 px-2 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-[0.98] text-white border border-white/20 font-black text-[11px] flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer truncate"
-                  >
-                    <Eye size={15} className="flex-shrink-0" />
-                    <span className="truncate">Ver detalle del viaje</span>
-                  </button>
-                </div>
+                    <button
+                      onClick={() => onNavigateToView('activity')}
+                      className="py-2.5 px-2 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-[0.98] text-white border border-white/20 font-black text-[11px] flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer truncate"
+                    >
+                      <Eye size={15} className="flex-shrink-0" />
+                      <span className="truncate">Ver detalle del viaje</span>
+                    </button>
+                  </div>
+                ) : (
+                  /* 3 BOTONES EN LA MISMA LÍNEA PARA EL CLIENTE (JULIAN) */
+                  <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-white/10">
+                    {activeTrip.clientConfirmedArrivalAtOrigin ? (
+                      <button
+                        disabled
+                        className="py-2.5 px-1.5 rounded-2xl bg-emerald-600/90 text-white font-black text-[10px] flex items-center justify-center gap-1 cursor-default opacity-90 truncate"
+                      >
+                        <CheckCircle2 size={13} className="flex-shrink-0 text-emerald-200" />
+                        <span className="truncate">Llegada OK ✓</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => activeTrip && onClientConfirmArrivalAtOrigin?.(activeTrip)}
+                        className="py-2.5 px-1.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-black text-[10px] flex items-center justify-center gap-1 shadow-lg transition-all cursor-pointer truncate"
+                      >
+                        <CheckCircle2 size={13} className="flex-shrink-0" />
+                        <span className="truncate">Confirmar Llegada</span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => onNavigateToView('chat')}
+                      className="py-2.5 px-1.5 rounded-2xl bg-blue-500 hover:bg-blue-600 active:scale-[0.98] text-white font-black text-[10px] flex items-center justify-center gap-1 shadow-lg transition-all cursor-pointer truncate"
+                    >
+                      <MessageSquare size={13} className="flex-shrink-0" />
+                      <span className="truncate">Contactar</span>
+                    </button>
+
+                    <button
+                      onClick={() => onNavigateToView('activity')}
+                      className="py-2.5 px-1.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-[0.98] text-white border border-white/20 font-black text-[10px] flex items-center justify-center gap-1 shadow-md transition-all cursor-pointer truncate"
+                    >
+                      <Eye size={13} className="flex-shrink-0" />
+                      <span className="truncate">Ver Detalle</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
