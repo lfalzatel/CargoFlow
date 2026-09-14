@@ -77,6 +77,9 @@ export interface Trip {
   driverArrivedAtOriginAt?: string;
   clientConfirmedArrivalAtOrigin?: boolean;
   clientConfirmedArrivalAtOriginAt?: string;
+  tripStarted?: boolean;
+  tripStartedAt?: string;
+  deliveryPhotoURL?: string;
 }
 
 export interface ChatMessage {

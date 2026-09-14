@@ -19,7 +19,10 @@ interface HomeProps {
   onCounterOfferTrip?: (tripId: string, price: number, assignedPlate?: string, assignedType?: string) => void;
   onDriverArrivedAtOrigin?: (trip: Trip) => void;
   onClientConfirmArrivalAtOrigin?: (trip: Trip) => void;
+  onStartTrip?: (trip: Trip) => void;
   onRequestCompletion?: (trip: Trip) => void;
+  onConfirmCompletion?: (trip: Trip) => void;
+  onRejectCompletion?: (trip: Trip) => void;
   onNavigateToView: (view: 'home' | 'activity' | 'chat' | 'dashboard' | 'profile' | 'settings') => void;
   onUpdateProfile?: (updates: Partial<UserProfile>) => void;
   onLogout: () => void;
@@ -38,7 +41,10 @@ export default function Home({
   onCounterOfferTrip,
   onDriverArrivedAtOrigin,
   onClientConfirmArrivalAtOrigin,
+  onStartTrip,
   onRequestCompletion,
+  onConfirmCompletion,
+  onRejectCompletion,
   onNavigateToView, 
   onUpdateProfile, 
   onLogout 
@@ -1209,25 +1215,33 @@ export default function Home({
                         !activeTrip.driverArrivedAtOrigin
                           ? '📦 FASE 1 — IR AL CARGUE'
                           : !activeTrip.clientConfirmedArrivalAtOrigin
-                          ? '📍 EN CARGUE (ESPERANDO CLIENTE)'
-                          : activeTrip.completionRequestedBy
-                          ? '🏁 FASE 2 — ENTREGA SOLICITADA'
-                          : '🏁 FASE 2 — ENTREGAR EN DESTINO'
+                          ? '📍 FASE 1 — EN CARGUE (ESPERANDO CLIENTE)'
+                          : !activeTrip.tripStarted && !activeTrip.completionRequestedBy
+                          ? '🚚 FASE 2 — CARGUE CONFIRMADO'
+                          : !activeTrip.completionRequestedBy
+                          ? '🏁 FASE 3 — EN TRAYECTO A DESTINO'
+                          : '🏁 FASE 3 — ENTREGA SOLICITADA'
                       ) : (
                         !activeTrip.driverArrivedAtOrigin
-                          ? '🚚 CONDUCTOR EN CAMINO AL CARGUE'
+                          ? '🚚 FASE 1 — CONDUCTOR EN CAMINO'
                           : !activeTrip.clientConfirmedArrivalAtOrigin
-                          ? '📍 CONDUCTOR EN PUNTO DE CARGUE'
+                          ? '📍 FASE 1 — CONDUCTOR EN PUNTO DE CARGUE'
                           : activeTrip.completionRequestedBy
-                          ? '🏁 SOLICITUD DE ENTREGA EN DESTINO'
-                          : '🚚 VEHÍCULO EN TRAYECTO / EN CARGUE'
+                          ? '🏁 FASE 3 — CONFIRMAR ENTREGA EN DESTINO'
+                          : '🚚 FASE 2 — VEHÍCULO EN TRAYECTO'
                       )}
                     </p>
                     <p className="text-white font-black text-sm truncate">
                       {user.role === 'conductor' ? (
-                        !activeTrip.clientConfirmedArrivalAtOrigin ? activeTrip.origin : activeTrip.destination
+                        !activeTrip.clientConfirmedArrivalAtOrigin 
+                          ? activeTrip.origin 
+                          : activeTrip.destination
                       ) : (
-                        activeTrip.driverArrivedAtOrigin 
+                        activeTrip.completionRequestedBy
+                          ? `Entrega notificada en ${activeTrip.destination}`
+                          : activeTrip.clientConfirmedArrivalAtOrigin
+                          ? `En camino hacia ${activeTrip.destination}`
+                          : activeTrip.driverArrivedAtOrigin 
                           ? `${activeTrip.conductorName || 'El conductor'} ha llegado a ${activeTrip.origin}` 
                           : `${activeTrip.conductorName || 'El conductor'} va en camino a ${activeTrip.origin}`
                       )}
@@ -1266,6 +1280,18 @@ export default function Home({
                       >
                         <span className="truncate">⏳ Esperando cliente...</span>
                       </button>
+                    ) : !activeTrip.tripStarted && !activeTrip.completionRequestedBy ? (
+                      <button
+                        onClick={() => {
+                          if (onStartTrip) {
+                            onStartTrip(activeTrip);
+                          }
+                        }}
+                        className="py-2.5 px-2 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-black text-[11px] flex items-center justify-center gap-1.5 shadow-lg transition-all cursor-pointer truncate"
+                      >
+                        <Truck size={16} className="flex-shrink-0" />
+                        <span className="truncate">🚀 Iniciar Viaje</span>
+                      </button>
                     ) : (
                       <button
                         disabled={Boolean(activeTrip?.completionRequestedBy)}
@@ -1287,7 +1313,7 @@ export default function Home({
                         <span className="truncate">
                           {activeTrip?.completionRequestedBy
                             ? '⏳ Esperando confirmación...'
-                            : 'Solicitar entrega'}
+                            : 'Finalizar Entrega'}
                         </span>
                       </button>
                     )}
@@ -1303,7 +1329,15 @@ export default function Home({
                 ) : (
                   /* 3 BOTONES EN LA MISMA LÍNEA PARA EL CLIENTE (JULIAN) */
                   <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-white/10">
-                    {activeTrip.clientConfirmedArrivalAtOrigin ? (
+                    {activeTrip.completionRequestedBy ? (
+                      <button
+                        onClick={() => activeTrip && onConfirmCompletion?.(activeTrip)}
+                        className="py-2.5 px-1.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-black text-[10px] flex items-center justify-center gap-1 shadow-lg transition-all cursor-pointer truncate animate-pulse"
+                      >
+                        <CheckCircle2 size={13} className="flex-shrink-0" />
+                        <span className="truncate">Confirmar Entrega</span>
+                      </button>
+                    ) : activeTrip.clientConfirmedArrivalAtOrigin ? (
                       <button
                         disabled
                         className="py-2.5 px-1.5 rounded-2xl bg-emerald-600/90 text-white font-black text-[10px] flex items-center justify-center gap-1 cursor-default opacity-90 truncate"

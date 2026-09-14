@@ -299,6 +299,47 @@ export default function App() {
     }
   };
 
+  const handleStartTrip = async (trip: Trip) => {
+    const isAllowedRole = user.role === 'conductor' || user.role === 'admin';
+    const isConductor = sameEmail(user.email, trip.conductorId) || isAllowedRole;
+    if (!isConductor || trip.status !== 'EN CAMINO' || trip.tripStarted) {
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+    setTrips(prev => prev.map(t => t.id === trip.id ? { ...t, tripStarted: true, tripStartedAt: nowIso } : t));
+
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'trips', trip.id), {
+        tripStarted: true,
+        tripStartedAt: nowIso
+      });
+
+      if (trip.clienteId) {
+        const { sendDbNotification } = await import('./services/notificationService');
+        const cleanTripId = trip.id.startsWith('#') ? trip.id : `#${trip.id}`;
+        sendDbNotification(
+          trip.clienteId,
+          '🚀 Viaje Iniciado hacia Destino',
+          `El conductor (${user.name}) ha iniciado el trayecto hacia ${trip.destination} para el flete ${cleanTripId}.`,
+          `trip-started-${trip.id}`,
+          'info'
+        );
+      }
+
+      setActiveToast({
+        id: `start-trip-${Date.now()}`,
+        title: '🚀 Viaje Iniciado',
+        message: `Has iniciado el trayecto hacia ${trip.destination}.`,
+        type: 'info'
+      });
+    } catch (e) {
+      console.warn('Error starting trip journey:', e);
+    }
+  };
+
   const handleRequestCompletion = async (trip: Trip) => {
     const isAllowedRole = user.role === 'conductor' || user.role === 'admin';
     const isConductor = sameEmail(user.email, trip.conductorId) || isAllowedRole;
@@ -1474,7 +1515,10 @@ export default function App() {
               onCounterOfferTrip={handleCounterOffer}
               onDriverArrivedAtOrigin={handleDriverArrivedAtOrigin}
               onClientConfirmArrivalAtOrigin={handleClientConfirmArrivalAtOrigin}
+              onStartTrip={handleStartTrip}
               onRequestCompletion={handleRequestCompletion}
+              onConfirmCompletion={handleConfirmCompletion}
+              onRejectCompletion={handleRejectCompletion}
               onNavigateToView={handleViewChange}
               onUpdateProfile={handleUpdateProfile}
               onLogout={handleLogout}
