@@ -57,12 +57,15 @@ export const MapControls: React.FC<MapControlsProps> = ({
   const dragBoundsRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
 
-  // Smart deployment direction ('up' vs 'down') based on drop position relative to safe zone
+  // Smart deployment direction ('up' vs 'down') & horizontal align ('left' vs 'right') based on drop position relative to safe zone
   const [deployDirection, setDeployDirection] = useState<'up' | 'down'>('up');
+  const [horizontalAlign, setHorizontalAlign] = useState<'left' | 'right'>(() => config.position);
 
   useEffect(() => {
     const handleConfigChange = () => {
-      setConfig(getMapControlsConfig());
+      const newCfg = getMapControlsConfig();
+      setConfig(newCfg);
+      setHorizontalAlign(newCfg.position);
     };
     window.addEventListener('cargoflow:map-controls-config-changed', handleConfigChange);
     return () => {
@@ -74,12 +77,22 @@ export const MapControls: React.FC<MapControlsProps> = ({
     if (triggerRef.current && dragBoundsRef.current) {
       const triggerRect = triggerRef.current.getBoundingClientRect();
       const boundsRect = dragBoundsRef.current.getBoundingClientRect();
+      
+      // Vertical deployment direction
       const relativeY = triggerRect.top - boundsRect.top;
-      // If dropped in upper 45% of safe zone, deploy menu downward to avoid top cards
       if (relativeY < boundsRect.height * 0.45) {
         setDeployDirection('down');
       } else {
         setDeployDirection('up');
+      }
+
+      // Horizontal alignment direction
+      const triggerCenterX = triggerRect.left + triggerRect.width / 2;
+      const boundsCenterX = boundsRect.left + boundsRect.width / 2;
+      if (triggerCenterX < boundsCenterX) {
+        setHorizontalAlign('left');
+      } else {
+        setHorizontalAlign('right');
       }
     }
   };
@@ -147,6 +160,16 @@ export const MapControls: React.FC<MapControlsProps> = ({
 
   const isRight = config.position === 'right';
   const isVertical = config.direction === 'vertical';
+  const isAlignLeft = horizontalAlign === 'left';
+
+  const getPopoverPositionClass = () => {
+    if (!isVertical) {
+      return isAlignLeft ? 'left-14 top-0' : 'right-14 top-0';
+    }
+    const verticalClass = deployDirection === 'down' ? 'top-14' : 'bottom-14';
+    const horizontalClass = isAlignLeft ? 'left-0' : 'right-0';
+    return `${verticalClass} ${horizontalClass}`;
+  };
 
   return (
     <div className="w-full h-full relative z-10 pointer-events-none flex flex-col justify-between p-3 select-none">
@@ -369,13 +392,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
-                className={`absolute ${
-                  !isVertical
-                    ? (isRight ? 'right-14 top-0' : 'left-14 top-0')
-                    : (deployDirection === 'down' ? 'top-14' : 'bottom-14')
-                } ${
-                  isRight ? 'right-0' : 'left-0'
-                } bg-slate-900/95 border border-slate-700/90 backdrop-blur-xl p-2.5 rounded-3xl shadow-2xl min-w-[170px] z-50`}
+                className={`absolute ${getPopoverPositionClass()} bg-slate-900/95 border border-slate-700/90 backdrop-blur-xl p-2.5 rounded-3xl shadow-2xl min-w-[170px] z-50`}
               >
                 <div className={`flex ${!isVertical ? 'flex-row items-center gap-2' : 'flex-col gap-2'}`}>
                   {/* 1. Recenter GPS Location Button */}
