@@ -437,29 +437,21 @@ export default function Home({
             </div>
           </div>
         ) : (
-          /* CLIENT TOP CARD */
-          <button
-            onClick={() => setShowShipmentModal(true)}
-            className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white rounded-2xl shadow-[0px_10px_35px_rgba(16,185,129,0.3)] flex items-center justify-between p-3.5 cursor-pointer hover:opacity-95 transition-all border border-emerald-400/40 group active:scale-[0.99]"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center flex-shrink-0 font-bold shadow-inner">
-                <Truck size={22} fill="currentColor" />
+          /* CLIENT FLOATING CTA BUTTON (UBER / RAPPI STYLE PILL) */
+          <div className="flex justify-center w-full">
+            <button
+              onClick={() => setShowShipmentModal(true)}
+              className="bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white rounded-full px-5 py-3 shadow-[0px_12px_35px_rgba(16,185,129,0.45)] flex items-center gap-2.5 cursor-pointer hover:scale-105 active:scale-95 transition-all border border-emerald-300/50 group backdrop-blur-md anim-float-bounce"
+            >
+              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white flex-shrink-0 font-bold shadow-inner">
+                <Truck size={16} fill="currentColor" />
               </div>
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] font-black text-emerald-200 uppercase tracking-widest">
-                  PANEL CLIENTE
-                </span>
-                <span className="text-xs font-black text-white">
-                  Publicar Solicitud de Carga
-                </span>
-              </div>
-            </div>
-            <div className="px-3 py-2 bg-white text-emerald-700 rounded-xl font-black text-xs shadow-md flex-shrink-0 group-hover:bg-slate-100 anim-float-bounce flex items-center gap-1.5">
-              <span>Solicitar Flete</span>
-              <Navigation size={13} />
-            </div>
-          </button>
+              <span className="text-xs font-black tracking-wider uppercase text-white">
+                Solicitar Servicio
+              </span>
+              <Navigation size={15} className="text-emerald-200 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+            </button>
+          </div>
         )}
       </div>
 
