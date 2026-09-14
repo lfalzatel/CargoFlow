@@ -11,6 +11,7 @@ import {
   ChevronDown, 
   ChevronUp, 
   ChevronRight,
+  ChevronLeft,
   Route as RouteIcon, 
   Layers,
   SlidersHorizontal
@@ -57,6 +58,19 @@ export const MapControls: React.FC<MapControlsProps> = ({
   // Strict drag bounds safe-zone container ref
   const dragBoundsRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Horizontal scroll detection for carousel arrows
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScrollBounds = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 5);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
+    }
+  };
 
   // Smart deployment direction ('up' vs 'down') & horizontal align ('left' vs 'right') based on drop position relative to safe zone
   const [deployDirection, setDeployDirection] = useState<'up' | 'down'>('up');
@@ -73,6 +87,13 @@ export const MapControls: React.FC<MapControlsProps> = ({
       window.removeEventListener('cargoflow:map-controls-config-changed', handleConfigChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (isMenuOpen && config.direction === 'horizontal') {
+      const timer = setTimeout(checkScrollBounds, 60);
+      return () => clearTimeout(timer);
+    }
+  }, [isMenuOpen, config.direction, config.position]);
 
   const handleDragEnd = () => {
     if (triggerRef.current && dragBoundsRef.current) {
@@ -393,132 +414,160 @@ export const MapControls: React.FC<MapControlsProps> = ({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
-                className={`absolute ${getPopoverPositionClass()} bg-slate-900/95 border border-slate-700/90 backdrop-blur-xl p-2.5 rounded-3xl shadow-2xl z-50 ${
-                  !isVertical 
-                    ? 'max-w-[calc(100vw-75px)] overflow-x-auto no-scrollbar' 
-                    : 'w-max'
-                }`}
+                className={`absolute ${getPopoverPositionClass()} z-50`}
               >
-                <div className={`flex ${!isVertical ? 'flex-row items-center gap-1.5 flex-nowrap' : 'flex-col gap-2'}`}>
-                  {/* 1. Recenter GPS Location Button */}
-                  <button
-                    onClick={() => {
-                      onCenterUserLocation();
-                      setIsMenuOpen(false);
-                    }}
-                    className={`bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white border border-emerald-400/40 rounded-2xl shadow-md transition flex items-center gap-2 text-xs font-black active:scale-95 cursor-pointer whitespace-nowrap ${
-                      !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
-                    }`}
-                    title="Centrar en mi ubicación GPS"
-                  >
-                    <Compass size={16} className="text-white flex-shrink-0" />
-                    <span className="text-xs font-extrabold">{!isVertical ? 'GPS' : 'Mi Posición'}</span>
-                  </button>
-
-                  {/* 2. Toggle Route Simulator / Search */}
-                  <button
-                    onClick={() => {
-                      setIsExpanded(!isExpanded);
-                      setIsMenuOpen(false);
-                    }}
-                    className={`rounded-2xl shadow-md border text-xs font-black transition flex items-center gap-2 active:scale-95 cursor-pointer whitespace-nowrap ${
-                      !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
-                    } ${
-                      isExpanded 
-                        ? 'bg-white text-emerald-800 border-white' 
-                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400/40 hover:opacity-95'
-                    }`}
-                    title="Trazar y Calcular Ruta"
-                  >
-                    <RouteIcon size={15} className="flex-shrink-0" />
-                    <span className="text-xs font-extrabold">{!isVertical ? 'Ruta' : 'Trazar Ruta'}</span>
-                  </button>
-
-                  {/* 3. Offline Region Manager Download */}
-                  {onOpenRegionManager && (
+                <div className="relative">
+                  {/* Left Carousel Translucent Arrow Button */}
+                  {!isVertical && canScrollLeft && (
                     <button
-                      onClick={() => {
-                        onOpenRegionManager();
-                        setIsMenuOpen(false);
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        scrollContainerRef.current?.scrollBy({ left: -130, behavior: 'smooth' });
                       }}
-                      className={`bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white border border-emerald-400/40 rounded-2xl shadow-md transition flex items-center gap-2 text-xs font-black active:scale-95 cursor-pointer whitespace-nowrap ${
-                        !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
-                      }`}
-                      title="Descargar Mapas Offline"
+                      className="absolute -left-2.5 top-1/2 -translate-y-1/2 bg-slate-900/95 hover:bg-slate-800 text-emerald-400 border border-emerald-500/60 rounded-full w-7 h-7 flex items-center justify-center shadow-2xl backdrop-blur-md z-30 cursor-pointer transition-all active:scale-90"
+                      title="Deslizar al inicio"
                     >
-                      <Download size={15} className="text-white flex-shrink-0" />
-                      <span className="text-xs font-extrabold">{!isVertical ? 'Offline' : 'Mapas Offline'}</span>
+                      <ChevronLeft size={16} />
                     </button>
                   )}
 
-                  {/* 4. Toggle Traffic (Online Mode) */}
-                  {activeProvider === 'google' && (
+                  {/* Right Carousel Translucent Arrow Button */}
+                  {!isVertical && canScrollRight && (
                     <button
-                      onClick={() => {
-                        const next = !trafficEnabled;
-                        setTrafficEnabled(next);
-                        onToggleTraffic(next);
-                        setIsMenuOpen(false);
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        scrollContainerRef.current?.scrollBy({ left: 130, behavior: 'smooth' });
                       }}
-                      className={`rounded-2xl shadow-md border text-xs font-black transition flex items-center gap-2 active:scale-95 cursor-pointer whitespace-nowrap ${
-                        !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
-                      } ${
-                        trafficEnabled
-                          ? 'bg-amber-400 text-slate-950 border-amber-300'
-                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400/40 hover:opacity-95'
-                      }`}
-                      title="Tráfico en Tiempo Real"
+                      className="absolute -right-2.5 top-1/2 -translate-y-1/2 bg-slate-900/95 hover:bg-slate-800 text-emerald-400 border border-emerald-500/60 rounded-full w-7 h-7 flex items-center justify-center shadow-2xl backdrop-blur-md z-30 cursor-pointer transition-all active:scale-90 animate-pulse"
+                      title="Ver más opciones"
                     >
-                      <Layers size={15} className="flex-shrink-0" />
-                      <span className="text-xs font-extrabold">Tráfico</span>
+                      <ChevronRight size={16} />
                     </button>
                   )}
 
-                  {/* 5. Provider Selector Toggle */}
-                  <div className={`flex bg-slate-800 border border-slate-700 rounded-2xl p-1 shadow-md text-xs ${
-                    !isVertical ? 'flex-shrink-0' : 'w-full'
-                  }`}>
-                    <button
-                      onClick={() => {
-                        onToggleAutoSwitch(false);
-                        onToggleProvider('google');
-                        setIsMenuOpen(false);
-                      }}
-                      disabled={!isOnline}
-                      className={`px-2 py-1 rounded-xl font-black transition text-center cursor-pointer text-[10px] ${
-                        activeProvider === 'google'
-                          ? 'bg-white text-emerald-800 shadow-md'
-                          : 'text-slate-300 hover:text-white disabled:opacity-40'
-                      }`}
-                    >
-                      Google
-                    </button>
-                    <button
-                      onClick={() => {
-                        onToggleAutoSwitch(false);
-                        onToggleProvider('osm_offline');
-                        setIsMenuOpen(false);
-                      }}
-                      className={`px-2 py-1 rounded-xl font-black transition text-center cursor-pointer text-[10px] ${
-                        activeProvider === 'osm_offline'
-                          ? 'bg-white text-emerald-800 shadow-md'
-                          : 'text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      OSM
-                    </button>
-                  </div>
+                  {/* Main Scrollable Content Box */}
+                  <div
+                    ref={scrollContainerRef}
+                    onScroll={checkScrollBounds}
+                    className={`bg-slate-900/95 border border-slate-700/90 backdrop-blur-xl p-2.5 rounded-3xl shadow-2xl ${
+                      !isVertical 
+                        ? 'max-w-[calc(100vw-75px)] overflow-x-auto no-scrollbar' 
+                        : 'w-max'
+                    }`}
+                  >
+                    <div className={`flex ${!isVertical ? 'flex-row items-center gap-1.5 flex-nowrap' : 'flex-col gap-2'}`}>
+                      {/* 1. Recenter GPS Location Button */}
+                      <button
+                        onClick={() => {
+                          onCenterUserLocation();
+                          setIsMenuOpen(false);
+                        }}
+                        className={`bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white border border-emerald-400/40 rounded-2xl shadow-md transition flex items-center gap-2 text-xs font-black active:scale-95 cursor-pointer whitespace-nowrap ${
+                          !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
+                        }`}
+                        title="Centrar en mi ubicación GPS"
+                      >
+                        <Compass size={16} className="text-white flex-shrink-0" />
+                        <span className="text-xs font-extrabold">{!isVertical ? 'GPS' : 'Mi Posición'}</span>
+                      </button>
 
-                  {/* 6. Horizontal Scroll Swipe Indicator Badge */}
-                  {!isVertical && (
-                    <div 
-                      className="flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white border border-emerald-400/50 px-2.5 py-1.5 rounded-2xl text-[10px] font-black flex-shrink-0 animate-pulse select-none cursor-pointer shadow-md"
-                      title="Desliza horizontalmente para ver más opciones"
-                    >
-                      <span>Desliza</span>
-                      <ChevronRight size={13} className="text-white" />
+                      {/* 2. Toggle Route Simulator / Search */}
+                      <button
+                        onClick={() => {
+                          setIsExpanded(!isExpanded);
+                          setIsMenuOpen(false);
+                        }}
+                        className={`rounded-2xl shadow-md border text-xs font-black transition flex items-center gap-2 active:scale-95 cursor-pointer whitespace-nowrap ${
+                          !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
+                        } ${
+                          isExpanded 
+                            ? 'bg-white text-emerald-800 border-white' 
+                            : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400/40 hover:opacity-95'
+                        }`}
+                        title="Trazar y Calcular Ruta"
+                      >
+                        <RouteIcon size={15} className="flex-shrink-0" />
+                        <span className="text-xs font-extrabold">{!isVertical ? 'Ruta' : 'Trazar Ruta'}</span>
+                      </button>
+
+                      {/* 3. Offline Region Manager Download */}
+                      {onOpenRegionManager && (
+                        <button
+                          onClick={() => {
+                            onOpenRegionManager();
+                            setIsMenuOpen(false);
+                          }}
+                          className={`bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white border border-emerald-400/40 rounded-2xl shadow-md transition flex items-center gap-2 text-xs font-black active:scale-95 cursor-pointer whitespace-nowrap ${
+                            !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
+                          }`}
+                          title="Descargar Mapas Offline"
+                        >
+                          <Download size={15} className="text-white flex-shrink-0" />
+                          <span className="text-xs font-extrabold">{!isVertical ? 'Offline' : 'Mapas Offline'}</span>
+                        </button>
+                      )}
+
+                      {/* 4. Toggle Traffic (Online Mode) */}
+                      {activeProvider === 'google' && (
+                        <button
+                          onClick={() => {
+                            const next = !trafficEnabled;
+                            setTrafficEnabled(next);
+                            onToggleTraffic(next);
+                            setIsMenuOpen(false);
+                          }}
+                          className={`rounded-2xl shadow-md border text-xs font-black transition flex items-center gap-2 active:scale-95 cursor-pointer whitespace-nowrap ${
+                            !isVertical ? 'px-2.5 py-2 flex-shrink-0' : 'w-full p-2.5 justify-start'
+                          } ${
+                            trafficEnabled
+                              ? 'bg-amber-400 text-slate-950 border-amber-300'
+                              : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400/40 hover:opacity-95'
+                          }`}
+                          title="Tráfico en Tiempo Real"
+                        >
+                          <Layers size={15} className="flex-shrink-0" />
+                          <span className="text-xs font-extrabold">Tráfico</span>
+                        </button>
+                      )}
+
+                      {/* 5. Provider Selector Toggle */}
+                      <div className={`flex bg-slate-800 border border-slate-700 rounded-2xl p-1 shadow-md text-xs ${
+                        !isVertical ? 'flex-shrink-0' : 'w-full'
+                      }`}>
+                        <button
+                          onClick={() => {
+                            onToggleAutoSwitch(false);
+                            onToggleProvider('google');
+                            setIsMenuOpen(false);
+                          }}
+                          disabled={!isOnline}
+                          className={`px-2 py-1 rounded-xl font-black transition text-center cursor-pointer text-[10px] ${
+                            activeProvider === 'google'
+                              ? 'bg-white text-emerald-800 shadow-md'
+                              : 'text-slate-300 hover:text-white disabled:opacity-40'
+                          }`}
+                        >
+                          Google
+                        </button>
+                        <button
+                          onClick={() => {
+                            onToggleAutoSwitch(false);
+                            onToggleProvider('osm_offline');
+                            setIsMenuOpen(false);
+                          }}
+                          className={`px-2 py-1 rounded-xl font-black transition text-center cursor-pointer text-[10px] ${
+                            activeProvider === 'osm_offline'
+                              ? 'bg-white text-emerald-800 shadow-md'
+                              : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          OSM
+                        </button>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               </motion.div>
             )}
