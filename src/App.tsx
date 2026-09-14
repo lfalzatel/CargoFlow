@@ -25,6 +25,7 @@ import {
   listenForSWMessages,
   sendInAppNotification,
 } from './services/notificationService';
+import { playGeneralUiSound } from './lib/soundEffects';
 
 const INITIAL_TRIPS: Trip[] = [];
 
@@ -77,6 +78,20 @@ export default function App() {
   };
 
   const [splashSound, setSplashSound] = useState<string | undefined>(getSysTone('login'));
+
+  // Escuchador global de clics en la interfaz
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const interactiveEl = target.closest('button, a, [role="button"], input[type="button"], input[type="submit"]');
+      if (!interactiveEl) return;
+      if (interactiveEl.closest('nav, .bottom-nav, [data-bottom-nav]')) return;
+      playGeneralUiSound();
+    };
+    window.addEventListener('click', handleGlobalClick, { capture: true });
+    return () => window.removeEventListener('click', handleGlobalClick, { capture: true });
+  }, []);
 
   // Selected role
   const [selectedRole, setSelectedRole] = useState<UserRole>(() => {

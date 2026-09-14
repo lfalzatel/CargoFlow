@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Home, Truck, MessageSquare, User, BarChart3 } from 'lucide-react';
+import { playMenuUiSound } from '../lib/soundEffects';
 
 interface BottomNavProps {
   currentView: 'home' | 'activity' | 'chat' | 'dashboard' | 'profile';
@@ -37,7 +38,7 @@ export default function BottomNav({ currentView, onViewChange, unreadChatCount =
   ];
 
   return (
-    <nav className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 rounded-[28px] glass-nav-container h-16 px-2 flex justify-around items-center w-[calc(100%-16px)] max-w-[385px]">
+    <nav className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 rounded-[28px] glass-nav-container h-16 px-2 flex justify-around items-center w-[calc(100%-16px)] max-w-[385px] bottom-nav" data-bottom-nav>
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = currentView === item.id;
@@ -46,7 +47,10 @@ export default function BottomNav({ currentView, onViewChange, unreadChatCount =
         return (
           <button
             key={item.id}
-            onClick={() => onViewChange(item.id)}
+            onClick={() => {
+              playMenuUiSound();
+              onViewChange(item.id);
+            }}
             className="relative flex flex-col items-center justify-center flex-1 h-full focus:outline-none cursor-pointer"
             style={{ color: isActive ? '#fff' : ACCENT }}
           >

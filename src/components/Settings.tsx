@@ -14,6 +14,12 @@ import {
   playNotificationSound,
 } from '../services/notificationService';
 import UserManagementModal from './UserManagementModal';
+import { 
+  SOUND_PROFILES, 
+  getMenuUiSoundProfile, setMenuUiSoundProfile, playMenuUiSound,
+  getGeneralUiSoundProfile, setGeneralUiSoundProfile, playGeneralUiSound,
+  SoundProfileId 
+} from '../lib/soundEffects';
 
 // ── Types ────────────────────────────────────────────────────
 interface SettingsProps {
@@ -24,7 +30,7 @@ interface SettingsProps {
   onShareApp: () => void;
 }
 
-type SectionKey = 'cuenta' | 'notificaciones' | 'vehiculo' | 'apariencia' | 'info' | 'privacidad' | 'gestion';
+type SectionKey = 'cuenta' | 'notificaciones' | 'sonidos' | 'vehiculo' | 'apariencia' | 'info' | 'privacidad' | 'gestion';
 
 // ── Toggle component ─────────────────────────────────────────
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -473,6 +479,22 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
   const [sysToneLogin, setSysToneLogin]       = useState(() => localStorage.getItem('cf_sys_tone_login') || 'cyberpunk');
   const [sysToneLogout, setSysToneLogout]     = useState(() => localStorage.getItem('cf_sys_tone_logout') || 'boomstick');
 
+  // Synthesized UI sound profiles
+  const [selectedMenuSound, setSelectedMenuSound] = useState<SoundProfileId>(() => getMenuUiSoundProfile());
+  const [selectedGeneralSound, setSelectedGeneralSound] = useState<SoundProfileId>(() => getGeneralUiSoundProfile());
+
+  const handleSelectMenuSound = (id: SoundProfileId) => {
+    setSelectedMenuSound(id);
+    setMenuUiSoundProfile(id);
+    playMenuUiSound(id);
+  };
+
+  const handleSelectGeneralSound = (id: SoundProfileId) => {
+    setSelectedGeneralSound(id);
+    setGeneralUiSoundProfile(id);
+    playGeneralUiSound(id);
+  };
+
   // Theme
   const [activeTheme, setActiveTheme] = useState(() => localStorage.getItem('cf_theme') || 'dia');
   const [showThemeModal, setShowThemeModal] = useState(false);
@@ -734,6 +756,71 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
                     {tone.label}
                   </button>
                 ))}
+              </div>
+            </div>
+          </Section>
+
+          {/* ── 2.1. Sonidos de Interfaz (Sintetizados) ──────── */}
+          <Section title="Sonidos de Interfaz (Sintetizados Web Audio)" open={openSection === 'sonidos'} onToggle={() => toggle('sonidos')}>
+            {/* Control 1: Menú Inferior */}
+            <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                  <span>📱</span> Menú Inferior
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5 truncate">
+                  {SOUND_PROFILES.find(p => p.id === selectedMenuSound)?.desc}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <select 
+                  value={selectedMenuSound}
+                  onChange={(e) => handleSelectMenuSound(e.target.value as SoundProfileId)}
+                  className="p-2 rounded-xl bg-white border border-slate-200 font-bold text-xs text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0b224d]"
+                >
+                  {SOUND_PROFILES.map(p => (
+                    <option key={p.id} value={p.id}>{p.emoji} {p.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => playMenuUiSound(selectedMenuSound)}
+                  title="Probar sonido"
+                  className="px-2.5 py-2 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors text-xs font-bold flex items-center justify-center"
+                >
+                  ▶
+                </button>
+              </div>
+            </div>
+
+            {/* Control 2: Botones e Interfaz General */}
+            <div className="p-4 bg-slate-50 flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                  <span>🔘</span> Botones y Acciones General
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5 truncate">
+                  {SOUND_PROFILES.find(p => p.id === selectedGeneralSound)?.desc}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <select 
+                  value={selectedGeneralSound}
+                  onChange={(e) => handleSelectGeneralSound(e.target.value as SoundProfileId)}
+                  className="p-2 rounded-xl bg-white border border-slate-200 font-bold text-xs text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0b224d]"
+                >
+                  {SOUND_PROFILES.map(p => (
+                    <option key={p.id} value={p.id}>{p.emoji} {p.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => playGeneralUiSound(selectedGeneralSound)}
+                  title="Probar sonido"
+                  className="px-2.5 py-2 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors text-xs font-bold flex items-center justify-center"
+                >
+                  ▶
+                </button>
               </div>
             </div>
           </Section>
