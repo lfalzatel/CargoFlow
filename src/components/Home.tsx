@@ -29,6 +29,238 @@ export const CARGO_TYPES_CATALOG: CargoTypeItem[] = [
   { id: 'valores', title: 'Carga de Valor / Especial', icon: '💎', subtitle: 'Mercancía de alto costo, frágil o con protocolo especial' },
 ];
 
+export interface VehicleCatalogItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  color: string;
+  badge: string;
+  bgLight: string;
+}
+
+export const VEHICLES_CATALOG: VehicleCatalogItem[] = [
+  {
+    id: 'camion_sencillo',
+    title: 'Camión Sencillo',
+    subtitle: 'Capacidad 5 - 9 Ton. Carga general urbana e intermunicipal.',
+    icon: '🚛',
+    color: 'from-amber-500 to-orange-500',
+    badge: 'Popular',
+    bgLight: 'bg-amber-50 border-amber-200 text-amber-900',
+  },
+  {
+    id: 'furgon_mediano',
+    title: 'Furgón Mediano',
+    subtitle: 'Capacidad 3.5 - 5 Ton. Mudanzas, paquetería y protección.',
+    icon: '🚚',
+    color: 'from-blue-500 to-indigo-600',
+    badge: 'Urbano',
+    bgLight: 'bg-blue-50 border-blue-200 text-blue-900',
+  },
+  {
+    id: 'tractomula',
+    title: 'Tractomula',
+    subtitle: 'Capacidad 32 - 35 Ton. 3 ejes / Gran tonelaje industrial.',
+    icon: '🚜',
+    color: 'from-emerald-500 to-teal-700',
+    badge: 'Gran Pesado',
+    bgLight: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+  },
+  {
+    id: 'doble_troque',
+    title: 'Doble Troque',
+    subtitle: 'Capacidad 15 - 18 Ton. Carga pesada de gran volumen.',
+    icon: '🚛',
+    color: 'from-purple-500 to-indigo-700',
+    badge: 'Industrial',
+    bgLight: 'bg-purple-50 border-purple-200 text-purple-900',
+  },
+  {
+    id: 'cuatro_manos',
+    title: 'Cuatro Manos',
+    subtitle: 'Capacidad 22 - 24 Ton. Doble eje delantero de alta carga.',
+    icon: '🚛',
+    color: 'from-rose-500 to-pink-600',
+    badge: 'Alto Peso',
+    bgLight: 'bg-rose-50 border-rose-200 text-rose-900',
+  },
+  {
+    id: 'minimula',
+    title: 'Minimula',
+    subtitle: 'Capacidad 18 - 20 Ton. Semi-remolque compacto.',
+    icon: '🚛',
+    color: 'from-cyan-500 to-blue-600',
+    badge: 'Versátil',
+    bgLight: 'bg-cyan-50 border-cyan-200 text-cyan-900',
+  },
+  {
+    id: 'refrigerado',
+    title: 'Refrigerado',
+    subtitle: 'Control de frío (-20°C a +15°C) alimentos y medicinas.',
+    icon: '❄️',
+    color: 'from-sky-400 to-blue-600',
+    badge: 'Termo Frio',
+    bgLight: 'bg-sky-50 border-sky-200 text-sky-900',
+  },
+  {
+    id: 'cama_baja',
+    title: 'Cama Baja',
+    subtitle: 'Transporte de maquinaria pesada y sobredimensionados.',
+    icon: '🏗️',
+    color: 'from-yellow-500 to-amber-600',
+    badge: 'Maquinaria',
+    bgLight: 'bg-yellow-50 border-yellow-200 text-yellow-900',
+  },
+  {
+    id: 'grua_planchon',
+    title: 'Grúa Planchón',
+    subtitle: 'Asistencia y transporte de autos, maquinaria o contenedores.',
+    icon: '🏗️',
+    color: 'from-orange-500 to-red-600',
+    badge: 'Asistencia',
+    bgLight: 'bg-orange-50 border-orange-200 text-orange-900',
+  },
+  {
+    id: 'ninera',
+    title: 'Niñera',
+    subtitle: 'Transporte de flotillas y automóviles 0km.',
+    icon: '🚗',
+    color: 'from-violet-500 to-purple-600',
+    badge: 'Flotilla Autos',
+    bgLight: 'bg-violet-50 border-violet-200 text-violet-900',
+  },
+  {
+    id: 'motocarguera',
+    title: 'Motocarguera',
+    subtitle: 'Capacidad 500 - 800 kg. Entregas súper rápidas.',
+    icon: '🛵',
+    color: 'from-lime-500 to-emerald-600',
+    badge: 'Express',
+    bgLight: 'bg-lime-50 border-lime-200 text-lime-900',
+  },
+  {
+    id: 'volqueta',
+    title: 'Volqueta',
+    subtitle: 'Materiales de construcción, agregados, arena y tierra.',
+    icon: '🚜',
+    color: 'from-stone-500 to-stone-700',
+    badge: 'Construcción',
+    bgLight: 'bg-stone-100 border-stone-300 text-stone-900',
+  },
+  {
+    id: 'jaula',
+    title: 'Jaula',
+    subtitle: 'Transporte de ganado, porcinos o carga ventilada.',
+    icon: '📦',
+    color: 'from-teal-500 to-emerald-600',
+    badge: 'Ventilado',
+    bgLight: 'bg-teal-50 border-teal-200 text-teal-900',
+  },
+  {
+    id: 'camioneta',
+    title: 'Camioneta (Pick-up)',
+    subtitle: 'Capacidad 1 - 2 Ton. Acarreos ágiles y logística express.',
+    icon: '🛻',
+    color: 'from-blue-500 to-cyan-600',
+    badge: 'Acarreos',
+    bgLight: 'bg-blue-50 border-blue-200 text-blue-900',
+  },
+  {
+    id: 'moto_coche',
+    title: 'Moto con coche',
+    subtitle: 'Capacidad 150 - 300 kg. Paquetes pequeños y micro-fletes.',
+    icon: '🛺',
+    color: 'from-yellow-400 to-amber-500',
+    badge: 'Micro-Flete',
+    bgLight: 'bg-yellow-50 border-yellow-200 text-yellow-900',
+  },
+];
+
+export interface SpecialtyCatalogItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  color: string;
+  badge: string;
+  bgLight: string;
+  value: string;
+}
+
+export const SPECIALTIES_CATALOG: SpecialtyCatalogItem[] = [
+  {
+    id: 'ninguna',
+    title: 'Ninguna',
+    subtitle: 'Sin requerimiento especial o condiciones particulares.',
+    icon: '⚡',
+    color: 'from-slate-400 to-slate-600',
+    badge: 'Estándar',
+    bgLight: 'bg-slate-50 border-slate-200 text-slate-900',
+    value: '',
+  },
+  {
+    id: 'refrigerado',
+    title: 'REFRIGERADO',
+    subtitle: 'Cadena de frío activa todo el trayecto.',
+    icon: '❄️',
+    color: 'from-cyan-400 to-blue-600',
+    badge: 'Control Térmico',
+    bgLight: 'bg-cyan-50 border-cyan-200 text-cyan-900',
+    value: 'REFRIGERADO',
+  },
+  {
+    id: 'fragil',
+    title: 'FRÁGIL',
+    subtitle: 'Extremo cuidado, protección acolchada y amarre especial.',
+    icon: '⚠️',
+    color: 'from-amber-400 to-orange-600',
+    badge: 'Alta Protección',
+    bgLight: 'bg-amber-50 border-amber-200 text-amber-900',
+    value: 'FRÁGIL',
+  },
+  {
+    id: 'liquidos',
+    title: 'LÍQUIDOS',
+    subtitle: 'Tanques cisterna graduados o cubos IBC sellados.',
+    icon: '💧',
+    color: 'from-blue-400 to-indigo-600',
+    badge: 'Cisterna / Tanque',
+    bgLight: 'bg-blue-50 border-blue-200 text-blue-900',
+    value: 'LÍQUIDOS',
+  },
+  {
+    id: 'quimicos',
+    title: 'QUÍMICOS',
+    subtitle: 'Hazmat / Mercancías peligrosas con rotulado oficial.',
+    icon: '🧪',
+    color: 'from-emerald-400 to-teal-600',
+    badge: 'Hazmat Peligroso',
+    bgLight: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+    value: 'QUÍMICOS',
+  },
+  {
+    id: 'sobredimensionada',
+    title: 'SOBREDIMENSIONADA',
+    subtitle: 'Exceso de peso o dimensiones, requiere permiso o escolta.',
+    icon: '🏗️',
+    color: 'from-purple-400 to-pink-600',
+    badge: 'Exceso Tamaño',
+    bgLight: 'bg-purple-50 border-purple-200 text-purple-900',
+    value: 'SOBREDIMENSIONADA',
+  },
+  {
+    id: 'valores',
+    title: 'VALORES',
+    subtitle: 'Mercancía de alto costo con rastreo satelital o escolta.',
+    icon: '🔒',
+    color: 'from-rose-400 to-red-600',
+    badge: 'Máxima Seguridad',
+    bgLight: 'bg-rose-50 border-rose-200 text-rose-900',
+    value: 'VALORES',
+  },
+];
+
 interface HomeProps {
   user: UserProfile;
   trips?: Trip[];
@@ -149,6 +381,9 @@ export default function Home({
   const [cargoTypeSearch, setCargoTypeSearch] = useState('');
   const [tag, setTag] = useState<string>('');
   const [vehicle, setVehicle] = useState('Camión Sencillo');
+  const [showVehicleModal, setShowVehicleModal] = useState(false);
+  const [vehicleSearch, setVehicleSearch] = useState('');
+  const [showSpecialtyModal, setShowSpecialtyModal] = useState(false);
   const [notes, setNotes] = useState('');
   const [customPrice, setCustomPrice] = useState(1250000);
   const [isCounterOffering, setIsCounterOffering] = useState(false);
@@ -1007,77 +1242,74 @@ export default function Home({
                 {shipmentStep === 2 && (
                   <div className="flex flex-col gap-4 animate-fade-in">
                     <div className="grid grid-cols-2 gap-3">
-                      {/* Vehiculo */}
+                      {/* Vehiculo Trigger Button */}
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Tipo Vehículo</label>
-                        <select
-                          value={vehicle}
-                          onChange={(e) => setVehicle(e.target.value)}
-                          className="w-full h-11 px-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-500 font-bold text-slate-800"
+                        <button
+                          type="button"
+                          onClick={() => setShowVehicleModal(true)}
+                          className="w-full h-11 px-3 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border-2 border-amber-300 rounded-2xl flex items-center justify-between text-xs font-black text-slate-800 transition-all shadow-sm active:scale-95 cursor-pointer group"
                         >
-                          <option value="Camión Sencillo">Camión Sencillo</option>
-                          <option value="Tractomula">Tractomula</option>
-                          <option value="Furgón Mediano">Furgón Mediano</option>
-                          <option value="Doble Troque">Doble Troque</option>
-                          <option value="Cuatro Manos">Cuatro Manos</option>
-                          <option value="Minimula">Minimula</option>
-                          <option value="Refrigerado">Refrigerado</option>
-                          <option value="Cama Baja">Cama Baja</option>
-                          <option value="Grúa Planchón">Grúa Planchón</option>
-                          <option value="Niñera">Niñera</option>
-                          <option value="Motocarguera">Motocarguera</option>
-                          <option value="Volqueta">Volqueta</option>
-                          <option value="Jaula">Jaula</option>
-                          <option value="Camioneta">Camioneta (Pick-up)</option>
-                          <option value="Moto con coche">Moto con coche</option>
-                        </select>
+                          <div className="flex items-center gap-2 truncate">
+                            <span className="text-base p-1 bg-white rounded-xl shadow-2xs group-hover:scale-110 transition-transform">
+                              {VEHICLES_CATALOG.find(v => v.title === vehicle || vehicle.includes(v.title))?.icon || '🚚'}
+                            </span>
+                            <span className="truncate">{vehicle || 'Camión Sencillo'}</span>
+                          </div>
+                          <ChevronDown size={14} className="text-amber-600 group-hover:text-amber-800 transition-colors flex-shrink-0" />
+                        </button>
                       </div>
 
-                      {/* Especialidades */}
+                      {/* Especialidad Trigger Button */}
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Especialidad</label>
-                        <select
-                          value={tag}
-                          onChange={(e) => setTag(e.target.value)}
-                          className="w-full h-11 px-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-500 font-bold text-slate-800"
+                        <button
+                          type="button"
+                          onClick={() => setShowSpecialtyModal(true)}
+                          className="w-full h-11 px-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-2 border-blue-300 rounded-2xl flex items-center justify-between text-xs font-black text-slate-800 transition-all shadow-sm active:scale-95 cursor-pointer group"
                         >
-                          <option value="">Ninguna</option>
-                          <option value="REFRIGERADO">REFRIGERADO</option>
-                          <option value="FRÁGIL">FRÁGIL</option>
-                          <option value="LÍQUIDOS">LÍQUIDOS</option>
-                          <option value="QUÍMICOS">QUÍMICOS</option>
-                          <option value="SOBREDIMENSIONADA">SOBREDIMENSIONADA</option>
-                          <option value="VALORES">VALORES</option>
-                        </select>
+                          <div className="flex items-center gap-2 truncate">
+                            <span className="text-base p-1 bg-white rounded-xl shadow-2xs group-hover:scale-110 transition-transform">
+                              {SPECIALTIES_CATALOG.find(s => s.value === tag || (tag === '' && s.value === ''))?.icon || '⚡'}
+                            </span>
+                            <span className="truncate">{tag ? tag : 'Ninguna'}</span>
+                          </div>
+                          <ChevronDown size={14} className="text-blue-600 group-hover:text-blue-800 transition-colors flex-shrink-0" />
+                        </button>
                       </div>
                     </div>
 
-                    {/* Precio Deseado */}
-                    <div className="flex flex-col gap-1.5 bg-emerald-50/60 border border-emerald-200/80 p-3 rounded-2xl">
+                    {/* Precio Deseado (Flete Ofrecido - Inicia en 0) */}
+                    <div className="flex flex-col gap-1.5 bg-emerald-50/60 border-2 border-emerald-300 p-3 rounded-2xl shadow-sm">
                       <div className="flex justify-between items-center">
-                        <label className="text-xs font-black text-emerald-900 uppercase tracking-wider">Flete Ofrecido (COP)</label>
-                        <div className="flex items-center gap-1 bg-white border border-emerald-300 rounded-xl px-2 py-1 shadow-xs">
+                        <label className="text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <span>💰 Flete Ofrecido</span>
+                          <span className="text-[10px] text-emerald-600 font-bold bg-white px-2 py-0.5 rounded-full border border-emerald-200">COP</span>
+                        </label>
+                        <div className="flex items-center gap-1 bg-white border-2 border-emerald-400 rounded-xl px-2.5 py-1 shadow-xs">
                           <span className="text-xs font-black text-emerald-700">$</span>
                           <input 
                             type="number"
+                            min="0"
+                            step="1000"
                             value={customPrice}
-                            onChange={(e) => setCustomPrice(Number(e.target.value))}
+                            onChange={(e) => setCustomPrice(Math.max(0, Number(e.target.value)))}
                             className="w-24 bg-transparent text-xs font-black text-emerald-900 outline-none"
                           />
                         </div>
                       </div>
                       <input
                         type="range"
-                        min="100000"
+                        min="0"
                         max="5000000"
-                        step="50000"
+                        step="5000"
                         value={customPrice}
-                        onChange={(e) => setCustomPrice(Number(e.target.value))}
-                        className="w-full h-2 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 mt-1"
+                        onChange={(e) => setCustomPrice(Math.max(0, Number(e.target.value)))}
+                        className="w-full h-2.5 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 mt-1"
                       />
-                      <div className="flex justify-between text-[10px] text-emerald-700 font-bold">
-                        <span>$100k</span>
-                        <span>Sugerido: ${customPrice.toLocaleString('es-CO')}</span>
+                      <div className="flex justify-between text-[10px] text-emerald-700 font-black">
+                        <span>$0</span>
+                        <span>Ofrecido: ${customPrice.toLocaleString('es-CO')}</span>
                         <span>$5M</span>
                       </div>
                     </div>
@@ -1222,6 +1454,215 @@ export default function Home({
                       </button>
                     );
                   })}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 🎮 MARIO BROS STYLE VEHICLE SELECTION MODAL 🎮 */}
+      <AnimatePresence>
+        {showVehicleModal && (
+          <div 
+            className="fixed inset-0 z-[400] backdrop-blur-md bg-black/75 flex items-center justify-center p-4 animate-fade-in"
+            onClick={() => setShowVehicleModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 30 }}
+              transition={{ type: 'spring', damping: 22, stiffness: 350 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-[0_15px_40px_rgba(0,0,0,0.35)] overflow-hidden max-h-[90vh] flex flex-col border-4 border-amber-400 my-auto relative"
+            >
+              {/* Top Decorative Mario Bar */}
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-400 via-red-500 to-emerald-400" />
+
+              {/* Header */}
+              <div className="flex justify-between items-center pb-3 border-b-2 border-slate-100 mb-3 mt-1">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                    <span className="text-2xl p-1 bg-amber-100 rounded-xl shadow-xs border border-amber-300">🎮</span>
+                    <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent font-black">
+                      Seleccionar Tipo de Vehículo
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-extrabold uppercase tracking-wider mt-0.5">
+                    15 Opciones de vehículos disponibles
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowVehicleModal(false)}
+                  className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-700 transition-colors cursor-pointer border border-slate-200"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Search Filter Bar */}
+              <div className="relative mb-3">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 font-bold" />
+                <input
+                  type="text"
+                  placeholder="Buscar vehículo (ej. tractomula, furgón, motocarguera...)"
+                  value={vehicleSearch}
+                  onChange={(e) => setVehicleSearch(e.target.value)}
+                  className="w-full h-11 pl-10 pr-4 bg-amber-50/40 rounded-2xl border-2 border-amber-200 text-xs font-black text-slate-800 focus:outline-none focus:border-amber-500 transition-all shadow-xs"
+                />
+                {vehicleSearch && (
+                  <button
+                    onClick={() => setVehicleSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-black"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+
+              {/* Vehicles Grid List */}
+              <div className="overflow-y-auto max-h-[70vh] pr-1 space-y-2.5 no-scrollbar flex-1">
+                {VEHICLES_CATALOG
+                  .filter(v => 
+                    v.title.toLowerCase().includes(vehicleSearch.toLowerCase()) || 
+                    v.subtitle.toLowerCase().includes(vehicleSearch.toLowerCase()) ||
+                    v.badge.toLowerCase().includes(vehicleSearch.toLowerCase())
+                  )
+                  .map((v) => {
+                    const isSelected = vehicle === v.title;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => {
+                          setVehicle(v.title);
+                          setShowVehicleModal(false);
+                          setVehicleSearch('');
+                        }}
+                        className={`w-full text-left p-3.5 rounded-2xl border-2 transition-all flex items-center gap-3.5 cursor-pointer group relative overflow-hidden ${
+                          isSelected
+                            ? 'bg-gradient-to-r from-amber-100 to-orange-100 border-amber-500 shadow-md scale-[1.01]'
+                            : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-amber-300'
+                        }`}
+                      >
+                        {/* Vehicle Icon Badge */}
+                        <div className={`p-3 rounded-2xl text-2xl bg-gradient-to-br ${v.color} text-white shadow-md group-hover:scale-110 transition-transform flex-shrink-0 flex items-center justify-center`}>
+                          {v.icon}
+                        </div>
+
+                        {/* Text & Specs */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <h4 className={`text-xs font-black truncate ${isSelected ? 'text-amber-950' : 'text-slate-900'}`}>
+                              {v.title}
+                            </h4>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shadow-2xs ${v.bgLight}`}>
+                                {v.badge}
+                              </span>
+                              {isSelected && (
+                                <CheckCircle2 size={18} className="text-amber-600 flex-shrink-0" />
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-slate-500 font-bold leading-tight mt-1 line-clamp-2">
+                            {v.subtitle}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 🍄 MARIO BROS STYLE SPECIALTY SELECTION MODAL 🍄 */}
+      <AnimatePresence>
+        {showSpecialtyModal && (
+          <div 
+            className="fixed inset-0 z-[400] backdrop-blur-md bg-black/75 flex items-center justify-center p-4 animate-fade-in"
+            onClick={() => setShowSpecialtyModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 30 }}
+              transition={{ type: 'spring', damping: 22, stiffness: 350 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-[0_15px_40px_rgba(0,0,0,0.35)] overflow-hidden max-h-[90vh] flex flex-col border-4 border-blue-400 my-auto relative"
+            >
+              {/* Top Decorative Mario Bar */}
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500" />
+
+              {/* Header */}
+              <div className="flex justify-between items-center pb-3 border-b-2 border-slate-100 mb-3 mt-1">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                    <span className="text-2xl p-1 bg-blue-100 rounded-xl shadow-xs border border-blue-300">🍄</span>
+                    <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-black">
+                      Seleccionar Especialidad
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-extrabold uppercase tracking-wider mt-0.5">
+                    Condiciones especiales para la carga
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowSpecialtyModal(false)}
+                  className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-700 transition-colors cursor-pointer border border-slate-200"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Specialty List */}
+              <div className="overflow-y-auto max-h-[70vh] pr-1 space-y-2.5 no-scrollbar flex-1">
+                {SPECIALTIES_CATALOG.map((s) => {
+                  const isSelected = tag === s.value || (tag === '' && s.value === '');
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => {
+                        setTag(s.value);
+                        setShowSpecialtyModal(false);
+                      }}
+                      className={`w-full text-left p-3.5 rounded-2xl border-2 transition-all flex items-center gap-3.5 cursor-pointer group relative overflow-hidden ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-blue-100 to-indigo-100 border-blue-500 shadow-md scale-[1.01]'
+                          : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-blue-300'
+                      }`}
+                    >
+                      {/* Icon Badge */}
+                      <div className={`p-3 rounded-2xl text-2xl bg-gradient-to-br ${s.color} text-white shadow-md group-hover:scale-110 transition-transform flex-shrink-0 flex items-center justify-center`}>
+                        {s.icon}
+                      </div>
+
+                      {/* Text Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className={`text-xs font-black truncate ${isSelected ? 'text-blue-950' : 'text-slate-900'}`}>
+                            {s.title}
+                          </h4>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shadow-2xs ${s.bgLight}`}>
+                              {s.badge}
+                            </span>
+                            {isSelected && (
+                              <CheckCircle2 size={18} className="text-blue-600 flex-shrink-0" />
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-bold leading-tight mt-1 line-clamp-2">
+                          {s.subtitle}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </motion.div>
           </div>
