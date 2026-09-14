@@ -109,7 +109,7 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
 
   const chatPartnerPhoto = livePartnerUser?.photoURL || rawPartnerPhoto || (partnerEmail === user.email ? user.photoURL : undefined);
 
-  const chatCollectionPath = selectedTripState ? `trips/${selectedTripState.id}/chat_messages` : 'global_chat';
+  const chatCollectionPath = selectedTripState ? `trips/${selectedTripState.id}/chat_messages` : null;
   const mainScrollRef = useRef<HTMLDivElement>(null);
 
   const renderAvatar = (photoURL?: string, name?: string, sizeClass = "w-10 h-10 text-xs") => {
@@ -137,8 +137,9 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
     }
   }, [messages]);
 
-  // Listen to Firestore
+  // Listen to Firestore for active trip chat messages
   useEffect(() => {
+    if (!chatCollectionPath) return;
     let unsubscribe: () => void;
     
     const loadChat = async () => {
@@ -168,9 +169,7 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
             });
           });
           
-          if (loadedMessages.length > 0) {
-            setMessages(loadedMessages);
-          }
+          setMessages(loadedMessages);
         });
       } catch (e) {
         console.warn('Chat sync error', e);
@@ -183,7 +182,7 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
 
   // Handle message sending
   const handleSend = async () => {
-    if (!inputText.trim() && !attachedImage) return;
+    if ((!inputText.trim() && !attachedImage) || !chatCollectionPath) return;
 
     const textToSend = inputText;
     const attachmentToSend = attachedImage;
@@ -210,12 +209,13 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
         ? (user.email === selectedTripState.clienteId ? selectedTripState.conductorId : selectedTripState.clienteId)
         : null;
 
-      if (targetEmail) {
+      if (targetEmail && selectedTripState) {
+        const cleanTripId = selectedTripState.id.startsWith('#') ? selectedTripState.id : `#${selectedTripState.id}`;
         sendDbNotification(
           targetEmail,
-          `💬 Mensaje de ${user.name}`,
+          `💬 Mensaje de ${user.name} (${cleanTripId})`,
           textToSend || '📷 Imagen adjunta',
-          `chat-${selectedTripState?.id}`,
+          `chat-${selectedTripState.id}`,
           'chat'
         );
       }

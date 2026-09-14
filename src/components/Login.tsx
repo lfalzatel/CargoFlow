@@ -26,10 +26,21 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess, onOpe
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
 
+  const handleRoleChange = (role: UserRole) => {
+    setSelectedRole(role);
+    try {
+      localStorage.setItem('cf_last_role', role);
+    } catch (_) {}
+  };
+
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
     setIsLoading(true);
+
+    try {
+      localStorage.setItem('cf_last_role', selectedRole);
+    } catch (_) {}
 
     if (authMode === 'register') {
       try {
@@ -77,6 +88,10 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess, onOpe
   const handleGoogleClick = async () => {
     setIsLoading(true);
     try {
+      localStorage.setItem('cf_last_role', selectedRole);
+    } catch (_) {}
+
+    try {
       const userProfile = await loginWithGoogle(selectedRole);
       setIsLoading(false);
       onLoginSuccess({ ...userProfile, role: userProfile.role === 'admin' ? 'admin' : selectedRole });
@@ -86,8 +101,8 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess, onOpe
         return;
       }
       onLoginSuccess({
-        name: selectedRole === 'cliente' ? 'Luis Fernando (Cliente)' : 'Luis Fernando Alzate',
-        email: selectedRole === 'cliente' ? 'lfalzatel29@gmail.com' : 'lfalzatel@gmail.com',
+        name: selectedRole === 'cliente' ? 'Usuario Cliente' : 'Usuario Conductor',
+        email: selectedRole === 'cliente' ? 'cliente.demo@cargoflow.co' : 'conductor.demo@cargoflow.co',
         phone: selectedRole === 'cliente' ? '+57 300 123 4567' : '+57 312 987 6543',
         role: selectedRole,
         isVerified: true,
@@ -191,7 +206,7 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess, onOpe
         }`}>
           <button
             type="button"
-            onClick={() => setSelectedRole('conductor')}
+            onClick={() => handleRoleChange('conductor')}
             className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
               selectedRole === 'conductor'
                 ? 'bg-emerald-500 text-white shadow-lg scale-[1.02]'
@@ -204,7 +219,7 @@ export default function Login({ currentRole = 'conductor', onLoginSuccess, onOpe
 
           <button
             type="button"
-            onClick={() => setSelectedRole('cliente')}
+            onClick={() => handleRoleChange('cliente')}
             className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
               selectedRole === 'cliente'
                 ? 'bg-blue-600 text-white shadow-lg scale-[1.02]'

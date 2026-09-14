@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, History, Menu, Truck, Star, Info, X, Navigation, RefreshCw, CheckCircle2, Navigation2, Phone, Flag, PackageCheck, MapPinned, Compass, Map, Crosshair } from 'lucide-react';
+import { Search, MapPin, History, Menu, Truck, Star, Info, X, Navigation, RefreshCw, CheckCircle2, Navigation2, Phone, Flag, PackageCheck, MapPinned, Compass, Map, Crosshair, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trip, UserProfile } from '../types';
 import { HybridMapContainer } from '../maps/components/HybridMapContainer';
@@ -17,6 +17,7 @@ interface HomeProps {
   onEditShipment?: (trip: Trip) => void;
   onAcceptTrip?: (tripId: string, assignedPlate?: string, assignedType?: string) => void;
   onCounterOfferTrip?: (tripId: string, price: number, assignedPlate?: string, assignedType?: string) => void;
+  onDriverArrivedAtOrigin?: (trip: Trip) => void;
   onRequestCompletion?: (trip: Trip) => void;
   onNavigateToView: (view: 'home' | 'activity' | 'chat' | 'dashboard' | 'profile' | 'settings') => void;
   onUpdateProfile?: (updates: Partial<UserProfile>) => void;
@@ -34,6 +35,7 @@ export default function Home({
   onEditShipment,
   onAcceptTrip,
   onCounterOfferTrip,
+  onDriverArrivedAtOrigin,
   onRequestCompletion,
   onNavigateToView, 
   onUpdateProfile, 
@@ -49,15 +51,18 @@ export default function Home({
   const [showRatingReminder, setShowRatingReminder] = useState(false);
   const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Detect active trip (EN CAMINO) for this conductor
-  const activeTrip = user.role === 'conductor'
-    ? (trips || []).find(t => t.conductorId === user.email && t.status === 'EN CAMINO') ?? null
-    : null;
+  // Detect active trip (EN CAMINO) for conductor OR client
+  const activeTrip = (trips || []).find(t => 
+    t.status === 'EN CAMINO' && 
+    (user.role === 'conductor' ? t.conductorId === user.email : t.clienteId === user.email)
+  ) ?? null;
 
-  // Reset phase when active trip changes
+  // Sync trip phase with driverArrivedAtOrigin status
   useEffect(() => {
-    if (activeTrip) setTripPhase('cargue');
-  }, [activeTrip?.id]);
+    if (activeTrip) {
+      setTripPhase(activeTrip.driverArrivedAtOrigin ? 'descargue' : 'cargue');
+    }
+  }, [activeTrip?.id, activeTrip?.driverArrivedAtOrigin]);
 
   // Cleanup animation timer on unmount
   useEffect(() => () => { if (animTimerRef.current) clearTimeout(animTimerRef.current); }, []);
@@ -1134,9 +1139,9 @@ export default function Home({
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-30 flex flex-col bg-[#09152b]"
           >
-            {/* Map fullscreen */}
+            {/* Map fullscreen con controles flotantes del mapa activados */}
             <div className="absolute inset-0 z-0">
-              <HybridMapContainer className="!rounded-none" initialHeight="h-full" hideControls={true} />
+              <HybridMapContainer className="!rounded-none" initialHeight="h-full" hideControls={false} />
             </div>
 
             {/* Top minimal header */}
@@ -1167,26 +1172,24 @@ export default function Home({
               </div>
             </div>
 
-            {/* Trip info card — top floating */}
+            {/* Trip info card — top floating unificado con botones en la misma línea */}
             <motion.div
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="absolute top-16 left-3 right-3 z-10"
+              className="absolute top-16 left-3 right-3 z-30"
             >
-              <div className={`rounded-2xl p-4 shadow-2xl border backdrop-blur-md ${
+              <div className={`rounded-3xl p-3.5 shadow-2xl border backdrop-blur-md flex flex-col gap-2.5 ${
                 tripPhase === 'cargue'
-                  ? 'bg-[#09152b]/95 border-blue-500/30'
-                  : 'bg-emerald-900/95 border-emerald-400/30'
+                  ? 'bg-[#09152b]/95 border-blue-500/30 text-white'
+                  : 'bg-emerald-950/95 border-emerald-400/30 text-white'
               }`}>
+                {/* Upper summary row */}
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    tripPhase === 'cargue' ? 'bg-blue-500/20' : 'bg-emerald-500/20'
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                    tripPhase === 'cargue' ? 'bg-blue-500/20 text-blue-300' : 'bg-emerald-500/20 text-emerald-300'
                   }`}>
-                    {tripPhase === 'cargue'
-                      ? <MapPinned size={20} className="text-blue-300" />
-                      : <Flag size={20} className="text-emerald-300" />
-                    }
+                    {tripPhase === 'cargue' ? <MapPinned size={20} /> : <Flag size={20} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${
@@ -1197,69 +1200,74 @@ export default function Home({
                     <p className="text-white font-black text-sm truncate">
                       {tripPhase === 'cargue' ? activeTrip.origin : activeTrip.destination}
                     </p>
-                    <p className="text-slate-400 text-[11px] font-medium truncate">
+                    <p className="text-slate-400 text-[10px] font-medium truncate">
                       #{activeTrip.id} • {activeTrip.vehicleType}
                       {activeTrip.tag && ` • ${activeTrip.tag}`}
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-white font-black text-sm">${activeTrip.price.toLocaleString('es-CO')}</p>
-                    <p className="text-slate-400 text-[10px] font-semibold">COP</p>
+                    <p className="text-slate-400 text-[9px] font-bold">COP</p>
                   </div>
                 </div>
-              </div>
-            </motion.div>
 
-            {/* Bottom action bar */}
-            <motion.div
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="absolute bottom-20 left-0 right-0 z-10 bg-gradient-to-t from-[#09152b] via-[#09152b]/95 to-transparent px-4 pt-6 pb-2"
-            >
-              {/* Route info row */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center gap-1.5 text-slate-300">
-                  <Navigation2 size={14} className="text-blue-400" />
-                  <span className="text-xs font-bold">Calculando ruta automáticamente...</span>
+                {/* Dos botones en la MISMA LÍNEA (Side-by-Side) */}
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                  {tripPhase === 'cargue' ? (
+                    <button
+                      onClick={async () => {
+                        setTripPhase('descargue');
+                        if (activeTrip?.clienteId) {
+                          try {
+                            const { sendDbNotification } = await import('../services/notificationService');
+                            const cleanTripId = activeTrip.id.startsWith('#') ? activeTrip.id : `#${activeTrip.id}`;
+                            sendDbNotification(
+                              activeTrip.clienteId,
+                              '📍 Conductor en Punto de Cargue',
+                              `El conductor (${user.name}) ha llegado al punto de recolección en ${activeTrip.origin} para el flete ${cleanTripId}.`,
+                              `trip-arrived-${activeTrip.id}`,
+                              'info'
+                            );
+                          } catch (e) {
+                            console.warn('Could not send arrival notification:', e);
+                          }
+                        }
+                      }}
+                      className="py-2.5 px-2 rounded-2xl bg-blue-500 hover:bg-blue-600 active:scale-[0.98] text-white font-black text-[11px] flex items-center justify-center gap-1.5 shadow-lg transition-all cursor-pointer truncate"
+                    >
+                      <PackageCheck size={16} className="flex-shrink-0" />
+                      <span className="truncate">Llegué al Cargue ✓</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (activeTrip && onRequestCompletion && !activeTrip.completionRequestedBy) {
+                          onRequestCompletion(activeTrip);
+                        }
+                        onNavigateToView('activity');
+                        setShowRatingReminder(true);
+                        setTimeout(() => setShowRatingReminder(false), 30000);
+                      }}
+                      className="py-2.5 px-2 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-black text-[11px] flex items-center justify-center gap-1.5 shadow-lg transition-all cursor-pointer truncate"
+                    >
+                      <Flag size={16} className="flex-shrink-0" />
+                      <span className="truncate">
+                        {activeTrip?.completionRequestedBy
+                          ? 'Esperando cliente...'
+                          : 'Solicitar entrega'}
+                      </span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => onNavigateToView('activity')}
+                    className="py-2.5 px-2 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-[0.98] text-white border border-white/20 font-black text-[11px] flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer truncate"
+                  >
+                    <Eye size={15} className="flex-shrink-0" />
+                    <span className="truncate">Ver detalle del viaje</span>
+                  </button>
                 </div>
               </div>
-
-              {/* Phase action buttons */}
-              {tripPhase === 'cargue' ? (
-                <button
-                  onClick={() => setTripPhase('descargue')}
-                  className="w-full h-14 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-black text-sm flex items-center justify-center gap-3 shadow-xl transition-all active:scale-[0.98] cursor-pointer"
-                >
-                  <PackageCheck size={22} />
-                  He llegado al punto de Cargue ✓
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    if (activeTrip && onRequestCompletion && !activeTrip.completionRequestedBy) {
-                      onRequestCompletion(activeTrip);
-                    }
-                    onNavigateToView('activity');
-                    setShowRatingReminder(true);
-                    setTimeout(() => setShowRatingReminder(false), 30000);
-                  }}
-                  className="w-full h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm flex items-center justify-center gap-3 shadow-xl transition-all active:scale-[0.98] cursor-pointer"
-                >
-                  <Flag size={22} />
-                  {activeTrip?.completionRequestedBy
-                    ? 'Esperando confirmación del cliente'
-                    : 'Solicitar confirmación de entrega'}
-                </button>
-              )}
-
-              {/* Cancel/View detail small link */}
-              <button
-                onClick={() => onNavigateToView('activity')}
-                className="w-full mt-3 text-slate-500 text-xs font-bold text-center py-1 cursor-pointer hover:text-slate-300 transition-colors"
-              >
-                Ver detalle del viaje
-              </button>
             </motion.div>
           </motion.div>
         )}

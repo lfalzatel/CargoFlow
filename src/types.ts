@@ -73,6 +73,8 @@ export interface Trip {
   conductorRating?: { stars: number; comment?: string };
   completionRequestedBy?: string;
   completionRequestedAt?: string;
+  driverArrivedAtOrigin?: boolean;
+  driverArrivedAtOriginAt?: string;
 }
 
 export interface ChatMessage {

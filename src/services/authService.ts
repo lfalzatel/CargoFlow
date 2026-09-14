@@ -62,6 +62,11 @@ export const registerWithEmail = async (
 };
 
 export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserProfile> => {
+  // Ensure the requested role is saved immediately so onAuthStateChanged reads the correct role
+  try {
+    localStorage.setItem('cf_last_role', role);
+  } catch (_) {}
+
   // Create a fresh GoogleAuthProvider with forced select_account prompt
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({
@@ -120,8 +125,8 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
 
     const isComplete = role === 'cliente' ? true : false;
     const profile: UserProfile = {
-      name: cred.user.displayName || 'Usuario CargoFlow',
-      email: cred.user.email || 'usuario.google@cargoflow.co',
+      name: cred.user.displayName || (role === 'cliente' ? 'Cliente CargoFlow' : 'Conductor CargoFlow'),
+      email: cred.user.email || `usuario.${role}@cargoflow.co`,
       phone: cred.user.phoneNumber || '',
       role: role,
       isVerified: true,
@@ -149,8 +154,8 @@ export const loginWithGoogle = async (role: UserRole = 'cliente'): Promise<UserP
     // Return instant profile fallback for demo/offline mode
     // Clients are always complete; conductors need vehicle setup
     return {
-      name: role === 'cliente' ? 'Luis Fernando (Cliente)' : 'Luis Fernando Alzate',
-      email: role === 'cliente' ? 'lfalzatel29@gmail.com' : 'lfalzatel@gmail.com',
+      name: role === 'cliente' ? 'Usuario Cliente' : 'Usuario Conductor',
+      email: role === 'cliente' ? 'cliente.demo@cargoflow.co' : 'conductor.demo@cargoflow.co',
       phone: role === 'cliente' ? '+57 300 123 4567' : '+57 312 987 6543',
       role: role,
       isVerified: true,

@@ -701,53 +701,40 @@ export default function Header({
                       Otras Cuentas
                     </p>
                     
-                    {/* Dynamic List of Linked Accounts */}
-                    {linkedAccounts.length > 0 ? (
-                      linkedAccounts.map((acc, idx) => (
-                        <button
-                          key={acc.email + idx}
-                          onClick={() => {
-                            setIsMenuOpen(false);
-                            if (onSwitchAccount) onSwitchAccount(acc);
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/60 transition-colors text-left group"
-                        >
-                          <div className="relative w-7 h-7 overflow-hidden rounded-full ring-1 ring-slate-200">
-                            {renderAvatar(acc.photoURL, acc.name, "w-full h-full text-[10px] grayscale group-hover:grayscale-0 transition-all")}
-                          </div>
-                          <div className="flex-1 min-w-0 flex items-center justify-between">
-                            <div>
-                              <p className="text-xs truncate text-slate-800 font-medium group-hover:text-emerald-700">{acc.name}</p>
-                              <p className="text-[10px] truncate text-slate-500">{acc.email}</p>
+                    {/* Dynamic List of Linked Accounts (filtering out current active account) */}
+                    {(() => {
+                      const otherAccounts = linkedAccounts.filter(acc => !(acc.email === user.email && acc.role === user.role));
+                      if (otherAccounts.length > 0) {
+                        return otherAccounts.map((acc, idx) => (
+                          <button
+                            key={acc.email + '_' + acc.role + '_' + idx}
+                            onClick={() => {
+                              setIsMenuOpen(false);
+                              if (onSwitchAccount) onSwitchAccount(acc);
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/60 transition-colors text-left group"
+                          >
+                            <div className="relative w-7 h-7 overflow-hidden rounded-full ring-1 ring-slate-200">
+                              {renderAvatar(acc.photoURL, acc.name, "w-full h-full text-[10px] grayscale group-hover:grayscale-0 transition-all")}
                             </div>
-                            <span className="text-[9px] font-black uppercase tracking-tight text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full ml-2">
-                              {acc.role.toUpperCase()}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    ) : (
-                      <button 
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          if (onAddAccount) onAddAccount();
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/60 transition-colors text-left group opacity-60 hover:opacity-100"
-                      >
-                        <div className="relative w-7 h-7 overflow-hidden rounded-full ring-1 ring-slate-200">
-                          {renderAvatar(undefined, "Luis Fernando", "w-full h-full text-[10px] grayscale group-hover:grayscale-0 transition-all")}
-                        </div>
-                        <div className="flex-1 min-w-0 flex items-center justify-between">
-                          <div>
-                            <p className="text-xs truncate text-slate-800 font-medium group-hover:text-emerald-700">Luis Fernando</p>
-                            <p className="text-[10px] truncate text-slate-500">lfalzatel29@gmail.com</p>
-                          </div>
-                          <span className="text-[9px] font-black uppercase tracking-tight text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full ml-2">
-                            CLIENTE
-                          </span>
-                        </div>
-                      </button>
-                    )}
+                            <div className="flex-1 min-w-0 flex items-center justify-between">
+                              <div>
+                                <p className="text-xs truncate text-slate-800 font-medium group-hover:text-emerald-700">{acc.name}</p>
+                                <p className="text-[10px] truncate text-slate-500">{acc.email}</p>
+                              </div>
+                              <span className="text-[9px] font-black uppercase tracking-tight text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full ml-2">
+                                {acc.role.toUpperCase()}
+                              </span>
+                            </div>
+                          </button>
+                        ));
+                      }
+                      return (
+                        <p className="px-3 py-1.5 text-xs text-slate-400 font-medium italic">
+                          No hay otras cuentas vinculadas
+                        </p>
+                      );
+                    })()}
                   </div>
                   
                   <button
@@ -760,7 +747,7 @@ export default function Header({
                     <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
                       <span className="text-lg leading-none font-bold">+</span>
                     </div>
-                    <span className="text-sm font-semibold">Añadir Cuenta</span>
+                    <span className="text-sm font-semibold">Añadir / Cambiar Cuenta</span>
                   </button>
                 </div>
 

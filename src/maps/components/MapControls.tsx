@@ -58,6 +58,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [trafficEnabled, setTrafficEnabled] = useState(false);
   const [isRouteCardExpanded, setIsRouteCardExpanded] = useState(false);
+  const [showSteps, setShowSteps] = useState(false);
 
   const handleInputChange = async (type: 'origin' | 'dest', text: string) => {
     if (type === 'origin') {

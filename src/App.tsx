@@ -189,7 +189,46 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // ── Mutual Confirmation Completion Handlers ───────────────────────
+  // ── Mutual Confirmation & Phase Handlers ───────────────────────
+  const handleDriverArrivedAtOrigin = async (trip: Trip) => {
+    if (user.role !== 'conductor' || user.email !== trip.conductorId || trip.status !== 'EN CAMINO' || trip.driverArrivedAtOrigin) {
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+    setTrips(prev => prev.map(t => t.id === trip.id ? { ...t, driverArrivedAtOrigin: true, driverArrivedAtOriginAt: nowIso } : t));
+
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'trips', trip.id), {
+        driverArrivedAtOrigin: true,
+        driverArrivedAtOriginAt: nowIso
+      });
+
+      if (trip.clienteId) {
+        const { sendDbNotification } = await import('./services/notificationService');
+        const cleanTripId = trip.id.startsWith('#') ? trip.id : `#${trip.id}`;
+        sendDbNotification(
+          trip.clienteId,
+          '📍 Conductor en Punto de Cargue',
+          `El conductor (${user.name}) ha llegado al punto de recolección en ${trip.origin} para el flete ${cleanTripId}.`,
+          `trip-arrived-${trip.id}`,
+          'info'
+        );
+      }
+
+      setActiveToast({
+        id: `arr-done-${Date.now()}`,
+        title: '📍 Notificación enviada',
+        message: 'Has notificado al cliente que estás en el punto de cargue.',
+        type: 'info'
+      });
+    } catch (e) {
+      console.warn('Error marking arrival at origin:', e);
+    }
+  };
+
   const handleRequestCompletion = async (trip: Trip) => {
     if (user.role !== 'conductor' || user.email !== trip.conductorId || trip.status !== 'EN CAMINO' || trip.completionRequestedBy) {
       return;
@@ -628,8 +667,9 @@ export default function App() {
               return currentView;
             });
           } else {
-            // Fallback to checking both if lastRole didn't match (for new devices)
-            for (const role of ['conductor', 'cliente']) {
+            // Fallback to checking both if lastRole didn't match (for new devices), prioritizing lastRole choice
+            const rolesToCheck = lastRole === 'cliente' ? ['cliente', 'conductor'] : ['conductor', 'cliente'];
+            for (const role of rolesToCheck) {
               const docRef = doc(db, 'users', `${firebaseUser.uid}_${role}`);
               const snap = await getDoc(docRef);
               if (snap.exists()) {
@@ -970,6 +1010,8 @@ export default function App() {
         console.warn('Could not accept counter offer:', e);
       }
     } else {
+      const offeringConductor = trip.counterOffer?.conductorId;
+
       // Reject offer
       setTrips(prev => prev.map(t => 
         t.id === tripId 
@@ -983,6 +1025,18 @@ export default function App() {
         await updateDoc(doc(db, 'trips', tripId), {
           counterOffer: deleteField()
         });
+
+        if (offeringConductor) {
+          const { sendDbNotification } = await import('./services/notificationService');
+          const cleanTripId = tripId.startsWith('#') ? tripId : `#${tripId}`;
+          sendDbNotification(
+            offeringConductor,
+            '❌ Oferta No Aceptada',
+            `El cliente declinó tu contraoferta para el flete ${cleanTripId}. El servicio continúa disponible.`,
+            `trip-offer-rejected-${tripId}`,
+            'warning'
+          );
+        }
       } catch (e) {
         console.warn('Could not reject counter offer:', e);
       }
@@ -1146,17 +1200,23 @@ export default function App() {
   };
 
   // Linked accounts list (Instagram style quick account switcher)
-  const [linkedAccounts, setLinkedAccounts] = useState<UserProfile[]>([
-    {
-      name: 'Luis Fernando (Cliente)',
-      email: 'lfalzatel29@gmail.com',
-      phone: '+57 300 123 4567',
-      role: 'cliente',
-      isVerified: true,
-      rating: 5.0,
-      balance: 1500000,
-    }
-  ]);
+  const [linkedAccounts, setLinkedAccounts] = useState<UserProfile[]>(() => {
+    try {
+      const saved = localStorage.getItem('cf_linked_accounts');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (_) {}
+    return [];
+  });
+
+  // Sync linkedAccounts to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('cf_linked_accounts', JSON.stringify(linkedAccounts));
+    } catch (_) {}
+  }, [linkedAccounts]);
 
   // Switch account helper (Instagram style)
   const handleSwitchAccount = (targetAccount: UserProfile) => {
@@ -1342,6 +1402,7 @@ export default function App() {
               onEditShipment={handleEditTrip}
               onAcceptTrip={handleAcceptTrip}
               onCounterOfferTrip={handleCounterOffer}
+              onDriverArrivedAtOrigin={handleDriverArrivedAtOrigin}
               onRequestCompletion={handleRequestCompletion}
               onNavigateToView={handleViewChange}
               onUpdateProfile={handleUpdateProfile}
@@ -1365,6 +1426,7 @@ export default function App() {
               }}
               onResolveCounterOffer={handleResolveCounterOffer}
               onCompleteTrip={handleCompleteTrip}
+              onDriverArrivedAtOrigin={handleDriverArrivedAtOrigin}
               onRequestCompletion={handleRequestCompletion}
               onConfirmCompletion={handleConfirmCompletion}
               onRejectCompletion={handleRejectCompletion}
