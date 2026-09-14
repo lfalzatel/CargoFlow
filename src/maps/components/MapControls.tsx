@@ -357,10 +357,10 @@ export const MapControls: React.FC<MapControlsProps> = ({
         )}
       </div>
 
-      {/* STRICT SAFE DRAG BOUNDING CONTAINER (Cannot pass Top Card/Header or BottomNav) */}
+      {/* DRAG BOUNDING CONTAINER (Constrained between Top Header and Bottom Nav Bar) */}
       <div 
         ref={dragBoundsRef} 
-        className="absolute inset-0 top-[180px] bottom-[88px] left-2 right-2 pointer-events-none z-40 overflow-visible"
+        className="absolute inset-0 top-[65px] bottom-[65px] left-2 right-2 pointer-events-none z-40 overflow-visible"
       >
         {/* Draggable Floating Button Trigger Container (Fixed origin 48x48px, never shifts on expand) */}
         <motion.div 
@@ -371,7 +371,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
           dragMomentum={false}
           onDragEnd={handleDragEnd}
           whileDrag={{ scale: 1.08 }}
-          className={`pointer-events-auto absolute bottom-2 z-50 touch-none ${
+          className={`pointer-events-auto absolute bottom-1 z-50 touch-none ${
             isRight ? 'right-2' : 'left-2'
           }`}
         >
