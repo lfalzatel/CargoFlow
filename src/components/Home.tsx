@@ -6,6 +6,29 @@ import { HybridMapContainer } from '../maps/components/HybridMapContainer';
 import { COLOMBIA_LOGISTICS_PLACES } from '../maps/services/search/SearchCatalog';
 import { fleetSimulationService } from '../maps/services/fleet/FleetSimulationService';
 
+export interface CargoTypeItem {
+  id: string;
+  title: string;
+  icon: string;
+  subtitle: string;
+}
+
+export const CARGO_TYPES_CATALOG: CargoTypeItem[] = [
+  { id: 'general', title: 'Carga General / Enseres', icon: '📦', subtitle: 'Cajas, mercancía empaquetada o paquetería estándar' },
+  { id: 'mudanzas', title: 'Mudanzas y Trasteos', icon: '🛋️', subtitle: 'Muebles, electrodomésticos, enseres de hogar u oficina' },
+  { id: 'express', title: 'Express / Domicilio Moto', icon: '⚡', subtitle: 'Paquetes pequeños, sobres y mercancía urgente' },
+  { id: 'alimentos', title: 'Alimentos y Perecederos', icon: '🍎', subtitle: 'Frutas, verduras, carnes y víveres a temperatura ambiente' },
+  { id: 'refrigerados', title: 'Refrigerados y Congelados', icon: '🧊', subtitle: 'Lácteos, cárnicos y medicina a temperatura controlada' },
+  { id: 'construccion', title: 'Materiales de Construcción', icon: '🧱', subtitle: 'Cemento, varilla, ladrillo, arena, escombros, tuberías' },
+  { id: 'tecnologia', title: 'Tecnología y Delicados', icon: '💻', subtitle: 'Electrodomésticos, televisores, equipos de cómputo' },
+  { id: 'salud', title: 'Medicamentos y Salud', icon: '💊', subtitle: 'Insumos médicos, fármacos, productos farmacológicos' },
+  { id: 'quimicos', title: 'Mercancía Peligrosa / Químicos', icon: '⚠️', subtitle: 'Combustibles, aceites, pinturas, solventes e insumos' },
+  { id: 'liquidos', title: 'Líquidos y A Granel', icon: '💧', subtitle: 'Agua, tanques cisternas, granos, silos a granel' },
+  { id: 'maquinaria', title: 'Maquinaria y Repuestos Pesados', icon: '🚜', subtitle: 'Equipos industriales, piezas pesadas, motores, planchón' },
+  { id: 'ganado', title: 'Ganado y Animales Vivos', icon: '🐄', subtitle: 'Ganado bovino, porcino, caballos en vehículos adaptados' },
+  { id: 'valores', title: 'Carga de Valor / Especial', icon: '💎', subtitle: 'Mercancía de alto costo, frágil o con protocolo especial' },
+];
+
 interface HomeProps {
   user: UserProfile;
   trips?: Trip[];
@@ -121,7 +144,9 @@ export default function Home({
       setOrigin('Mi Ubicación GPS (Medellín, Antioquia)');
     }
   };
-  const [cargoType, setCargoType] = useState('General');
+  const [cargoType, setCargoType] = useState('Carga General / Enseres');
+  const [showCargoTypeModal, setShowCargoTypeModal] = useState(false);
+  const [cargoTypeSearch, setCargoTypeSearch] = useState('');
   const [tag, setTag] = useState<string>('');
   const [vehicle, setVehicle] = useState('Camión Sencillo');
   const [notes, setNotes] = useState('');
@@ -918,20 +943,55 @@ export default function Home({
                       </AnimatePresence>
                     </div>
 
-                    {/* Tipo de Mercancía */}
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Tipo de Mercancía</label>
-                      <select
-                        value={cargoType}
-                        onChange={(e) => setCargoType(e.target.value)}
-                        className="w-full h-11 px-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-500 font-bold text-slate-800"
+                    {/* Tipo de Mercancía (Visual Custom Category Selector) */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                          Tipo de Mercancía
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowCargoTypeModal(true)}
+                          className="text-[11px] font-extrabold text-emerald-600 hover:underline cursor-pointer"
+                        >
+                          Ver 13 categorías ➔
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowCargoTypeModal(true)}
+                        className="w-full h-11 px-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl flex items-center justify-between font-bold text-xs text-slate-800 transition-all cursor-pointer shadow-xs active:scale-[0.99]"
                       >
-                        <option value="General">Carga General / Enseres</option>
-                        <option value="Alimentos">Alimentos / Perecederos</option>
-                        <option value="Tecnología">Electrónicos / Tecnología</option>
-                        <option value="Medicinas">Medicamentos / Salud</option>
-                        <option value="Materiales">Materiales de Construcción</option>
-                      </select>
+                        <div className="flex items-center gap-2 truncate">
+                          <span className="text-base flex-shrink-0">
+                            {CARGO_TYPES_CATALOG.find(c => c.title === cargoType)?.icon || '📦'}
+                          </span>
+                          <span className="truncate">{cargoType}</span>
+                        </div>
+                        <ChevronDown size={16} className="text-slate-400 flex-shrink-0" />
+                      </button>
+
+                      {/* Quick Chips */}
+                      <div className="flex gap-1 flex-wrap">
+                        {['Carga General / Enseres', 'Mudanzas y Trasteos', 'Alimentos y Perecederos', 'Express / Domicilio Moto', 'Materiales de Construcción'].map((catTitle) => {
+                          const catObj = CARGO_TYPES_CATALOG.find(c => c.title === catTitle);
+                          return (
+                            <button
+                              key={`chip-${catTitle}`}
+                              type="button"
+                              onClick={() => setCargoType(catTitle)}
+                              className={`text-[10px] font-bold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                                cargoType === catTitle
+                                  ? 'bg-emerald-600 text-white border-emerald-600'
+                                  : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                              }`}
+                            >
+                              {catObj?.icon} {catTitle.split('/')[0]}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     {/* Step 1 Action Button */}
@@ -1067,6 +1127,110 @@ export default function Home({
                   </div>
                 )}
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CARGO TYPE SELECTION PICKER MODAL (13 Categories with Search) */}
+      <AnimatePresence>
+        {showCargoTypeModal && (
+          <div 
+            className="fixed inset-0 z-[400] backdrop-blur-md bg-black/70 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+            onClick={() => setShowCargoTypeModal(false)}
+          >
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col border border-slate-200"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-3">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                    <span className="text-xl">📦</span>
+                    <span>Seleccionar Tipo de Mercancía</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                    13 Categorías disponibles para tu flete
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCargoTypeModal(false)}
+                  className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Search Filter Bar */}
+              <div className="relative mb-3">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar categoría (ej. refrigerado, trasteos, alimentos, cemento...)"
+                  value={cargoTypeSearch}
+                  onChange={(e) => setCargoTypeSearch(e.target.value)}
+                  className="w-full h-11 pl-10 pr-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 transition-all shadow-xs"
+                />
+                {cargoTypeSearch && (
+                  <button
+                    onClick={() => setCargoTypeSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+
+              {/* Categories Grid List */}
+              <div className="overflow-y-auto max-h-[60vh] pr-1 space-y-2 no-scrollbar">
+                {CARGO_TYPES_CATALOG
+                  .filter(cat => 
+                    cat.title.toLowerCase().includes(cargoTypeSearch.toLowerCase()) || 
+                    cat.subtitle.toLowerCase().includes(cargoTypeSearch.toLowerCase())
+                  )
+                  .map((cat) => {
+                    const isSelected = cargoType === cat.title;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => {
+                          setCargoType(cat.title);
+                          setShowCargoTypeModal(false);
+                          setCargoTypeSearch('');
+                        }}
+                        className={`w-full text-left p-3 rounded-2xl border transition-all flex items-start gap-3 cursor-pointer group ${
+                          isSelected
+                            ? 'bg-emerald-50 border-emerald-500 shadow-sm'
+                            : 'bg-white hover:bg-slate-50 border-slate-200'
+                        }`}
+                      >
+                        <span className="text-2xl p-2 rounded-2xl bg-slate-100 group-hover:bg-white transition-colors flex-shrink-0">
+                          {cat.icon}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h4 className={`text-xs font-black truncate ${isSelected ? 'text-emerald-800' : 'text-slate-900'}`}>
+                              {cat.title}
+                            </h4>
+                            {isSelected && (
+                              <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-500 font-medium leading-tight mt-0.5 line-clamp-2">
+                            {cat.subtitle}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+              </div>
             </motion.div>
           </div>
         )}
