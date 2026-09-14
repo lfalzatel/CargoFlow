@@ -1128,16 +1128,16 @@ export default function Home({
       <AnimatePresence>
         {showCargoTypeModal && (
           <div 
-            className="fixed inset-0 z-[400] backdrop-blur-md bg-black/70 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+            className="fixed inset-0 z-[400] backdrop-blur-md bg-black/70 flex items-center justify-center p-4 animate-fade-in"
             onClick={() => setShowCargoTypeModal(false)}
           >
             <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col border border-slate-200"
+              className="bg-white w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-slate-200 my-auto"
             >
               {/* Header */}
               <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-3">
@@ -1180,7 +1180,7 @@ export default function Home({
               </div>
 
               {/* Categories Grid List */}
-              <div className="overflow-y-auto max-h-[60vh] pr-1 space-y-2 no-scrollbar">
+              <div className="overflow-y-auto max-h-[70vh] pr-1 space-y-2 no-scrollbar flex-1">
                 {CARGO_TYPES_CATALOG
                   .filter(cat => 
                     cat.title.toLowerCase().includes(cargoTypeSearch.toLowerCase()) || 
