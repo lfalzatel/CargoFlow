@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, History, Menu, Truck, Star, Info, X, Navigation, RefreshCw, CheckCircle2, Navigation2, Phone, Flag, PackageCheck, MapPinned, Compass, Map, Crosshair, Eye, MessageSquare } from 'lucide-react';
+import { Search, MapPin, History, Menu, Truck, Star, Info, X, Navigation, RefreshCw, CheckCircle2, Navigation2, Phone, Flag, PackageCheck, MapPinned, Compass, Map, Crosshair, Eye, MessageSquare, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trip, UserProfile } from '../types';
 import { HybridMapContainer } from '../maps/components/HybridMapContainer';
@@ -447,7 +447,7 @@ export default function Home({
                 <Truck size={16} fill="currentColor" />
               </div>
               <span className="text-xs font-black tracking-wider uppercase text-white">
-                Solicitar Servicio
+                Solicitar Transporte
               </span>
               <Navigation size={15} className="text-emerald-200 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
             </button>
