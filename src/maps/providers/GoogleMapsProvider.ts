@@ -349,10 +349,14 @@ export class GoogleMapsProvider implements IMapProvider {
         iconSymbol = '🚛';
         bg = '#EF4444';
         label = 'Tractomula';
+      } else if (vt.includes('turbo')) {
+        iconSymbol = '🚚';
+        bg = '#8B5CF6';
+        label = 'Turbo Light';
       } else {
         iconSymbol = '🚚';
         bg = '#6366F1';
-        label = 'Camión';
+        label = 'Camión Sencillo';
       }
     }
 
