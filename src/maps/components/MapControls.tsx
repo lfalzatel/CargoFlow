@@ -10,6 +10,7 @@ import {
   Download, 
   ChevronDown, 
   ChevronUp, 
+  ChevronRight,
   Route as RouteIcon, 
   Layers,
   SlidersHorizontal
@@ -507,6 +508,17 @@ export const MapControls: React.FC<MapControlsProps> = ({
                       OSM
                     </button>
                   </div>
+
+                  {/* 6. Horizontal Scroll Swipe Indicator Badge */}
+                  {!isVertical && (
+                    <div 
+                      className="flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white border border-emerald-400/50 px-2.5 py-1.5 rounded-2xl text-[10px] font-black flex-shrink-0 animate-pulse select-none cursor-pointer shadow-md"
+                      title="Desliza horizontalmente para ver más opciones"
+                    >
+                      <span>Desliza</span>
+                      <ChevronRight size={13} className="text-white" />
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
