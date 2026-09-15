@@ -44,8 +44,8 @@ export default function ToggleConfettiOverlay({
   useEffect(() => {
     if (isOpen) {
       playToggleConfettiSound(activated);
-      const voiceText = statusText ? `Actualización exitosa. ${statusText}` : `Actualización exitosa. ${subtitle}`;
-      speakVoiceConfirmation(voiceText);
+      const voiceText = activated ? '¡Actualización exitosa! ¡Activado!' : '¡Actualización exitosa! ¡Desactivado!';
+      speakVoiceConfirmation(voiceText, 'toggles');
     }
   }, [isOpen, activated, title, subtitle, statusText]);
 
@@ -57,7 +57,7 @@ export default function ToggleConfettiOverlay({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[100000] flex flex-col items-center justify-between p-6 bg-slate-950/85 backdrop-blur-md select-none cursor-pointer overflow-hidden animate-fade-in"
+      className="fixed inset-0 z-[200000] flex flex-col items-center justify-between p-6 bg-slate-950/60 backdrop-blur-sm select-none cursor-pointer overflow-hidden animate-fade-in"
     >
       {/* CSS Keyframes de Lluvia Infinita de Confeti */}
       <style>{`

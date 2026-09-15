@@ -99,10 +99,15 @@ export function playImpactCrystalChime(freq: number, delayMs: number): void {
 /**
  * 4. Confirmación de Voz por Web Speech API Nativa
  */
-export function speakVoiceConfirmation(text: string): void {
+export function speakVoiceConfirmation(text: string, category: 'gamification' | 'toggles' = 'gamification'): void {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-  // Verificar si la voz TTS está habilitada en configuración
+  
+  // Verificar switches independientes de voz según categoría
+  if (category === 'gamification' && localStorage.getItem('cf_voice_gamification_enabled') === 'false') return;
+  if (category === 'toggles' && localStorage.getItem('cf_voice_toggles_enabled') === 'false') return;
+  // Compatibilidad con antiguo switch general si existe
   if (localStorage.getItem('cf_voice_tts_enabled') === 'false') return;
+
   try {
     window.speechSynthesis.cancel();
     // Ajuste de lectura fluida para marcas o términos
@@ -112,8 +117,8 @@ export function speakVoiceConfirmation(text: string): void {
 
     const utterance = new SpeechSynthesisUtterance(fluentText);
     utterance.lang = 'es-CO';
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
+    utterance.rate = 1.05;  // Ritmo ágil y dinámico
+    utterance.pitch = 1.25; // Pitch alegre, animado y cálido
     window.speechSynthesis.speak(utterance);
   } catch (e) {
     console.warn('Speech synthesis error:', e);

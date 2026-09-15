@@ -589,6 +589,7 @@ export default function Header({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          setIsMenuOpen(false);
                           const newStatus = !isAvailable;
                           setIsAvailable(newStatus);
                           if (onUpdateProfile) {
@@ -638,13 +639,21 @@ export default function Header({
                   <div>
                     <button
                       onClick={(e) => {
-                        // Don't close the menu, just toggle
                         e.stopPropagation();
+                        setIsMenuOpen(false);
                         const next = !notificationsEnabled;
                         setNotificationsEnabled(next);
                         try { localStorage.setItem('cf_notif_enabled', String(next)); } catch { }
                         // Dispatch a storage event so App.tsx reacts immediately
                         window.dispatchEvent(new StorageEvent('storage', { key: 'cf_notif_enabled', newValue: String(next) }));
+                        window.dispatchEvent(new CustomEvent('cargoflow:toggle-confetti', {
+                          detail: {
+                            title: 'Actualización exitosa.',
+                            subtitle: next ? 'Notificaciones activadas' : 'Notificaciones desactivadas',
+                            statusText: next ? '🔔 Notificaciones Activadas' : '🔕 Notificaciones Desactivadas',
+                            activated: next,
+                          }
+                        }));
                       }}
                       className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)] transition-colors"
                     >

@@ -510,7 +510,8 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
 
   // Gamification 3D and TTS voice preferences
   const [gamificationAnimEnabled, setGamificationAnimEnabled] = useState(() => localStorage.getItem('cf_gamification_anim_enabled') !== 'false');
-  const [voiceTtsEnabled, setVoiceTtsEnabled]                 = useState(() => localStorage.getItem('cf_voice_tts_enabled') !== 'false');
+  const [voiceGamificationEnabled, setVoiceGamificationEnabled] = useState(() => localStorage.getItem('cf_voice_gamification_enabled') !== 'false');
+  const [voiceTogglesEnabled, setVoiceTogglesEnabled] = useState(() => localStorage.getItem('cf_voice_toggles_enabled') !== 'false');
 
   const handleSelectMenuSound = (id: SoundProfileId) => {
     setSelectedMenuSound(id);
@@ -553,9 +554,10 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
   // Persist notification settings and immediately propagate to App.tsx listener
   const handleNotifToggle = (key: string, value: boolean) => {
     localStorage.setItem(key, String(value));
-    // Dispatch a storage event so other parts of the app react immediately
+    // Dispatch events so other parts of the app react immediately
     try {
       window.dispatchEvent(new StorageEvent('storage', { key, newValue: String(value) }));
+      window.dispatchEvent(new CustomEvent('cargoflow:notif-settings-changed', { detail: { key, value } }));
     } catch { /* ignore */ }
     if (key === 'cf_notif_enabled' && value) {
       requestNotificationPermission();
@@ -897,15 +899,33 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
               icon={<Volume2 size={16} />}
               iconBg="bg-purple-50"
               iconColor="#9333ea"
-              title="Voces Sintetizadas (TTS)"
-              subtitle="Lectura por voz nativa en español de logros y actualizaciones"
+              title="Voces de Gamificación y Calificación"
+              subtitle="Lectura por voz nativa en español al recibir o dar estrellas"
               action={
                 <Toggle
-                  checked={voiceTtsEnabled}
-                  label="Voces Sintetizadas (TTS)"
+                  checked={voiceGamificationEnabled}
+                  label="Voces de Gamificación y Calificación"
                   onChange={(v) => {
-                    setVoiceTtsEnabled(v);
-                    localStorage.setItem('cf_voice_tts_enabled', String(v));
+                    setVoiceGamificationEnabled(v);
+                    localStorage.setItem('cf_voice_gamification_enabled', String(v));
+                  }}
+                />
+              }
+            />
+
+            <SettingRow
+              icon={<Volume2 size={16} />}
+              iconBg="bg-indigo-50"
+              iconColor="#4f46e5"
+              title="Voces de Estado y Toggles"
+              subtitle="Lectura por voz corta (Activado / Desactivado) al cambiar opciones"
+              action={
+                <Toggle
+                  checked={voiceTogglesEnabled}
+                  label="Voces de Estado y Toggles"
+                  onChange={(v) => {
+                    setVoiceTogglesEnabled(v);
+                    localStorage.setItem('cf_voice_toggles_enabled', String(v));
                   }}
                 />
               }

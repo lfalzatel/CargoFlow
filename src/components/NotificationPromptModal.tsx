@@ -12,7 +12,32 @@ export const NotificationPromptModal: React.FC = () => {
   // Drag bounding container ref
   const dragBoundsRef = useRef<HTMLDivElement>(null);
 
-  // Check notification status and hamburger position on mount
+  // Helper to check if notifications are active both in browser AND CargoFlow app settings
+  const isNotificationActive = () => {
+    if (typeof window === 'undefined') return true;
+    const browserGranted = 'Notification' in window && Notification.permission === 'granted';
+    const appEnabled = localStorage.getItem('cf_notif_enabled') !== 'false';
+    return browserGranted && appEnabled;
+  };
+
+  // Evaluate notification state and determine prompt/sphere/hidden
+  const evaluateState = () => {
+    if (typeof window === 'undefined') return;
+
+    if (isNotificationActive()) {
+      setModalState('hidden');
+      return;
+    }
+
+    // If notifications are inactive (disabled in app settings or browser permission not granted)
+    const isMinimized = sessionStorage.getItem('cf_notif_prompt_minimized') === 'true';
+    if (isMinimized) {
+      setModalState('minimized');
+    } else {
+      setModalState('prompt');
+    }
+  };
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -23,44 +48,42 @@ export const NotificationPromptModal: React.FC = () => {
     };
 
     updateHamburgerPos();
-    window.addEventListener('cargoflow:map-controls-config-changed', updateHamburgerPos);
+    evaluateState();
 
-    // If notifications are not supported or already granted, do not show prompt
-    if (!('Notification' in window)) return;
-
-    if (Notification.permission === 'granted') {
-      setModalState('hidden');
-      return;
-    }
-
-    // Check if user previously minimized it in this session
-    const isMinimized = sessionStorage.getItem('cf_notif_prompt_minimized') === 'true';
-    if (isMinimized) {
-      setModalState('minimized');
-    } else {
-      // Delay showing prompt slightly after app loads
-      const timer = setTimeout(() => {
+    // Event listeners for config/storage/notif changes
+    const handleStorageChange = () => evaluateState();
+    const handleConfettiToggle = (e: any) => {
+      if (e?.detail?.activated === false) {
+        // Notifications were turned OFF in header dropdown
+        sessionStorage.removeItem('cf_notif_prompt_minimized');
         setModalState('prompt');
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
+      } else if (e?.detail?.activated === true) {
+        evaluateState();
+      }
+    };
+
+    window.addEventListener('cargoflow:map-controls-config-changed', updateHamburgerPos);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('cargoflow:toggle-confetti', handleConfettiToggle);
+    window.addEventListener('cargoflow:notif-settings-changed', handleStorageChange);
 
     return () => {
       window.removeEventListener('cargoflow:map-controls-config-changed', updateHamburgerPos);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('cargoflow:toggle-confetti', handleConfettiToggle);
+      window.removeEventListener('cargoflow:notif-settings-changed', handleStorageChange);
     };
   }, []);
 
   const handleActivateClick = async () => {
     playCoinClaimSound();
+    localStorage.setItem('cf_notif_enabled', 'true');
+    window.dispatchEvent(new StorageEvent('storage', { key: 'cf_notif_enabled', newValue: 'true' }));
+
     const perm = await requestNotificationPermission();
-    if (perm === 'granted') {
-      setModalState('celebration');
-      playGamificationFanfare();
-      sessionStorage.removeItem('cf_notif_prompt_minimized');
-    } else {
-      // User denied or dismissed native browser prompt -> minimize to sphere
-      handleMinimize();
-    }
+    setModalState('celebration');
+    playGamificationFanfare();
+    sessionStorage.removeItem('cf_notif_prompt_minimized');
   };
 
   const handleMinimize = () => {
