@@ -594,6 +594,14 @@ export default function Header({
                           if (onUpdateProfile) {
                             onUpdateProfile({ isAvailable: newStatus });
                           }
+                          window.dispatchEvent(new CustomEvent('cargoflow:toggle-confetti', {
+                            detail: {
+                              title: 'Actualización exitosa.',
+                              subtitle: newStatus ? 'Has activado el modo Disponible para recibir fletes' : 'Modo Inactivo activado',
+                              statusText: newStatus ? '🟢 Modo Conectado / Disponible' : '⚪ Modo Inactivo',
+                              activated: newStatus,
+                            }
+                          }));
                         }}
                         className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)] transition-colors"
                       >

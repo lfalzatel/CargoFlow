@@ -47,10 +47,21 @@ interface SettingsProps {
 type SectionKey = 'cuenta' | 'notificaciones' | 'sonidos' | 'gamificacion' | 'vehiculo' | 'apariencia' | 'info' | 'privacidad' | 'gestion' | 'mapa';
 
 // ── Toggle component ─────────────────────────────────────────
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ checked, onChange, label = 'Configuración guardada' }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
   return (
     <button
-      onClick={() => onChange(!checked)}
+      onClick={() => {
+        const nextVal = !checked;
+        onChange(nextVal);
+        window.dispatchEvent(new CustomEvent('cargoflow:toggle-confetti', {
+          detail: {
+            title: 'Actualización exitosa.',
+            subtitle: label,
+            statusText: nextVal ? '🟢 Activado Correctamente' : '⚪ Desactivado Correctamente',
+            activated: nextVal,
+          }
+        }));
+      }}
       className={`relative inline-flex items-center w-10 h-5.5 rounded-full transition-colors duration-200 focus:outline-none flex-shrink-0 ${
         checked ? 'bg-[#0b224d]' : 'bg-slate-200'
       }`}
@@ -497,6 +508,10 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
   const [selectedMenuSound, setSelectedMenuSound] = useState<SoundProfileId>(() => getMenuUiSoundProfile());
   const [selectedGeneralSound, setSelectedGeneralSound] = useState<SoundProfileId>(() => getGeneralUiSoundProfile());
 
+  // Gamification 3D and TTS voice preferences
+  const [gamificationAnimEnabled, setGamificationAnimEnabled] = useState(() => localStorage.getItem('cf_gamification_anim_enabled') !== 'false');
+  const [voiceTtsEnabled, setVoiceTtsEnabled]                 = useState(() => localStorage.getItem('cf_voice_tts_enabled') !== 'false');
+
   const handleSelectMenuSound = (id: SoundProfileId) => {
     setSelectedMenuSound(id);
     setMenuUiSoundProfile(id);
@@ -859,7 +874,44 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
 
           {/* ── 2.4 Gamificación y Efectos 3D (Mario Bros / Temu) ───────────────── */}
           <Section title="Gamificación y Efectos 3D" open={openSection === 'gamificacion'} onToggle={() => toggle('gamificacion')}>
-            <div className="p-4 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border-b border-amber-200/50">
+            {/* Control Toggles */}
+            <SettingRow
+              icon={<Sparkles size={16} />}
+              iconBg="bg-amber-50"
+              iconColor="#d97706"
+              title="Animaciones 3D y Confeti"
+              subtitle="Efectos visuales de recompensas y lluvia de confeti"
+              action={
+                <Toggle
+                  checked={gamificationAnimEnabled}
+                  label="Animaciones 3D y Confeti"
+                  onChange={(v) => {
+                    setGamificationAnimEnabled(v);
+                    localStorage.setItem('cf_gamification_anim_enabled', String(v));
+                  }}
+                />
+              }
+            />
+
+            <SettingRow
+              icon={<Volume2 size={16} />}
+              iconBg="bg-purple-50"
+              iconColor="#9333ea"
+              title="Voces Sintetizadas (TTS)"
+              subtitle="Lectura por voz nativa en español de logros y actualizaciones"
+              action={
+                <Toggle
+                  checked={voiceTtsEnabled}
+                  label="Voces Sintetizadas (TTS)"
+                  onChange={(v) => {
+                    setVoiceTtsEnabled(v);
+                    localStorage.setItem('cf_voice_tts_enabled', String(v));
+                  }}
+                />
+              }
+            />
+
+            <div className="p-4 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border-b border-t border-amber-200/50">
               <p className="text-xs font-bold text-amber-900 flex items-center gap-1.5 mb-1">
                 <Sparkles size={16} className="text-amber-600" />
                 Probador de Recompensas & Animaciones 3D
@@ -964,7 +1016,7 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
             </div>
 
             {/* Test Voice TTS */}
-            <div className="p-3.5 flex items-center justify-between gap-3">
+            <div className="p-3.5 border-b border-slate-50 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center font-bold text-xs">
                   🗣️
@@ -980,6 +1032,35 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
                 className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
               >
                 ▶ Probar Voz
+              </button>
+            </div>
+
+            {/* Test Confetti Rain Overlay (Matching screenshot) */}
+            <div className="p-3.5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-yellow-100 text-yellow-800 flex items-center justify-center font-bold text-xs">
+                  ✨
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Lluvia de Confeti (Toggle / Estado)</p>
+                  <p className="text-[10px] text-slate-400">Partículas cayendo hasta hacer clic para continuar</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('cargoflow:toggle-confetti', {
+                    detail: {
+                      title: 'Actualización exitosa.',
+                      subtitle: 'Has cambiado el estado del toggle correctamente',
+                      statusText: '🌟 Estado Actualizado Exitosamente',
+                      activated: true,
+                    }
+                  }));
+                }}
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-amber-950 font-black text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+              >
+                Probar Lluvia
               </button>
             </div>
           </Section>

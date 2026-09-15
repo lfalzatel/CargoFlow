@@ -381,7 +381,7 @@ export default function Home({
   const [showCargoTypeModal, setShowCargoTypeModal] = useState(false);
   const [cargoTypeSearch, setCargoTypeSearch] = useState('');
   const [tag, setTag] = useState<string>('');
-  const [vehicle, setVehicle] = useState('Camión Sencillo');
+  const [vehicle, setVehicle] = useState('');
   const [showVehicleModal, setShowVehicleModal] = useState(false);
   const [vehicleSearch, setVehicleSearch] = useState('');
   const [showSpecialtyModal, setShowSpecialtyModal] = useState(false);
@@ -615,6 +615,14 @@ export default function Home({
               if (onUpdateProfile) {
                 onUpdateProfile({ isAvailable: newStatus });
               }
+              window.dispatchEvent(new CustomEvent('cargoflow:toggle-confetti', {
+                detail: {
+                  title: 'Actualización exitosa.',
+                  subtitle: newStatus ? 'Has activado el modo Disponible para recibir fletes' : 'Modo Inactivo activado',
+                  statusText: newStatus ? '🟢 Modo Conectado / Disponible' : '⚪ Modo Inactivo',
+                  activated: newStatus,
+                }
+              }));
             }}
             className={`flex items-center gap-2 px-3 py-2 rounded-full shadow-lg border backdrop-blur-md transition-all active:scale-95 ${
               (user.isAvailable ?? true) 
@@ -1144,20 +1152,40 @@ export default function Home({
                     <div className="grid grid-cols-2 gap-3">
                       {/* Vehiculo Trigger Button */}
                       <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Tipo Vehículo</label>
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                          Tipo Vehículo
+                          <span className="text-[9px] font-bold text-slate-400 normal-case tracking-normal">(Opcional)</span>
+                        </label>
                         <button
                           type="button"
                           onClick={() => setShowVehicleModal(true)}
-                          className="w-full h-11 px-3 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border-2 border-amber-300 rounded-2xl flex items-center justify-between text-xs font-black text-slate-800 transition-all shadow-sm active:scale-95 cursor-pointer group"
+                          className={`w-full h-11 px-3 hover:from-amber-100 hover:to-orange-100 border-2 rounded-2xl flex items-center justify-between text-xs font-black text-slate-800 transition-all shadow-sm active:scale-95 cursor-pointer group ${
+                            vehicle
+                              ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300'
+                              : 'bg-slate-50 border-slate-200 border-dashed'
+                          }`}
                         >
                           <div className="flex items-center gap-2 truncate">
                             <span className="text-base p-1 bg-white rounded-xl shadow-2xs group-hover:scale-110 transition-transform">
-                              {VEHICLES_CATALOG.find(v => v.title === vehicle || vehicle.includes(v.title))?.icon || '🚚'}
+                              {vehicle
+                                ? (VEHICLES_CATALOG.find(v => v.title === vehicle || vehicle.includes(v.title))?.icon || '🚚')
+                                : '🚛'}
                             </span>
-                            <span className="truncate">{vehicle || 'Camión Sencillo'}</span>
+                            <span className={`truncate ${vehicle ? '' : 'text-slate-400 font-semibold'}`}>
+                              {vehicle || 'Cualquier vehículo'}
+                            </span>
                           </div>
                           <ChevronDown size={14} className="text-amber-600 group-hover:text-amber-800 transition-colors flex-shrink-0" />
                         </button>
+                        {vehicle && (
+                          <button
+                            type="button"
+                            onClick={() => setVehicle('')}
+                            className="text-[10px] text-slate-400 hover:text-slate-600 text-right font-semibold"
+                          >
+                            × Quitar selección
+                          </button>
+                        )}
                       </div>
 
                       {/* Especialidad Trigger Button */}

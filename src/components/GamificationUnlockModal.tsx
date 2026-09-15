@@ -72,6 +72,9 @@ export default function GamificationUnlockModal({
   }, [isOpen]);
 
   if (!isOpen) return null;
+  if (typeof window !== 'undefined' && localStorage.getItem('cf_gamification_anim_enabled') === 'false') {
+    return null;
+  }
 
   // Localiza la cápsula de calificación/puntos visible en la cabecera (Header)
   const getVisibleCapsule = (): HTMLElement | null => {

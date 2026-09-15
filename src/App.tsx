@@ -16,6 +16,7 @@ import SplashScreen from './components/SplashScreen';
 import NotificationToast from './components/NotificationToast';
 import Rating from './components/Rating';
 import GamificationUnlockModal from './components/GamificationUnlockModal';
+import ToggleConfettiOverlay from './components/ToggleConfettiOverlay';
 import { NotificationPromptModal } from './components/NotificationPromptModal';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './config/firebase';
@@ -152,6 +153,31 @@ export default function App() {
     isSenderFeedback?: boolean;
   } | null>(null);
   const shownRatingModalRef = useRef<Set<string>>(new Set());
+
+  const [confettiOverlay, setConfettiOverlay] = useState<{
+    isOpen: boolean;
+    title?: string;
+    subtitle?: string;
+    statusText?: string;
+    activated?: boolean;
+  } | null>(null);
+
+  // Escuchar evento cargoflow:toggle-confetti para lluvia de confeti al cambiar toggles
+  useEffect(() => {
+    const handleToggleConfetti = (e: Event) => {
+      const detail = (e as CustomEvent).detail || {};
+      setConfettiOverlay({
+        isOpen: true,
+        title: detail.title || 'Actualización exitosa.',
+        subtitle: detail.subtitle || 'Configuración guardada correctamente',
+        statusText: detail.statusText || '🌟 Estado Actualizado Exitosamente',
+        activated: detail.activated ?? true,
+      });
+    };
+
+    window.addEventListener('cargoflow:toggle-confetti', handleToggleConfetti);
+    return () => window.removeEventListener('cargoflow:toggle-confetti', handleToggleConfetti);
+  }, []);
 
   // Auto-dismiss in-app activeToast banner after 5 seconds
   useEffect(() => {
@@ -1638,6 +1664,18 @@ export default function App() {
               senderName={gamificationModal.senderName}
               role={gamificationModal.role}
               isSenderFeedback={gamificationModal.isSenderFeedback}
+            />
+          )}
+
+          {/* Confetti Rain & Toggle Status Change Overlay */}
+          {confettiOverlay?.isOpen && (
+            <ToggleConfettiOverlay
+              isOpen={confettiOverlay.isOpen}
+              onClose={() => setConfettiOverlay(null)}
+              title={confettiOverlay.title}
+              subtitle={confettiOverlay.subtitle}
+              statusText={confettiOverlay.statusText}
+              activated={confettiOverlay.activated}
             />
           )}
 

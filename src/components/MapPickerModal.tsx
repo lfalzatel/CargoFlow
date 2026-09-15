@@ -62,65 +62,70 @@ export const MapPickerModal: React.FC<MapPickerModalProps> = ({
   useEffect(() => {
     if (!isOpen || !mapContainerRef.current) return;
 
-    // Default center: Medellín (or user initial)
+    // Default center: Medellín
     const initialLat = 6.2442;
     const initialLng = -75.5812;
 
-    if (!mapInstanceRef.current) {
-      const map = L.map(mapContainerRef.current, {
-        center: [initialLat, initialLng],
-        zoom: 14,
-        zoomControl: true,
-      });
+    // Delay init until modal animation is done
+    const initMap = () => {
+      if (!mapContainerRef.current) return;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19,
-      }).addTo(map);
+      if (!mapInstanceRef.current) {
+        const map = L.map(mapContainerRef.current, {
+          center: [initialLat, initialLng],
+          zoom: 14,
+          zoomControl: true,
+        });
 
-      // Custom Icon for Leaflet Marker
-      const customIcon = L.divIcon({
-        className: 'custom-picker-pin',
-        html: `<div style="font-size: 36px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transform: translate(-50%, -100%); line-height: 1;">${pinIconEmoji}</div>`,
-        iconSize: [40, 40],
-        iconAnchor: [20, 40],
-      });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+          maxZoom: 19,
+        }).addTo(map);
 
-      const marker = L.marker([initialLat, initialLng], {
-        draggable: true,
-        icon: customIcon,
-      }).addTo(map);
+        // Custom Icon for Leaflet Marker
+        const customIcon = L.divIcon({
+          className: 'custom-picker-pin',
+          html: `<div style="font-size: 36px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transform: translate(-50%, -100%); line-height: 1;">${pinIconEmoji}</div>`,
+          iconSize: [40, 40],
+          iconAnchor: [20, 40],
+        });
 
-      markerInstanceRef.current = marker;
-      mapInstanceRef.current = map;
+        const marker = L.marker([initialLat, initialLng], {
+          draggable: true,
+          icon: customIcon,
+        }).addTo(map);
 
-      // Handle map drag / move to update coordinates & address
-      const handlePositionChange = (lat: number, lng: number) => {
-        setSelectedCoords({ lat, lng });
-        reverseGeocode(lat, lng);
-      };
+        markerInstanceRef.current = marker;
+        mapInstanceRef.current = map;
 
-      map.on('click', (e: L.LeafletMouseEvent) => {
-        marker.setLatLng(e.latlng);
-        handlePositionChange(e.latlng.lat, e.latlng.lng);
-      });
+        // Handle map drag / move to update coordinates & address
+        const handlePositionChange = (lat: number, lng: number) => {
+          setSelectedCoords({ lat, lng });
+          reverseGeocode(lat, lng);
+        };
 
-      marker.on('dragend', () => {
-        const pos = marker.getLatLng();
-        handlePositionChange(pos.lat, pos.lng);
-      });
+        map.on('click', (e: L.LeafletMouseEvent) => {
+          marker.setLatLng(e.latlng);
+          handlePositionChange(e.latlng.lat, e.latlng.lng);
+        });
 
-      // Recalculate container size on mount
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 300);
-    } else {
-      setTimeout(() => {
-        mapInstanceRef.current?.invalidateSize();
-      }, 300);
-    }
+        marker.on('dragend', () => {
+          const pos = marker.getLatLng();
+          handlePositionChange(pos.lat, pos.lng);
+        });
+      }
+
+      // Fire invalidateSize multiple times to catch any async layout shifts
+      [100, 250, 400, 700].forEach(delay =>
+        setTimeout(() => mapInstanceRef.current?.invalidateSize(), delay)
+      );
+    };
+
+    // Wait for modal spring animation (~300ms) before measuring
+    const initTimer = setTimeout(initMap, 50);
 
     return () => {
+      clearTimeout(initTimer);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -184,113 +189,122 @@ export const MapPickerModal: React.FC<MapPickerModalProps> = ({
           exit={{ scale: 0.88, opacity: 0, y: 30 }}
           transition={{ type: 'spring', damping: 22, stiffness: 350 }}
           onClick={(e) => e.stopPropagation()}
-          className={`bg-white w-full max-w-lg rounded-3xl p-4 sm:p-5 shadow-[0_15px_40px_rgba(0,0,0,0.35)] overflow-hidden max-h-[90vh] flex flex-col border-4 ${themeColor} my-auto relative`}
+          className={`bg-white w-full max-w-lg rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.35)] max-h-[92vh] flex flex-col border-4 ${themeColor} my-auto relative`}
+          style={{ overflow: 'hidden' }}
         >
           {/* Top Decorative Bar */}
           <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${themeBg}`} />
 
-          {/* Header */}
-          <div className="flex justify-between items-center pb-3 border-b-2 border-slate-100 mb-3 mt-1">
-            <div>
-              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                <span className="text-2xl p-1 bg-slate-100 rounded-xl shadow-xs border border-slate-200">🗺️</span>
-                <span className={`bg-gradient-to-r ${themeBg} bg-clip-text text-transparent font-black`}>
-                  {titleText}
-                </span>
-              </h3>
-              <p className="text-[11px] text-slate-500 font-extrabold uppercase tracking-wider mt-0.5">
-                Arrastra el marcador o toca en el mapa para ubicar
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-700 transition-colors cursor-pointer border border-slate-200"
-            >
-              <X size={20} />
-            </button>
-          </div>
+          {/* Scrollable inner content */}
+          <div className="flex flex-col gap-0 p-4 sm:p-5 overflow-y-auto flex-1">
 
-          {/* Address Search Bar */}
-          <div className="relative mb-3 z-20">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold" />
-            <input
-              type="text"
-              placeholder="Buscar dirección, lugar o punto (ej. El Poblado, Terminal Carga...)"
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full h-11 pl-10 pr-4 bg-slate-50 rounded-2xl border-2 border-slate-200 text-xs font-black text-slate-800 focus:outline-none focus:border-emerald-500 transition-all shadow-xs"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-black"
-              >
-                Limpiar
-              </button>
-            )}
-
-            {/* Auto-suggest dropdown */}
-            {searchResults.length > 0 && (
-              <div className="absolute top-12 left-0 right-0 bg-white border-2 border-slate-200 rounded-2xl shadow-xl max-h-44 overflow-y-auto z-30 p-1 flex flex-col gap-1">
-                {searchResults.map((p) => (
-                  <button
-                    key={`search-${p.id}`}
-                    type="button"
-                    onClick={() => handleSelectSearchResult(p)}
-                    className="w-full text-left p-2 hover:bg-emerald-50 rounded-xl transition-colors flex flex-col cursor-pointer border border-transparent hover:border-emerald-200"
-                  >
-                    <span className="text-xs font-black text-slate-800">{p.title}</span>
-                    <span className="text-[10px] text-slate-500 font-bold">{p.address}</span>
-                  </button>
-                ))}
+            {/* Header */}
+            <div className="flex justify-between items-center pb-3 border-b-2 border-slate-100 mb-3 mt-1">
+              <div>
+                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <span className="text-2xl p-1 bg-slate-100 rounded-xl shadow-xs border border-slate-200">🗺️</span>
+                  <span className={`bg-gradient-to-r ${themeBg} bg-clip-text text-transparent font-black`}>
+                    {titleText}
+                  </span>
+                </h3>
+                <p className="text-[11px] text-slate-500 font-extrabold uppercase tracking-wider mt-0.5">
+                  Arrastra el marcador o toca en el mapa para ubicar
+                </p>
               </div>
-            )}
-          </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-700 transition-colors cursor-pointer border border-slate-200"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-          {/* Interactive Leaflet Map Container */}
-          <div className="relative w-full h-[280px] sm:h-[320px] rounded-2xl border-2 border-slate-200 overflow-hidden shadow-inner flex-1 mb-3">
-            <div ref={mapContainerRef} className="w-full h-full" />
+            {/* Address Search Bar */}
+            <div className="relative mb-3 z-20">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold" />
+              <input
+                type="text"
+                placeholder="Buscar dirección, lugar o punto (ej. El Poblado, Terminal Carga...)"
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="w-full h-11 pl-10 pr-4 bg-slate-50 rounded-2xl border-2 border-slate-200 text-xs font-black text-slate-800 focus:outline-none focus:border-emerald-500 transition-all shadow-xs"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-black"
+                >
+                  Limpiar
+                </button>
+              )}
 
-            {/* GPS Snap Button Floating on Map */}
+              {/* Auto-suggest dropdown */}
+              {searchResults.length > 0 && (
+                <div className="absolute top-12 left-0 right-0 bg-white border-2 border-slate-200 rounded-2xl shadow-xl max-h-44 overflow-y-auto z-30 p-1 flex flex-col gap-1">
+                  {searchResults.map((p) => (
+                    <button
+                      key={`search-${p.id}`}
+                      type="button"
+                      onClick={() => handleSelectSearchResult(p)}
+                      className="w-full text-left p-2 hover:bg-emerald-50 rounded-xl transition-colors flex flex-col cursor-pointer border border-transparent hover:border-emerald-200"
+                    >
+                      <span className="text-xs font-black text-slate-800">{p.title}</span>
+                      <span className="text-[10px] text-slate-500 font-bold">{p.address}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Interactive Leaflet Map Container — explicit pixel height for Leaflet */}
+            <div
+              className="relative w-full rounded-2xl border-2 border-slate-200 shadow-inner mb-3"
+              style={{ height: '260px', minHeight: '260px', overflow: 'hidden' }}
+            >
+              <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
+
+              {/* GPS Snap Button Floating on Map */}
+              <button
+                type="button"
+                onClick={handleUseCurrentGps}
+                className="absolute bottom-3 right-3 z-[400] bg-white text-slate-800 hover:bg-slate-50 font-black text-xs px-3 py-2 rounded-2xl shadow-lg border-2 border-slate-200 flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+              >
+                <Crosshair size={14} className="text-emerald-600 animate-pulse" />
+                <span>Mi Ubicación GPS</span>
+              </button>
+            </div>
+
+            {/* Selected Address Display Card */}
+            <div className="bg-slate-50 border-2 border-slate-200 p-3 rounded-2xl mb-3 flex items-start gap-2.5">
+              <span className="text-2xl flex-shrink-0 mt-0.5">{pinIconEmoji}</span>
+              <div className="flex-1 min-w-0">
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                  {isGeocoding ? 'Ubicando dirección...' : 'Ubicación Seleccionada:'}
+                </span>
+                <p className="text-xs font-black text-slate-900 truncate mt-0.5">
+                  {selectedAddress}
+                </p>
+                <span className="text-[10px] font-bold text-slate-400">
+                  Coords: {selectedCoords.lat.toFixed(4)}, {selectedCoords.lng.toFixed(4)}
+                </span>
+              </div>
+            </div>
+
+            {/* Confirm Button */}
             <button
               type="button"
-              onClick={handleUseCurrentGps}
-              className="absolute bottom-3 right-3 z-[400] bg-white text-slate-800 hover:bg-slate-50 font-black text-xs px-3 py-2 rounded-2xl shadow-lg border-2 border-slate-200 flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+              onClick={() => {
+                onConfirmLocation(selectedAddress, selectedCoords);
+                onClose();
+              }}
+              className={`w-full h-12 bg-gradient-to-r ${themeBg} hover:opacity-95 text-white font-black text-xs rounded-2xl shadow-lg transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2`}
             >
-              <Crosshair size={14} className="text-emerald-600 animate-pulse" />
-              <span>Mi Ubicación GPS</span>
+              <CheckCircle2 size={18} />
+              <span>Confirmar Ubicación de {isOrigin ? 'Origen' : 'Destino'}</span>
             </button>
-          </div>
 
-          {/* Selected Address Display Card */}
-          <div className="bg-slate-50 border-2 border-slate-200 p-3 rounded-2xl mb-3 flex items-start gap-2.5">
-            <span className="text-2xl flex-shrink-0 mt-0.5">{pinIconEmoji}</span>
-            <div className="flex-1 min-w-0">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
-                {isGeocoding ? 'Ubicando dirección...' : 'Ubicación Seleccionada:'}
-              </span>
-              <p className="text-xs font-black text-slate-900 truncate mt-0.5">
-                {selectedAddress}
-              </p>
-              <span className="text-[10px] font-bold text-slate-400">
-                Coords: {selectedCoords.lat.toFixed(4)}, {selectedCoords.lng.toFixed(4)}
-              </span>
-            </div>
-          </div>
-
-          {/* Confirm Button */}
-          <button
-            type="button"
-            onClick={() => {
-              onConfirmLocation(selectedAddress, selectedCoords);
-              onClose();
-            }}
-            className={`w-full h-12 bg-gradient-to-r ${themeBg} hover:opacity-95 text-white font-black text-xs rounded-2xl shadow-lg transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2`}
-          >
-            <CheckCircle2 size={18} />
-            <span>Confirmar Ubicación de {isOrigin ? 'Origen' : 'Destino'}</span>
-          </button>
+          </div>{/* end inner scroll */}
         </motion.div>
       </div>
     </AnimatePresence>
