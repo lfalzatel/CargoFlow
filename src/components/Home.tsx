@@ -5,6 +5,7 @@ import { Trip, UserProfile } from '../types';
 import { HybridMapContainer } from '../maps/components/HybridMapContainer';
 import { COLOMBIA_LOGISTICS_PLACES } from '../maps/services/search/SearchCatalog';
 import { fleetSimulationService } from '../maps/services/fleet/FleetSimulationService';
+import { MapPickerModal } from './MapPickerModal';
 
 export interface CargoTypeItem {
   id: string;
@@ -384,6 +385,8 @@ export default function Home({
   const [showVehicleModal, setShowVehicleModal] = useState(false);
   const [vehicleSearch, setVehicleSearch] = useState('');
   const [showSpecialtyModal, setShowSpecialtyModal] = useState(false);
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [mapPickerTarget, setMapPickerTarget] = useState<'origin' | 'destination'>('origin');
   const [notes, setNotes] = useState('');
   const [customPrice, setCustomPrice] = useState(1250000);
   const [isCounterOffering, setIsCounterOffering] = useState(false);
@@ -990,18 +993,18 @@ export default function Home({
                 {/* ── STEP 1: RUTA Y CARGA ────────────────────────── */}
                 {shipmentStep === 1 && (
                   <div className="flex flex-col gap-4 animate-fade-in">
-                    {/* ORIGEN */}
+                    {/* ORIGEN DE LA CARGA */}
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                           <MapPin size={14} className="text-emerald-600" />
-                          Origen de la Carga
+                          Origen de la Carga (Recogida)
                         </label>
                         <button
                           type="button"
                           onClick={handleGetGpsOrigin}
                           disabled={isLocatingGps}
-                          className="text-[11px] font-extrabold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-2.5 py-1 rounded-full flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                          className="text-[11px] font-black text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-full flex items-center gap-1 transition-all cursor-pointer active:scale-95 shadow-2xs"
                         >
                           <Crosshair size={12} className={isLocatingGps ? 'animate-spin' : ''} />
                           <span>{isLocatingGps ? 'Ubicando...' : '🎯 Usar GPS'}</span>
@@ -1014,89 +1017,32 @@ export default function Home({
                           placeholder="Escribe o selecciona dirección de origen"
                           value={origin}
                           onChange={(e) => setOrigin(e.target.value)}
-                          className="w-full h-11 pl-3.5 pr-10 bg-slate-50 rounded-2xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white font-bold text-slate-800 transition-all shadow-xs"
+                          className="w-full h-11 px-3.5 bg-slate-50 rounded-2xl border-2 border-slate-200 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white font-bold text-slate-800 transition-all shadow-xs"
                           required
                         />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowOriginCatalog(!showOriginCatalog);
-                            setShowDestCatalog(false);
-                          }}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer"
-                          title="Ver puntos logísticos de origen"
-                        >
-                          <Map size={18} />
-                        </button>
                       </div>
 
-                      {/* Quick Chips for Origen */}
-                      <div className="flex gap-1 flex-wrap">
-                        {['Medellín, ANT', 'Bogotá, D.C.', 'Rionegro, ANT', 'Itagüí, ANT'].map((loc) => (
-                          <button
-                            key={`orig-${loc}`}
-                            type="button"
-                            onClick={() => setOrigin(loc)}
-                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
-                              origin === loc 
-                                ? 'bg-emerald-600 text-white border-emerald-600' 
-                                : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-                            }`}
-                          >
-                            📍 {loc}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Origin Catalog */}
-                      <AnimatePresence>
-                        {showOriginCatalog && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="bg-slate-900 text-white rounded-2xl p-3 border border-slate-700 shadow-xl overflow-hidden flex flex-col gap-1 mt-1"
-                          >
-                            <p className="text-[10px] font-black uppercase text-emerald-400 tracking-wider mb-1">Catálogo Puntos de Carga</p>
-                            <div className="max-h-32 overflow-y-auto flex flex-col gap-1 pr-1">
-                              {COLOMBIA_LOGISTICS_PLACES.map((place) => (
-                                <button
-                                  key={`orig-cat-${place.id}`}
-                                  type="button"
-                                  onClick={() => {
-                                    setOrigin(place.title);
-                                    setShowOriginCatalog(false);
-                                  }}
-                                  className="w-full text-left p-2 hover:bg-slate-800 rounded-xl transition-colors flex flex-col cursor-pointer"
-                                >
-                                  <span className="text-xs font-bold text-white">{place.title}</span>
-                                  <span className="text-[10px] text-slate-400 truncate">{place.address}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                      {/* Mario Bros Style Action Button: Seleccionar en Mapa */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMapPickerTarget('origin');
+                          setShowMapPicker(true);
+                        }}
+                        className="w-full h-10 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs rounded-2xl shadow-sm border-2 border-emerald-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 mt-0.5"
+                      >
+                        <Map size={16} />
+                        <span>🗺️ Seleccionar Ubicación de Origen en Mapa</span>
+                      </button>
                     </div>
 
-                    {/* DESTINO */}
+                    {/* DESTINO DE LA CARGA */}
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                           <MapPin size={14} className="text-blue-600" />
-                          Destino de la Carga
+                          Destino de la Carga (Entrega)
                         </label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowDestCatalog(!showDestCatalog);
-                            setShowOriginCatalog(false);
-                          }}
-                          className="text-[11px] font-extrabold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-2.5 py-1 rounded-full flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                        >
-                          <Map size={12} />
-                          <span>🗺️ Puntos Entrega</span>
-                        </button>
                       </div>
 
                       <div className="relative">
@@ -1105,69 +1051,23 @@ export default function Home({
                           placeholder="Escribe o selecciona dirección de destino"
                           value={destination}
                           onChange={(e) => setDestination(e.target.value)}
-                          className="w-full h-11 pl-3.5 pr-10 bg-slate-50 rounded-2xl border border-slate-200 text-xs focus:outline-none focus:border-blue-500 focus:bg-white font-bold text-slate-800 transition-all shadow-xs"
+                          className="w-full h-11 px-3.5 bg-slate-50 rounded-2xl border-2 border-slate-200 text-xs focus:outline-none focus:border-blue-500 focus:bg-white font-bold text-slate-800 transition-all shadow-xs"
                           required
                         />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowDestCatalog(!showDestCatalog);
-                            setShowOriginCatalog(false);
-                          }}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"
-                          title="Ver puntos logísticos de destino"
-                        >
-                          <Map size={18} />
-                        </button>
                       </div>
 
-                      {/* Quick Chips for Destino */}
-                      <div className="flex gap-1 flex-wrap">
-                        {['Medellín, ANT', 'Bogotá, D.C.', 'Cali, VAL', 'Barranquilla, ATL'].map((loc) => (
-                          <button
-                            key={`dest-${loc}`}
-                            type="button"
-                            onClick={() => setDestination(loc)}
-                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
-                              destination === loc 
-                                ? 'bg-blue-600 text-white border-blue-600' 
-                                : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-                            }`}
-                          >
-                            🏁 {loc}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Destination Catalog */}
-                      <AnimatePresence>
-                        {showDestCatalog && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="bg-slate-900 text-white rounded-2xl p-3 border border-slate-700 shadow-xl overflow-hidden flex flex-col gap-1 mt-1"
-                          >
-                            <p className="text-[10px] font-black uppercase text-blue-400 tracking-wider mb-1">Catálogo Puntos de Entrega</p>
-                            <div className="max-h-32 overflow-y-auto flex flex-col gap-1 pr-1">
-                              {COLOMBIA_LOGISTICS_PLACES.map((place) => (
-                                <button
-                                  key={`dest-cat-${place.id}`}
-                                  type="button"
-                                  onClick={() => {
-                                    setDestination(place.title);
-                                    setShowDestCatalog(false);
-                                  }}
-                                  className="w-full text-left p-2 hover:bg-slate-800 rounded-xl transition-colors flex flex-col cursor-pointer"
-                                >
-                                  <span className="text-xs font-bold text-white">{place.title}</span>
-                                  <span className="text-[10px] text-slate-400 truncate">{place.address}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                      {/* Mario Bros Style Action Button: Seleccionar en Mapa */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMapPickerTarget('destination');
+                          setShowMapPicker(true);
+                        }}
+                        className="w-full h-10 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-black text-xs rounded-2xl shadow-sm border-2 border-blue-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 mt-0.5"
+                      >
+                        <Map size={16} />
+                        <span>🗺️ Seleccionar Ubicación de Destino en Mapa</span>
+                      </button>
                     </div>
 
                     {/* Tipo de Mercancía (Visual Custom Category Selector) */}
@@ -2008,10 +1908,11 @@ export default function Home({
                     {activeTrip.completionRequestedBy ? (
                       <button
                         onClick={() => activeTrip && onConfirmCompletion?.(activeTrip)}
-                        className="py-2.5 px-1.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-black text-[10px] flex items-center justify-center gap-1 shadow-lg transition-all cursor-pointer truncate animate-pulse"
+                        className="py-2.5 px-1 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-black text-[9.5px] leading-tight flex items-center justify-center gap-1 shadow-lg transition-all cursor-pointer animate-pulse"
+                        title="Confirmar entrega realizada"
                       >
                         <CheckCircle2 size={13} className="flex-shrink-0" />
-                        <span className="truncate">Confirmar Entrega</span>
+                        <span className="truncate">✓ Confirmar Entrega</span>
                       </button>
                     ) : activeTrip.clientConfirmedArrivalAtOrigin ? (
                       <button
@@ -2053,6 +1954,21 @@ export default function Home({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 🗺️ MARIO BROS STYLE MAP PICKER MODAL 🗺️ */}
+      <MapPickerModal
+        isOpen={showMapPicker}
+        target={mapPickerTarget}
+        initialAddress={mapPickerTarget === 'origin' ? origin : destination}
+        onClose={() => setShowMapPicker(false)}
+        onConfirmLocation={(address) => {
+          if (mapPickerTarget === 'origin') {
+            setOrigin(address);
+          } else {
+            setDestination(address);
+          }
+        }}
+      />
     </div>
   );
 }

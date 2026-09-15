@@ -1624,58 +1624,6 @@ export default function App() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Floating Completion Confirmation Banner for Client */}
-      {user.role === 'cliente' && (() => {
-        const pendingTrip = trips.find(t => t.clienteId === user.email && t.status === 'EN CAMINO' && t.completionRequestedBy && t.completionRequestedBy === t.conductorId);
-        if (!pendingTrip) return null;
-
-        return (
-          <AnimatePresence>
-            <motion.div
-              initial={{ y: 80, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 80, opacity: 0 }}
-              className="fixed bottom-22 left-4 right-4 z-[100] max-w-md mx-auto bg-gradient-to-br from-[#09152b] via-[#0b224d] to-[#041029] border-2 border-emerald-400 text-white p-4 rounded-3xl shadow-2xl backdrop-blur-xl flex flex-col gap-3"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center flex-shrink-0 text-emerald-400 font-bold text-xl shadow-inner">
-                  🏁
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-emerald-400 text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-400/30">
-                      Confirmación de Entrega
-                    </span>
-                  </div>
-                  <p className="text-white text-sm font-black truncate mt-0.5">
-                    Flete #{pendingTrip.id} — ${pendingTrip.price.toLocaleString('es-CO')} COP
-                  </p>
-                  <p className="text-slate-300 text-xs truncate">
-                    {pendingTrip.conductorName || 'El conductor'} reporta haber entregado tu carga.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-1 border-t border-slate-700/60">
-                <button
-                  onClick={() => handleRejectCompletion(pendingTrip)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition active:scale-95 cursor-pointer"
-                >
-                  Rechazar
-                </button>
-                <button
-                  onClick={() => handleConfirmCompletion(pendingTrip)}
-                  className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs shadow-lg transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <CheckCircle2 size={16} />
-                  Confirmar Entrega
-                </button>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        );
-      })()}
-
       {/* Floating In-App Toast Banner */}
       <AnimatePresence>
         {activeToast && (
