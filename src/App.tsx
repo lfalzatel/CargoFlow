@@ -666,6 +666,10 @@ export default function App() {
             const data = change.doc.data();
             if (change.type === 'added' && !data.read) {
               if (!isInitial) {
+                // Respect global notification preference set in the profile dropdown
+                const notifEnabled = localStorage.getItem('cf_notif_enabled') !== 'false';
+                if (!notifEnabled) return; // user muted all notifications
+
                 const isFreightOffer = data.userId === 'all_conductors' || data.tag?.startsWith('trip-new-') || data.title?.includes('Flete');
                 const isConductorInactive = user.role === 'conductor' && user.isAvailable === false;
 

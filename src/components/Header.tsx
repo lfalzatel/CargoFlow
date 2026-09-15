@@ -51,7 +51,10 @@ export default function Header({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showSplashModal, setShowSplashModal] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    // Read persisted preference; default to true
+    try { return localStorage.getItem('cf_notif_enabled') !== 'false'; } catch { return true; }
+  });
   const [activeTheme, setActiveTheme] = useState<string>('dia');
   const [quickThemes, setQuickThemes] = useState<string[]>(['dia', 'cyber', 'kilo']);
   // Local state for immediate UI feedback on availability toggle
@@ -629,7 +632,11 @@ export default function Header({
                       onClick={(e) => {
                         // Don't close the menu, just toggle
                         e.stopPropagation();
-                        setNotificationsEnabled(!notificationsEnabled);
+                        const next = !notificationsEnabled;
+                        setNotificationsEnabled(next);
+                        try { localStorage.setItem('cf_notif_enabled', String(next)); } catch { }
+                        // Dispatch a storage event so App.tsx reacts immediately
+                        window.dispatchEvent(new StorageEvent('storage', { key: 'cf_notif_enabled', newValue: String(next) }));
                       }}
                       className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)] transition-colors"
                     >
