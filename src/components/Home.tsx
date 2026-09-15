@@ -649,7 +649,7 @@ export default function Home({
 
       {/* Map Layer Container */}
       <div className="absolute inset-0 z-0">
-        <HybridMapContainer className="w-full h-full rounded-none border-none shadow-none" initialHeight="h-full" />
+        <HybridMapContainer className="w-full h-full rounded-none border-none shadow-none" initialHeight="h-full" activeTrip={activeTrip} userRole={user.role} />
 
       </div>
 
@@ -1725,7 +1725,7 @@ export default function Home({
           >
             {/* Map fullscreen con controles flotantes del mapa activados */}
             <div className="absolute inset-0 z-0">
-              <HybridMapContainer className="!rounded-none" initialHeight="h-full" hideControls={false} />
+              <HybridMapContainer className="!rounded-none" initialHeight="h-full" hideControls={false} activeTrip={activeTrip} userRole={user.role} />
             </div>
 
             {/* Top minimal header */}

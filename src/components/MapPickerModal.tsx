@@ -160,13 +160,13 @@ export const MapPickerModal: React.FC<MapPickerModalProps> = ({
 
   const handleSelectSearchResult = (place: typeof COLOMBIA_LOGISTICS_PLACES[0]) => {
     setSelectedAddress(place.title);
-    setSelectedCoords({ lat: place.coords.lat, lng: place.coords.lng });
+    setSelectedCoords({ lat: place.position.lat, lng: place.position.lng });
     setSearchQuery('');
     setSearchResults([]);
 
     if (mapInstanceRef.current && markerInstanceRef.current) {
-      mapInstanceRef.current.setView([place.coords.lat, place.coords.lng], 16);
-      markerInstanceRef.current.setLatLng([place.coords.lat, place.coords.lng]);
+      mapInstanceRef.current.setView([place.position.lat, place.position.lng], 16);
+      markerInstanceRef.current.setLatLng([place.position.lat, place.position.lng]);
     }
   };
 

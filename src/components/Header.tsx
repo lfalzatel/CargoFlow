@@ -412,7 +412,7 @@ export default function Header({
         )}
       </AnimatePresence>
 
-      <header className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-surface-container h-16 px-2.5 sm:px-4 md:px-8 flex items-center justify-between shadow-sm transition-all">
+      <header data-top-header="true" className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-surface-container h-16 px-2.5 sm:px-4 md:px-8 flex items-center justify-between shadow-sm transition-all">
         {/* Left: Animated Circular Logo Icon (Triggers Fullscreen Splash Modal on Click) */}
         <div 
           onClick={() => setShowSplashModal(true)} 
@@ -490,7 +490,7 @@ export default function Header({
           </div>
 
           {/* Profile Capsule Button (Google Avatar + Name + Role Badge + Chevron) */}
-          <div className="relative min-w-0" ref={menuRef}>
+          <div className="relative min-w-0" ref={menuRef} data-points-capsule="true">
             <motion.button
               animate={{ scale: capsuleScale }}
               transition={{ type: 'spring', stiffness: 350, damping: 12 }}

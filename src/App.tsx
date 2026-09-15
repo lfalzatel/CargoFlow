@@ -15,6 +15,7 @@ import Header from './components/Header';
 import SplashScreen from './components/SplashScreen';
 import NotificationToast from './components/NotificationToast';
 import Rating from './components/Rating';
+import GamificationUnlockModal from './components/GamificationUnlockModal';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './config/firebase';
 import { doc, getDoc, updateDoc, setDoc, deleteField } from 'firebase/firestore';
@@ -139,6 +140,17 @@ export default function App() {
   const [activeToast, setActiveToast] = useState<{ id: string; title: string; message: string; type?: string; tag?: string; tripId?: string } | null>(null);
   const [ratingTrip, setRatingTrip] = useState<Trip | null>(null);
   const [usersList, setUsersList] = useState<UserProfile[]>([]);
+  const [gamificationModal, setGamificationModal] = useState<{
+    isOpen: boolean;
+    title?: string;
+    stars?: number;
+    rewardText?: string;
+    badgeName?: string;
+    senderName?: string;
+    role?: 'cliente' | 'conductor';
+    isSenderFeedback?: boolean;
+  } | null>(null);
+  const shownRatingModalRef = useRef<Set<string>>(new Set());
 
   // Auto-dismiss in-app activeToast banner after 5 seconds
   useEffect(() => {
@@ -506,6 +518,22 @@ export default function App() {
 
     const currentTrip = ratingTrip;
     setRatingTrip(null);
+
+    // Disparar animación 3D de feedback inmediato al usuario emisor de la calificación
+    const partnerName = isClient
+      ? (currentTrip.conductorName || 'Conductor')
+      : (currentTrip.clienteName || 'Cliente');
+
+    setGamificationModal({
+      isOpen: true,
+      title: '¡CALIFICACIÓN ENVIADA!',
+      stars,
+      rewardText: `¡Has calificado la experiencia con ${stars} estrellas!`,
+      badgeName: user.role === 'cliente' ? 'Cliente Excelente' : 'Conductor Top',
+      senderName: partnerName,
+      role: user.role,
+      isSenderFeedback: true,
+    });
 
     try {
       const { db } = await import('./config/firebase');
@@ -1216,6 +1244,42 @@ export default function App() {
                     }
                   }
 
+                  // 5. Conductor recibe calificación en tiempo real de Cliente
+                  if (user.role === 'conductor' && tripData.conductorId === user.email && tripData.ratedByCliente && tripData.clienteRating) {
+                    const modalKey = `driver-received-${tripData.id}`;
+                    if (!shownRatingModalRef.current.has(modalKey)) {
+                      shownRatingModalRef.current.add(modalKey);
+                      setGamificationModal({
+                        isOpen: true,
+                        title: '¡NUEVA CALIFICACIÓN RECIBIDA!',
+                        stars: tripData.clienteRating.stars || 5,
+                        rewardText: `¡El cliente (${tripData.clienteName || 'Cliente'}) te ha calificado con ${tripData.clienteRating.stars || 5} estrellas!`,
+                        badgeName: 'Conductor 5 Estrellas',
+                        senderName: tripData.clienteName || 'Cliente CargoFlow',
+                        role: 'conductor',
+                        isSenderFeedback: false,
+                      });
+                    }
+                  }
+
+                  // 6. Cliente recibe calificación en tiempo real de Conductor
+                  if (user.role === 'cliente' && tripData.clienteId === user.email && tripData.ratedByConductor && tripData.conductorRating) {
+                    const modalKey = `client-received-${tripData.id}`;
+                    if (!shownRatingModalRef.current.has(modalKey)) {
+                      shownRatingModalRef.current.add(modalKey);
+                      setGamificationModal({
+                        isOpen: true,
+                        title: '¡NUEVA CALIFICACIÓN RECIBIDA!',
+                        stars: tripData.conductorRating.stars || 5,
+                        rewardText: `¡El conductor (${tripData.conductorName || 'Conductor'}) te ha calificado con ${tripData.conductorRating.stars || 5} estrellas!`,
+                        badgeName: 'Cliente VIP',
+                        senderName: tripData.conductorName || 'Conductor CargoFlow',
+                        role: 'cliente',
+                        isSenderFeedback: false,
+                      });
+                    }
+                  }
+
                   // 2. Conductor accepts trip -> Client gets notified
                   if (tripData.status === 'EN CAMINO' && prevStatus === 'PENDIENTE') {
                     if (user.email === tripData.clienteId) {
@@ -1569,6 +1633,21 @@ export default function App() {
             );
           })()}
 
+          {/* Gamification 3D Reward & Feedback Unlock Modal */}
+          {gamificationModal?.isOpen && (
+            <GamificationUnlockModal
+              isOpen={gamificationModal.isOpen}
+              onClose={() => setGamificationModal(null)}
+              title={gamificationModal.title}
+              stars={gamificationModal.stars}
+              rewardText={gamificationModal.rewardText}
+              badgeName={gamificationModal.badgeName}
+              senderName={gamificationModal.senderName}
+              role={gamificationModal.role}
+              isSenderFeedback={gamificationModal.isSenderFeedback}
+            />
+          )}
+
           {view === 'chat' && (
             <Chat 
               user={user}
@@ -1618,6 +1697,31 @@ export default function App() {
                       url: window.location.origin
                     }).catch(() => {});
                  }
+              }}
+              onTestGamificationModal={(type) => {
+                if (type === 'receiver') {
+                  setGamificationModal({
+                    isOpen: true,
+                    title: '¡NUEVA CALIFICACIÓN RECIBIDA!',
+                    stars: 5,
+                    rewardText: '¡Has recibido 5 estrellas por tu excelente servicio!',
+                    badgeName: user.role === 'conductor' ? 'Conductor 5 Estrellas' : 'Cliente VIP',
+                    senderName: user.role === 'conductor' ? 'Cliente Solicitante' : 'Conductor Asignado',
+                    role: user.role,
+                    isSenderFeedback: false,
+                  });
+                } else {
+                  setGamificationModal({
+                    isOpen: true,
+                    title: '¡CALIFICACIÓN ENVIADA!',
+                    stars: 5,
+                    rewardText: '¡Has calificado la experiencia con 5 estrellas!',
+                    badgeName: user.role === 'conductor' ? 'Conductor Top' : 'Cliente Excelente',
+                    senderName: user.role === 'conductor' ? 'Cliente Solicitante' : 'Conductor Asignado',
+                    role: user.role,
+                    isSenderFeedback: true,
+                  });
+                }
               }}
             />
           )}

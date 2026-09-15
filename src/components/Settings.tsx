@@ -5,7 +5,8 @@ import {
   Phone, Mail, KeyRound, Car, FileText,
   Volume2, Smartphone, MessageSquare, Download,
   Share2, HelpCircle, Trash2, LogOut, Sun, Monitor,
-  X, Check, ArrowLeft, AlertTriangle, Moon, Layers, Terminal, Zap
+  X, Check, ArrowLeft, AlertTriangle, Moon, Layers, Terminal, Zap,
+  Sparkles, Star, Trophy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
@@ -20,6 +21,11 @@ import {
   getGeneralUiSoundProfile, setGeneralUiSoundProfile, playGeneralUiSound,
   SoundProfileId 
 } from '../lib/soundEffects';
+import {
+  playGamificationFanfare,
+  playCoinClaimSound,
+  speakVoiceConfirmation
+} from '../lib/ui-sounds';
 
 import { 
   getMapControlsConfig, 
@@ -35,9 +41,10 @@ interface SettingsProps {
   onLogout: () => void;
   onInstallApp: () => void;
   onShareApp: () => void;
+  onTestGamificationModal?: (type: 'receiver' | 'sender') => void;
 }
 
-type SectionKey = 'cuenta' | 'notificaciones' | 'sonidos' | 'vehiculo' | 'apariencia' | 'info' | 'privacidad' | 'gestion' | 'mapa';
+type SectionKey = 'cuenta' | 'notificaciones' | 'sonidos' | 'gamificacion' | 'vehiculo' | 'apariencia' | 'info' | 'privacidad' | 'gestion' | 'mapa';
 
 // ── Toggle component ─────────────────────────────────────────
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -470,9 +477,9 @@ function ProfileModal({ user, onClose }: { user: UserProfile; onClose: () => voi
 }
 
 // ── Main Settings Page ────────────────────────────────────────
-export default function Settings({ user, onBack, onLogout, onInstallApp, onShareApp }: SettingsProps) {
-  // Accordion state
-  const [openSection, setOpenSection] = useState<SectionKey | null>('cuenta');
+export default function Settings({ user, onBack, onLogout, onInstallApp, onShareApp, onTestGamificationModal }: SettingsProps) {
+  // Accordion state (null = all sections collapsed by default)
+  const [openSection, setOpenSection] = useState<SectionKey | null>(null);
 
   // Notification preferences (saved to localStorage)
   const [notifEnabled, setNotifEnabled]   = useState(() => localStorage.getItem('cf_notif_enabled')   !== 'false');
@@ -843,6 +850,133 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
                   ▶
                 </button>
               </div>
+            </div>
+          </Section>
+
+          {/* ── 2.4 Gamificación y Efectos 3D (Mario Bros / Temu) ───────────────── */}
+          <Section title="Gamificación y Efectos 3D" open={openSection === 'gamificacion'} onToggle={() => toggle('gamificacion')}>
+            <div className="p-4 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border-b border-amber-200/50">
+              <p className="text-xs font-bold text-amber-900 flex items-center gap-1.5 mb-1">
+                <Sparkles size={16} className="text-amber-600" />
+                Probador de Recompensas & Animaciones 3D
+              </p>
+              <p className="text-[11px] text-slate-600 leading-snug">
+                Prueba las animaciones tridimensionales estilo Mario Bros / Temu con físicas de partículas parabólicas, audio nativo y voz TTS.
+              </p>
+            </div>
+
+            {/* Test Receiver Animation */}
+            <div className="p-3.5 border-b border-slate-50 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs">
+                  🏆
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Animación Ganar Estrellas (Receptor)</p>
+                  <p className="text-[10px] text-slate-400">Modal 3D + Partículas + Voz + Vuelo a Header</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onTestGamificationModal) {
+                    onTestGamificationModal('receiver');
+                  } else {
+                    playGamificationFanfare();
+                    speakVoiceConfirmation('¡Felicidades! Has ganado 5 estrellas de calificación.');
+                  }
+                }}
+                className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+              >
+                Probar 3D
+              </button>
+            </div>
+
+            {/* Test Sender Animation */}
+            <div className="p-3.5 border-b border-slate-50 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
+                  ⭐
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Animación Calificación Enviada (Emisor)</p>
+                  <p className="text-[10px] text-slate-400">Feedback positivo al enviar estrellas</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onTestGamificationModal) {
+                    onTestGamificationModal('sender');
+                  } else {
+                    playGamificationFanfare();
+                    speakVoiceConfirmation('¡Gracias por calificar la experiencia!');
+                  }
+                }}
+                className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+              >
+                Probar Feedback
+              </button>
+            </div>
+
+            {/* Test Pure Fanfare Audio */}
+            <div className="p-3.5 border-b border-slate-50 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+                  🎵
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Fanfarria Triunfal (Web Audio API)</p>
+                  <p className="text-[10px] text-slate-400">Secuencia armónica de 4 notas sintetizadas</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => playGamificationFanfare()}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+              >
+                ▶ Escuchar
+              </button>
+            </div>
+
+            {/* Test Mario Bros Coin Sound */}
+            <div className="p-3.5 border-b border-slate-50 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-yellow-100 text-yellow-800 flex items-center justify-center font-bold text-xs">
+                  🪙
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Chime de Monedas (Estilo Mario Bros)</p>
+                  <p className="text-[10px] text-slate-400">Efecto Si5 -&gt; Mi6 al reclamar recompensa</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => playCoinClaimSound()}
+                className="px-3 py-1.5 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-extrabold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+              >
+                ▶ Escuchar
+              </button>
+            </div>
+
+            {/* Test Voice TTS */}
+            <div className="p-3.5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center font-bold text-xs">
+                  🗣️
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Confirmación de Voz Nativa (TTS)</p>
+                  <p className="text-[10px] text-slate-400">Voz nativa en español de Colombia</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => speakVoiceConfirmation('¡Felicidades! Has ganado 5 estrellas de calificación en CargoFlow.')}
+                className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+              >
+                ▶ Probar Voz
+              </button>
             </div>
           </Section>
 
