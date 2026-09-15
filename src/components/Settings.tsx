@@ -535,9 +535,13 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
     setOpenSection((prev) => (prev === section ? null : section));
   };
 
-  // Persist notification settings
+  // Persist notification settings and immediately propagate to App.tsx listener
   const handleNotifToggle = (key: string, value: boolean) => {
     localStorage.setItem(key, String(value));
+    // Dispatch a storage event so other parts of the app react immediately
+    try {
+      window.dispatchEvent(new StorageEvent('storage', { key, newValue: String(value) }));
+    } catch { /* ignore */ }
     if (key === 'cf_notif_enabled' && value) {
       requestNotificationPermission();
     }

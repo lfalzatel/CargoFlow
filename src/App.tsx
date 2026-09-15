@@ -666,7 +666,7 @@ export default function App() {
             const data = change.doc.data();
             if (change.type === 'added' && !data.read) {
               if (!isInitial) {
-                // Respect global notification preference set in the profile dropdown
+                // ── Master switch ────────────────────────────────────────────
                 const notifEnabled = localStorage.getItem('cf_notif_enabled') !== 'false';
                 if (!notifEnabled) return; // user muted all notifications
 
@@ -675,15 +675,22 @@ export default function App() {
 
                 // Silence new freight offer notifications if conductor is set to Inactive / No Disponible
                 if (!isFreightOffer || !isConductorInactive) {
-                  playNotificationSound();
-                  setActiveToast({
-                    id: change.doc.id,
-                    title: data.title || 'Nueva Notificación',
-                    message: data.body || data.message || '',
-                    type: data.type || (data.tag?.includes('chat') || data.title?.includes('Mensaje') ? 'chat' : 'info'),
-                    tag: data.tag || undefined,
-                    tripId: data.tag?.startsWith('chat-') ? data.tag.replace('chat-', '') : undefined,
-                  });
+                  // ── Sound toggle (cf_notif_sound) ────────────────────────
+                  const soundEnabled = localStorage.getItem('cf_notif_sound') !== 'false';
+                  if (soundEnabled) playNotificationSound();
+
+                  // ── In-app toast toggle (cf_notif_inapp) ─────────────────
+                  const inAppEnabled = localStorage.getItem('cf_notif_inapp') !== 'false';
+                  if (inAppEnabled) {
+                    setActiveToast({
+                      id: change.doc.id,
+                      title: data.title || 'Nueva Notificación',
+                      message: data.body || data.message || '',
+                      type: data.type || (data.tag?.includes('chat') || data.title?.includes('Mensaje') ? 'chat' : 'info'),
+                      tag: data.tag || undefined,
+                      tripId: data.tag?.startsWith('chat-') ? data.tag.replace('chat-', '') : undefined,
+                    });
+                  }
                 }
               }
             }
