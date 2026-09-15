@@ -102,10 +102,13 @@ export const NotificationPromptModal: React.FC = () => {
   }
 
   // Calculate opposite position in X and Y relative to hamburger button
-  // If hamburger is on 'right' (bottom-right), sphere sits on 'left' (top-left/opposite)
   const spherePositionClass = hamburgerPosition === 'right'
     ? 'left-3 top-20'
     : 'right-3 top-20';
+
+  // Calculate exit trajectory coordinates so modal glides toward sphere location
+  const exitTargetX = hamburgerPosition === 'right' ? '-38vw' : '38vw';
+  const exitTargetY = '-35vh';
 
   return (
     <>
@@ -123,10 +126,10 @@ export const NotificationPromptModal: React.FC = () => {
               dragElastic={0.08}
               dragMomentum={false}
               whileDrag={{ scale: 1.15 }}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+              initial={{ scale: 0.2, opacity: 0, y: -20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.2, opacity: 0 }}
+              transition={{ type: 'spring', damping: 16, stiffness: 280 }}
               className={`pointer-events-auto absolute ${spherePositionClass} z-[350] touch-none`}
             >
               <button
@@ -150,22 +153,33 @@ export const NotificationPromptModal: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* ── MARIO BROS PROMPT MODAL (IMAGE 1 STYLE) ────────────────── */}
+      {/* ── MARIO BROS PROMPT MODAL (IMAGE 1 STYLE WITH MORPHING EXIT) ─ */}
       <AnimatePresence>
         {modalState === 'prompt' && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.22 }}
+            transition={{ duration: 0.28, ease: 'easeOut' }}
             className="fixed inset-0 z-[450] backdrop-blur-md bg-black/75 flex items-center justify-center p-4"
             onClick={handleMinimize}
           >
             <motion.div
-              initial={{ scale: 0.25, opacity: 0, y: 70 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.1, opacity: 0, y: -20 }}
-              transition={{ type: 'spring', damping: 15, stiffness: 280, bounce: 0.5 }}
+              initial={{ scale: 0.25, opacity: 0, y: 80 }}
+              animate={{ scale: 1, opacity: 1, x: 0, y: 0, rotate: 0 }}
+              exit={{ 
+                scale: 0.15, 
+                opacity: 0.1, 
+                x: exitTargetX, 
+                y: exitTargetY, 
+                rotate: -12 
+              }}
+              transition={{ 
+                type: 'spring', 
+                damping: 18, 
+                stiffness: 260, 
+                bounce: 0.4 
+              }}
               onClick={(e) => e.stopPropagation()}
               className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden border-4 border-amber-400 flex flex-col items-center relative text-center my-auto"
             >
@@ -175,7 +189,7 @@ export const NotificationPromptModal: React.FC = () => {
               {/* Close X button */}
               <button
                 onClick={handleMinimize}
-                className="absolute top-3 right-3 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors border border-slate-200"
+                className="absolute top-3 right-3 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors border border-slate-200 cursor-pointer"
               >
                 <X size={18} />
               </button>
