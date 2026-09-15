@@ -104,11 +104,32 @@ export default function Header({
         if (stored) {
           setQuickThemes(JSON.parse(stored));
         }
+        setNotificationsEnabled(localStorage.getItem('cf_notif_enabled') !== 'false');
       } catch (e) {}
     };
+
+    const handleNotifEvent = (e: any) => {
+      if (e?.detail?.key === 'cf_notif_enabled') {
+        setNotificationsEnabled(Boolean(e.detail.value));
+      } else if (typeof e?.detail?.activated === 'boolean') {
+        setNotificationsEnabled(e.detail.activated);
+      } else {
+        try {
+          setNotificationsEnabled(localStorage.getItem('cf_notif_enabled') !== 'false');
+        } catch (_) {}
+      }
+    };
+
     handleStorage();
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    window.addEventListener('cargoflow:notif-settings-changed', handleNotifEvent);
+    window.addEventListener('cargoflow:toggle-confetti', handleNotifEvent);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('cargoflow:notif-settings-changed', handleNotifEvent);
+      window.removeEventListener('cargoflow:toggle-confetti', handleNotifEvent);
+    };
   }, []);
   const [pwaInstallPrompt, setPwaInstallPrompt] = useState<any>(null);
   const [installSuccess, setInstallSuccess] = useState(false);

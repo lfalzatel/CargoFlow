@@ -499,6 +499,22 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
   const [notifSound, setNotifSound]       = useState(() => localStorage.getItem('cf_notif_sound')      !== 'false');
   const [notifTone, setNotifTone]         = useState(() => localStorage.getItem('cf_notif_tone')        || 'notif1');
 
+  React.useEffect(() => {
+    const handleSync = () => {
+      try {
+        setNotifEnabled(localStorage.getItem('cf_notif_enabled') !== 'false');
+      } catch (e) {}
+    };
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('cargoflow:notif-settings-changed', handleSync);
+    window.addEventListener('cargoflow:toggle-confetti', handleSync);
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('cargoflow:notif-settings-changed', handleSync);
+      window.removeEventListener('cargoflow:toggle-confetti', handleSync);
+    };
+  }, []);
+
   // System sounds preferences
   const [sysSoundEnabled, setSysSoundEnabled] = useState(() => localStorage.getItem('cf_sys_sound') !== 'false');
   const [sysToneLogin, setSysToneLogin]       = useState(() => localStorage.getItem('cf_sys_tone_login') || 'cyberpunk');
