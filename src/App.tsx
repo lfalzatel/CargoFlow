@@ -16,6 +16,7 @@ import SplashScreen from './components/SplashScreen';
 import NotificationToast from './components/NotificationToast';
 import Rating from './components/Rating';
 import GamificationUnlockModal from './components/GamificationUnlockModal';
+import { NotificationPromptModal } from './components/NotificationPromptModal';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './config/firebase';
 import { doc, getDoc, updateDoc, setDoc, deleteField } from 'firebase/firestore';
@@ -738,28 +739,10 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Request notification permission once user is logged in
-  // and listen for SW notification click messages
-  const notifPermRequestedRef = useRef(false);
+  // Listen for SW notification click messages -> navigate within app
   useEffect(() => {
     if (!['home', 'activity', 'chat', 'profile'].includes(view)) return;
-    if (notifPermRequestedRef.current) return;
-    notifPermRequestedRef.current = true;
 
-    // Ask for permission after a short delay (avoids permission prompt on first render)
-    const t = setTimeout(() => {
-      requestNotificationPermission().then((perm) => {
-        if (perm === 'granted') {
-          sendInAppNotification({
-            title: '¡Notificaciones activadas!',
-            body:  'Recibirás alertas de fletes, estado de envíos y mensajes.',
-            tag:   'cargoflow-success',
-          });
-        }
-      });
-    }, 3000);
-
-    // Listen for SW notification click -> navigate within app
     const unlistenSW = listenForSWMessages((url) => {
       if (url.includes('chat'))     setView('chat');
       else if (url.includes('activity')) setView('activity');
@@ -767,7 +750,6 @@ export default function App() {
     });
 
     return () => {
-      clearTimeout(t);
       unlistenSW();
     };
   }, [view]);
@@ -1790,12 +1772,15 @@ export default function App() {
 
       {/* Render Bottom navigation on main dashboards */}
       {['home', 'activity', 'chat', 'dashboard', 'profile', 'settings'].includes(view) && (
-        <BottomNav 
-          currentView={view as any} 
-          onViewChange={handleViewChange} 
-          unreadChatCount={unreadChatCount}
-          userRole={user.role}
-        />
+        <>
+          <NotificationPromptModal />
+          <BottomNav 
+            currentView={view as any} 
+            onViewChange={handleViewChange} 
+            unreadChatCount={unreadChatCount}
+            userRole={user.role}
+          />
+        </>
       )}
     </div>
     </>
