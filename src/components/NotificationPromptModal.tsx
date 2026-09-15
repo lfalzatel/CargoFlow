@@ -153,15 +153,19 @@ export const NotificationPromptModal: React.FC = () => {
       {/* ── MARIO BROS PROMPT MODAL (IMAGE 1 STYLE) ────────────────── */}
       <AnimatePresence>
         {modalState === 'prompt' && (
-          <div 
-            className="fixed inset-0 z-[450] backdrop-blur-md bg-black/75 flex items-center justify-center p-4 animate-fade-in"
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            className="fixed inset-0 z-[450] backdrop-blur-md bg-black/75 flex items-center justify-center p-4"
             onClick={handleMinimize}
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0, y: 40 }}
+              initial={{ scale: 0.25, opacity: 0, y: 70 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.4, opacity: 0, scaleX: 0.1, scaleY: 0.1 }}
-              transition={{ type: 'spring', damping: 22, stiffness: 350 }}
+              exit={{ scale: 0.1, opacity: 0, y: -20 }}
+              transition={{ type: 'spring', damping: 15, stiffness: 280, bounce: 0.5 }}
               onClick={(e) => e.stopPropagation()}
               className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden border-4 border-amber-400 flex flex-col items-center relative text-center my-auto"
             >
@@ -181,8 +185,8 @@ export const NotificationPromptModal: React.FC = () => {
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 border-2 border-white shadow-lg flex items-center justify-center mb-2 animate-bounce-subtle">
                   <Bell size={32} className="text-white drop-shadow-md" />
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white px-3 py-0.5 rounded-full shadow-xs">
-                  🎮 Modo Juego CargoFlow
+                <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white px-3.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                  ⚡ ALERTAS EN TIEMPO REAL
                 </span>
               </div>
 
@@ -221,7 +225,7 @@ export const NotificationPromptModal: React.FC = () => {
                 </button>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
