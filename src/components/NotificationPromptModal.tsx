@@ -96,8 +96,8 @@ export const NotificationPromptModal: React.FC = () => {
     setModalState('prompt');
   };
 
-  // If notifications granted or hidden, don't render anything
-  if (typeof window !== 'undefined' && Notification.permission === 'granted' && modalState !== 'celebration') {
+  // If modal state is hidden, don't render anything
+  if (modalState === 'hidden') {
     return null;
   }
 
