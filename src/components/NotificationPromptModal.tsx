@@ -115,9 +115,9 @@ export const NotificationPromptModal: React.FC = () => {
     ? 'left-3 top-20'
     : 'right-3 top-20';
 
-  // Calculate exit trajectory coordinates so modal glides toward sphere location
-  const exitTargetX = hamburgerPosition === 'right' ? '-38vw' : '38vw';
-  const exitTargetY = '-35vh';
+  // Calculate exact pixel-perfect target coordinates so modal glides directly into floating sphere position
+  const exitTargetX = hamburgerPosition === 'right' ? 'calc(-50vw + 42px)' : 'calc(50vw - 42px)';
+  const exitTargetY = 'calc(-50vh + 106px)';
 
   return (
     <>
@@ -135,9 +135,9 @@ export const NotificationPromptModal: React.FC = () => {
               dragElastic={0.08}
               dragMomentum={false}
               whileDrag={{ scale: 1.15 }}
-              initial={{ scale: 0.2, opacity: 0, y: -20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.2, opacity: 0 }}
+              initial={{ scale: 0.15, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.15, opacity: 0 }}
               transition={{ type: 'spring', damping: 16, stiffness: 280 }}
               className={`pointer-events-auto absolute ${spherePositionClass} z-[350] touch-none`}
             >
@@ -162,35 +162,48 @@ export const NotificationPromptModal: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* ── MARIO BROS PROMPT MODAL (IMAGE 1 STYLE WITH MORPHING EXIT) ─ */}
+      {/* ── MARIO BROS PROMPT MODAL (WITH SEAMLESS MORPHING FLIGHT TO SPHERE) ─ */}
       <AnimatePresence>
         {modalState === 'prompt' && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.28, ease: 'easeOut' }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
             className="fixed inset-0 z-[450] backdrop-blur-md bg-black/75 flex items-center justify-center p-4"
             onClick={handleMinimize}
           >
             <motion.div
-              initial={{ scale: 0.25, opacity: 0, y: 80 }}
-              animate={{ scale: 1, opacity: 1, x: 0, y: 0, rotate: 0 }}
-              exit={{ 
+              initial={{ 
                 scale: 0.15, 
-                opacity: 0.1, 
+                opacity: 0, 
                 x: exitTargetX, 
                 y: exitTargetY, 
-                rotate: -12 
+                borderRadius: '9999px',
+                rotate: -180 
+              }}
+              animate={{ 
+                scale: 1, 
+                opacity: 1, 
+                x: 0, 
+                y: 0, 
+                borderRadius: '24px', 
+                rotate: 0 
+              }}
+              exit={{ 
+                scale: 0.14, 
+                opacity: 0.9, 
+                x: exitTargetX, 
+                y: exitTargetY, 
+                borderRadius: '9999px',
+                rotate: -360 
               }}
               transition={{ 
-                type: 'spring', 
-                damping: 18, 
-                stiffness: 260, 
-                bounce: 0.4 
+                duration: 0.5, 
+                ease: [0.16, 1, 0.3, 1]
               }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden border-4 border-amber-400 flex flex-col items-center relative text-center my-auto"
+              className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.4)] border-4 border-amber-400 flex flex-col items-center relative text-center my-auto overflow-hidden"
             >
               {/* Top Bar */}
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-400 via-red-500 to-emerald-400" />
