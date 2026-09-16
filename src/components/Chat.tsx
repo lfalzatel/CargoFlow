@@ -248,9 +248,9 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
     const displayedTrips = inboxTab === 'activos' ? activeInboxTrips : historyInboxTrips;
 
     return (
-      <div className="bg-background flex flex-col font-sans pb-28 pt-16">
+      <div className="bg-background flex flex-col font-sans pb-28 pt-16 min-h-screen">
         {/* Top Header */}
-        <header className="sticky top-16 z-30 bg-white shadow-xs flex items-center justify-between px-4 py-3 border-b border-surface-container flex-shrink-0">
+        <header className="sticky top-16 z-30 bg-surface shadow-xs flex items-center justify-between px-4 py-3 border-b border-surface-container flex-shrink-0">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => {
@@ -262,25 +262,25 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
               <ArrowLeft size={20} />
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base">
+              <div className="w-9 h-9 rounded-full bg-primary/10 text-primary-container flex items-center justify-center font-bold text-base">
                 💬
               </div>
               <div>
-                <h2 className="font-black text-sm text-slate-800">Conversaciones</h2>
-                <p className="text-[10px] font-bold text-slate-400">Canal oficial de mensajería</p>
+                <h2 className="font-black text-sm text-on-surface">Conversaciones</h2>
+                <p className="text-[10px] font-bold text-on-surface-variant">Canal oficial de mensajería</p>
               </div>
             </div>
           </div>
         </header>
 
         {/* Tab Selector: Activos vs Historial */}
-        <div className="px-4 pt-3 pb-2 bg-white border-b border-slate-100 flex gap-2 sticky top-[121px] z-20">
+        <div className="px-4 pt-3 pb-2 bg-surface border-b border-surface-container flex gap-2 sticky top-[121px] z-20">
           <button
             onClick={() => setInboxTab('activos')}
             className={`flex-1 py-2.5 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               inboxTab === 'activos'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'bg-primary-container text-white shadow-md'
+                : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
             }`}
           >
             ● Activos ({activeInboxTrips.length})
@@ -289,8 +289,8 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
             onClick={() => setInboxTab('historial')}
             className={`flex-1 py-2.5 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               inboxTab === 'historial'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'bg-primary-container text-white shadow-md'
+                : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
             }`}
           >
             ✓ Historial ({historyInboxTrips.length})
@@ -300,12 +300,12 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
         {/* Inbox Conversations List */}
         <div className="p-4 flex flex-col gap-3 flex-1 overflow-y-auto">
           {displayedTrips.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 border border-slate-100 text-center flex flex-col items-center justify-center gap-3 mt-4 shadow-xs">
-              <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+            <div className="bg-surface-container-low rounded-2xl p-8 border border-surface-container text-center flex flex-col items-center justify-center gap-3 mt-4 shadow-xs">
+              <div className="w-14 h-14 rounded-full bg-primary/10 text-primary-container flex items-center justify-center text-xl">
                 💬
               </div>
-              <h4 className="font-extrabold text-sm text-slate-700">No hay conversaciones en esta sección</h4>
-              <p className="text-xs text-slate-400 max-w-xs">
+              <h4 className="font-extrabold text-sm text-on-surface">No hay conversaciones en esta sección</h4>
+              <p className="text-xs text-on-surface-variant max-w-xs">
                 {inboxTab === 'activos'
                   ? 'Tus fletes en camino o solicitudes de carga aparecerán aquí automáticamente.'
                   : 'Los mensajes de fletes completados quedarán guardados en tu historial.'}
@@ -326,24 +326,24 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
                     setSelectedTripState(trip);
                     if (onSelectTripChat) onSelectTripChat(trip);
                   }}
-                  className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md transition-all flex items-center gap-3.5 cursor-pointer active:scale-98"
+                  className="bg-surface-container-low rounded-2xl p-4 border border-surface-container shadow-xs hover:shadow-md transition-all flex items-center gap-3.5 cursor-pointer active:scale-98"
                 >
                   {renderAvatar(partnerPhoto || (partnerName === user.name ? user.photoURL : undefined), partnerName, "w-12 h-12 text-sm")}
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
-                      <h4 className="font-extrabold text-xs text-slate-800 truncate">{partnerName}</h4>
+                      <h4 className="font-extrabold text-xs text-on-surface truncate">{partnerName}</h4>
                       <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-                        trip.status === 'EN CAMINO' ? 'bg-blue-100 text-blue-700' :
-                        trip.status === 'PENDIENTE' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
+                        trip.status === 'EN CAMINO' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-300' :
+                        trip.status === 'PENDIENTE' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300' : 'bg-surface-container text-on-surface-variant'
                       }`}>
                         {trip.status}
                       </span>
                     </div>
-                    <p className="text-[11px] font-bold text-slate-500 truncate mb-0.5">
+                    <p className="text-[11px] font-bold text-on-surface-variant truncate mb-0.5">
                       Flete #{trip.id} • {trip.vehicleType}
                     </p>
-                    <p className="text-[11px] font-medium text-slate-400 truncate">
+                    <p className="text-[11px] font-medium text-on-surface-variant/80 truncate">
                       📍 {trip.origin} → {trip.destination}
                     </p>
                   </div>
@@ -359,7 +359,7 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
   return (
     <div className="bg-background flex flex-col font-sans antialiased pb-28 pt-16 min-h-screen">
       {/* Header */}
-      <header className="sticky top-16 z-30 bg-white shadow-xs flex items-center justify-between px-4 py-3 border-b border-surface-container flex-shrink-0">
+      <header className="sticky top-16 z-30 bg-surface shadow-xs flex items-center justify-between px-4 py-3 border-b border-surface-container flex-shrink-0">
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
@@ -424,7 +424,7 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
               
               <div className={`flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'}`}>
                 {!isUser && (
-                  <span className="text-[10px] font-black text-slate-500 ml-1">
+                  <span className="text-[10px] font-black text-on-surface-variant ml-1">
                     {msgSenderName}
                   </span>
                 )}
@@ -433,7 +433,7 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
                   className={`p-3.5 rounded-2xl shadow-[0px_2px_8px_rgba(0,0,0,0.02)] border ${
                     isUser
                       ? 'bg-primary-container text-white rounded-br-sm border-primary'
-                      : 'bg-white text-on-surface rounded-bl-sm border-surface-container'
+                      : 'bg-surface-container-low text-on-surface rounded-bl-sm border-surface-container'
                   }`}
                 >
                   {/* Message Attachment Image */}
@@ -457,7 +457,7 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
 
                 {/* Timestamp and receipts */}
                 <div className="flex items-center gap-1 px-1">
-                  <span className="text-[10px] text-outline font-semibold">{msg.timestamp}</span>
+                  <span className="text-[10px] text-on-surface-variant font-semibold">{msg.timestamp}</span>
                   {isUser && (
                     <CheckCheck size={14} className="text-primary-container" />
                   )}
@@ -474,7 +474,7 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />
 
       {/* Input Area */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-surface-container-highest p-3 flex flex-col gap-2 z-40 pb-5 shadow-[0px_-4px_20px_rgba(0,0,0,0.02)]">
+      <div className="fixed bottom-16 left-0 right-0 bg-surface border-t border-surface-container-highest p-3 flex flex-col gap-2 z-40 pb-5 shadow-[0px_-4px_20px_rgba(0,0,0,0.02)]">
         {/* Attached Image Preview */}
         {attachedImage && (
           <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-emerald-500 shadow-md self-start ml-2 group">
