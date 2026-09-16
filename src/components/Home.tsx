@@ -389,7 +389,7 @@ export default function Home({
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [mapPickerTarget, setMapPickerTarget] = useState<'origin' | 'destination'>('origin');
   const [notes, setNotes] = useState('');
-  const [customPrice, setCustomPrice] = useState(255000);
+  const [customPrice, setCustomPrice] = useState(60000);
   const [showPriceConfirmModal, setShowPriceConfirmModal] = useState(false);
   const [isCounterOffering, setIsCounterOffering] = useState(false);
   const [counterOfferPrice, setCounterOfferPrice] = useState(pendingTrip?.price || 1250000);
@@ -425,7 +425,7 @@ export default function Home({
       setVehicle(editingTrip.vehicleType);
       setTag(editingTrip.tag || '');
       setNotes(editingTrip.notes || '');
-      setCustomPrice(editingTrip.price || 255000);
+      setCustomPrice(editingTrip.price || 60000);
       setShowShipmentModal(true);
     }
   }, [editingTrip]);
@@ -1232,7 +1232,7 @@ export default function Home({
                       </div>
                     </div>
 
-                    {/* Precio Deseado (Flete Ofrecido - Inicia en 60.000, máx 3.000.000) */}
+                    {/* Precio Deseado (Flete Ofrecido - Inicia en 60.000, min 6.000, máx 3.000.000) */}
                     <div className="flex flex-col gap-1.5 bg-emerald-50/60 border-2 border-emerald-300 p-3 rounded-2xl shadow-sm">
                       <div className="flex justify-between items-center">
                         <label className="text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
@@ -1243,26 +1243,26 @@ export default function Home({
                           <span className="text-xs font-black text-emerald-700">$</span>
                           <input 
                             type="number"
-                            min="60000"
+                            min="6000"
                             max="3000000"
                             step="5000"
                             value={customPrice}
-                            onChange={(e) => setCustomPrice(Math.max(60000, Math.min(3000000, Number(e.target.value))))}
+                            onChange={(e) => setCustomPrice(Math.max(6000, Math.min(3000000, Number(e.target.value))))}
                             className="w-24 bg-transparent text-xs font-black text-emerald-900 outline-none"
                           />
                         </div>
                       </div>
                       <input
                         type="range"
-                        min="60000"
+                        min="6000"
                         max="3000000"
                         step="5000"
                         value={customPrice}
-                        onChange={(e) => setCustomPrice(Math.max(60000, Math.min(3000000, Number(e.target.value))))}
+                        onChange={(e) => setCustomPrice(Math.max(6000, Math.min(3000000, Number(e.target.value))))}
                         className="w-full h-2.5 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 mt-1"
                       />
                       <div className="flex justify-between text-[10px] text-emerald-700 font-black">
-                        <span>$60.000</span>
+                        <span>$6.000</span>
                         <span>Ofrecido: ${customPrice.toLocaleString('es-CO')}</span>
                         <span>$3M</span>
                       </div>
@@ -1414,7 +1414,7 @@ export default function Home({
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <button
                     type="button"
-                    onClick={() => setCustomPrice(prev => Math.max(60000, prev - 10000))}
+                    onClick={() => setCustomPrice(prev => Math.max(6000, prev - 10000))}
                     className={`w-8 h-8 rounded-xl border font-black text-sm active:scale-95 shadow-xs flex items-center justify-center cursor-pointer ${
                       activeTheme === 'noche' ? 'bg-slate-700 border-slate-600 text-emerald-400 hover:bg-slate-600' : 'bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-100'
                     }`}
@@ -1428,11 +1428,11 @@ export default function Home({
                     <span className="text-sm font-black text-emerald-500">$</span>
                     <input
                       type="number"
-                      min="60000"
+                      min="6000"
                       max="3000000"
                       step="5000"
                       value={customPrice}
-                      onChange={(e) => setCustomPrice(Math.max(60000, Math.min(3000000, Number(e.target.value))))}
+                      onChange={(e) => setCustomPrice(Math.max(6000, Math.min(3000000, Number(e.target.value))))}
                       className={`w-28 text-base font-black bg-transparent text-center outline-none ${
                         activeTheme === 'noche' ? 'text-slate-100' : 'text-emerald-900'
                       }`}
@@ -1452,16 +1452,16 @@ export default function Home({
 
                 <input
                   type="range"
-                  min="60000"
+                  min="6000"
                   max="3000000"
                   step="5000"
                   value={customPrice}
-                  onChange={(e) => setCustomPrice(Math.max(60000, Math.min(3000000, Number(e.target.value))))}
+                  onChange={(e) => setCustomPrice(Math.max(6000, Math.min(3000000, Number(e.target.value))))}
                   className="w-full h-2 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 mb-1"
                 />
                 
                 <div className="flex justify-between text-[10px] font-black text-emerald-500 px-1">
-                  <span>$60.000</span>
+                  <span>$6.000</span>
                   <span>$3M</span>
                 </div>
               </div>
