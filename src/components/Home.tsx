@@ -436,10 +436,15 @@ export default function Home({
     return () => fleetSimulationService.stop();
   }, []);
 
-  const handleCreateShipmentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!origin || !destination) return;
-    // Open Mario Bros confirmation modal to review & allow editing price before publishing
+  const handleCreateShipmentSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!origin || !origin.trim() || !destination || !destination.trim()) {
+      showAlert('Por favor indica Origen y Destino de la carga para continuar.', { title: 'Ubicación Requerida', variant: 'warning', icon: '📍' });
+      setShipmentStep(1);
+      return;
+    }
+    // Close wizard modal and open summary confirmation modal
+    setShowShipmentModal(false);
     setShowPriceConfirmModal(true);
   };
 
@@ -456,6 +461,7 @@ export default function Home({
       };
       onEditShipment(updatedTrip);
       if (onCloseEditing) onCloseEditing();
+      showAlert('¡Los datos del despacho han sido actualizados!', { title: 'Flete Actualizado', variant: 'success', icon: '✏️' });
     } else {
       const newTrip: Trip = {
         id: `#CF-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -471,11 +477,18 @@ export default function Home({
         ...(notes ? { notes } : {}),
       };
       onCreateShipment(newTrip);
+      showAlert('¡Tu solicitud de flete ha sido publicada con éxito!', { title: '¡Flete Publicado!', variant: 'success', icon: '🚀' });
     }
 
     setShowPriceConfirmModal(false);
     setShowShipmentModal(false);
-    onNavigateToView('activity'); // go to activity screen to see it
+    setShipmentStep(1);
+    setOrigin('');
+    setDestination('');
+    setVehicle('');
+    setTag('');
+    setNotes('');
+    onNavigateToView('activity');
   };
 
   const handleQuickReorder = () => {
@@ -1370,7 +1383,8 @@ export default function Home({
                         ← Volver
                       </button>
                       <button
-                        type="submit"
+                        type="button"
+                        onClick={handleCreateShipmentSubmit}
                         className="flex-1 h-12 bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 hover:opacity-95 text-white font-black text-xs rounded-2xl shadow-lg transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
                       >
                         {editingTrip ? (
@@ -1562,7 +1576,10 @@ export default function Home({
 
                 <button
                   type="button"
-                  onClick={() => setShowPriceConfirmModal(false)}
+                  onClick={() => {
+                    setShowPriceConfirmModal(false);
+                    setShowShipmentModal(true);
+                  }}
                   className={`w-full py-2.5 font-bold text-xs rounded-2xl transition cursor-pointer border ${
                     activeTheme === 'noche' ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200'
                   }`}
