@@ -332,3 +332,9 @@ header[data-top-header="true"] {
   transition: transform 1.4s linear, left 1.4s linear, top 1.4s linear !important;
 }
 
+/* Remove Leaflet white attribution background box behind bottom menu */
+.leaflet-control-attribution,
+.leaflet-bottom.leaflet-right {
+  display: none !important;
+}
+
