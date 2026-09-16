@@ -47,7 +47,7 @@ interface SettingsProps {
 type SectionKey = 'cuenta' | 'notificaciones' | 'sonidos' | 'gamificacion' | 'vehiculo' | 'apariencia' | 'info' | 'privacidad' | 'gestion' | 'mapa';
 
 // ── Toggle component ─────────────────────────────────────────
-function Toggle({ checked, onChange, label = 'Configuración guardada' }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
+function Toggle({ checked, onChange, label = 'Configuración guardada', target = 'general' }: { checked: boolean; onChange: (v: boolean) => void; label?: string; target?: string }) {
   return (
     <button
       onClick={() => {
@@ -55,6 +55,7 @@ function Toggle({ checked, onChange, label = 'Configuración guardada' }: { chec
         onChange(nextVal);
         window.dispatchEvent(new CustomEvent('cargoflow:toggle-confetti', {
           detail: {
+            target,
             title: 'Actualización exitosa.',
             subtitle: label,
             statusText: nextVal ? '🟢 Activado Correctamente' : '⚪ Desactivado Correctamente',
@@ -198,23 +199,23 @@ function ThemeModal({
       const stored = localStorage.getItem('cf_theme_quick_list');
       if (stored) return JSON.parse(stored);
     } catch (e) {}
-    return ['dia', 'cyber', 'kilo']; // default
+    return ['dia', 'noche', 'original']; // default
   });
 
   const themes = [
-    { id: 'dia',   label: 'Día',       icon: <Sun size={22} /> },
-    { id: 'original', label: 'Original', icon: <Moon size={22} /> },
-    { id: 'glass', label: 'Glass', icon: <Layers size={22} /> },
-    { id: 'cyber', label: 'Cyber',     icon: <Terminal size={22} /> },
-    { id: 'kilo',  label: 'Kilo', icon: <Zap size={22} /> },
+    { id: 'original', label: 'Gamer (Mario)', icon: <span className="text-xl">🍄</span> },
+    { id: 'dia',      label: 'Modo Día',     icon: <Sun size={22} /> },
+    { id: 'noche',    label: 'Modo Noche',   icon: <Moon size={22} /> },
+    { id: 'glass',    label: 'Glass',        icon: <Layers size={22} /> },
+    { id: 'cyber',    label: 'Cyber',        icon: <Terminal size={22} /> },
   ];
 
   const fullLabels: Record<string, string> = {
-    dia: 'Día',
-    original: 'Noche (Original)',
-    glass: 'Glassmorphism',
-    cyber: 'Cyberpunk',
-    kilo: 'KiloCode'
+    original: 'Modo Gamer (Mario Bros)',
+    dia: 'Modo Día (Limpio Corporativo)',
+    noche: 'Modo Noche (Oscuro Elegante)',
+    glass: 'Glassmorphism Transparente',
+    cyber: 'Cyberpunk Neón'
   };
 
   const toggleQuickTheme = (id: string) => {
@@ -231,8 +232,9 @@ function ThemeModal({
 
   const handleSave = () => {
     localStorage.setItem('cf_theme_quick_list', JSON.stringify(quickList));
-    // Optionally emit event if header needs to immediately know without a page refresh
-    window.dispatchEvent(new Event('storage')); 
+    localStorage.setItem('cf_theme', selected);
+    window.dispatchEvent(new CustomEvent('cargoflow:theme-changed', { detail: { theme: selected } }));
+    window.dispatchEvent(new StorageEvent('storage', { key: 'cf_theme', newValue: selected }));
     onSave(selected);
     onClose();
   };
@@ -679,6 +681,7 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
               action={
                 <Toggle
                   checked={notifEnabled}
+                  target="notification"
                   onChange={(v) => { setNotifEnabled(v); handleNotifToggle('cf_notif_enabled', v); }}
                 />
               }

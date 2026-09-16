@@ -392,10 +392,29 @@ export default function Home({
   const [showPriceConfirmModal, setShowPriceConfirmModal] = useState(false);
   const [isCounterOffering, setIsCounterOffering] = useState(false);
   const [counterOfferPrice, setCounterOfferPrice] = useState(pendingTrip?.price || 1250000);
+  const [activeTheme, setActiveTheme] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'original';
+    return localStorage.getItem('cf_theme') || 'original';
+  });
 
   // Vehicle Selector state (for transport companies / multi-vehicle assignment)
   const [showVehicleSelector, setShowVehicleSelector] = useState(false);
   const [actionToPerform, setActionToPerform] = useState<{ type: 'accept' | 'counter'; tripId: string; price?: number } | null>(null);
+
+  // Sync active theme
+  useEffect(() => {
+    const handleThemeChange = (e?: any) => {
+      const newTheme = e?.detail?.theme || localStorage.getItem('cf_theme') || 'original';
+      setActiveTheme(newTheme);
+    };
+    handleThemeChange();
+    window.addEventListener('cargoflow:theme-changed', handleThemeChange);
+    window.addEventListener('storage', handleThemeChange);
+    return () => {
+      window.removeEventListener('cargoflow:theme-changed', handleThemeChange);
+      window.removeEventListener('storage', handleThemeChange);
+    };
+  }, []);
 
   // When editingTrip changes, load it into the form
   React.useEffect(() => {
@@ -1290,7 +1309,7 @@ export default function Home({
         )}
       </AnimatePresence>
 
-      {/* ── MARIO BROS CONFIRMATION & PRICE ADJUSTMENT MODAL ── */}
+      {/* ── CONFIRMATION & PRICE ADJUSTMENT MODAL ── */}
       <AnimatePresence>
         {showPriceConfirmModal && (
           <div 
@@ -1303,61 +1322,91 @@ export default function Home({
               exit={{ scale: 0.85, opacity: 0, y: 30 }}
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden border-4 border-amber-400 flex flex-col items-center relative text-center my-auto"
+              className={
+                activeTheme === 'original'
+                  ? "bg-white w-full max-w-sm rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden border-4 border-amber-400 flex flex-col items-center relative text-center my-auto"
+                  : activeTheme === 'noche'
+                  ? "bg-slate-900 text-white w-full max-w-sm rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden border-2 border-slate-800 flex flex-col items-center relative text-center my-auto"
+                  : "bg-white text-slate-900 w-full max-w-sm rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] overflow-hidden border-2 border-slate-200 flex flex-col items-center relative text-center my-auto"
+              }
             >
               {/* Decorative Top Bar */}
-              <div className="absolute top-0 left-0 right-0 h-2.5 bg-gradient-to-r from-amber-400 via-orange-500 to-emerald-500" />
+              {activeTheme === 'original' ? (
+                <div className="absolute top-0 left-0 right-0 h-2.5 bg-gradient-to-r from-amber-400 via-orange-500 to-emerald-500" />
+              ) : (
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-emerald-500" />
+              )}
               
               {/* Close Button */}
               <button
                 type="button"
                 onClick={() => setShowPriceConfirmModal(false)}
-                className="absolute top-3.5 right-3.5 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors border border-slate-200 cursor-pointer"
+                className={`absolute top-3.5 right-3.5 p-1.5 rounded-full transition-colors border cursor-pointer ${
+                  activeTheme === 'noche'
+                    ? 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border-slate-700'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 border-slate-200'
+                }`}
               >
                 <X size={18} />
               </button>
 
               {/* Header Badge */}
-              <div className="w-full bg-gradient-to-br from-amber-100 via-orange-50 to-amber-200 rounded-2xl p-3 border-2 border-amber-300 mb-3 mt-2 flex flex-col items-center shadow-inner relative overflow-hidden">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 border-2 border-white shadow-md flex items-center justify-center mb-1 animate-bounce-subtle">
-                  <Truck size={28} className="text-white drop-shadow-md" fill="currentColor" />
+              {activeTheme === 'original' ? (
+                <div className="w-full bg-gradient-to-br from-amber-100 via-orange-50 to-amber-200 rounded-2xl p-3 border-2 border-amber-300 mb-3 mt-2 flex flex-col items-center shadow-inner relative overflow-hidden">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 border-2 border-white shadow-md flex items-center justify-center mb-1 animate-bounce-subtle">
+                    <Truck size={28} className="text-white drop-shadow-md" fill="currentColor" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white px-3 py-0.5 rounded-full shadow-xs">
+                    🍄 CONFIRMAR PUBLICACIÓN
+                  </span>
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white px-3 py-0.5 rounded-full shadow-xs">
-                  🍄 CONFIRMAR PUBLICACIÓN
-                </span>
-              </div>
+              ) : (
+                <div className="w-full rounded-2xl p-3 mb-1 mt-2 flex flex-col items-center relative overflow-hidden">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-1 shadow-md ${
+                    activeTheme === 'noche' ? 'bg-emerald-950/80 border border-emerald-700/60 text-emerald-400' : 'bg-emerald-50 border border-emerald-200 text-emerald-600'
+                  }`}>
+                    <Truck size={28} fill="currentColor" />
+                  </div>
+                </div>
+              )}
 
               {/* Title */}
-              <h3 className="text-base font-black text-slate-900 leading-tight mb-1">
+              <h3 className={`text-base font-black leading-tight mb-1 ${activeTheme === 'noche' ? 'text-slate-100' : 'text-slate-900'}`}>
                 ¿El precio ofrecido es correcto?
               </h3>
-              <p className="text-xs font-bold text-slate-500 mb-3">
+              <p className={`text-xs font-medium mb-3 ${activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-500'}`}>
                 Verifica el resumen de tu despacho y ajusta el valor si lo deseas.
               </p>
 
               {/* Shipment Details Summary Box */}
-              <div className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 mb-3 text-left space-y-1.5 text-xs">
-                <div className="flex items-center justify-between border-b border-slate-200/60 pb-1">
-                  <span className="font-bold text-slate-500">📍 Origen:</span>
-                  <span className="font-black text-slate-800 truncate max-w-[180px]">{origin}</span>
+              <div className={`w-full border-2 rounded-2xl p-3 mb-3 text-left space-y-1.5 text-xs ${
+                activeTheme === 'noche' ? 'bg-slate-800/80 border-slate-700' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <div className="flex items-center justify-between border-b border-slate-200/40 pb-1">
+                  <span className={`font-bold ${activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-500'}`}>📍 Origen:</span>
+                  <span className={`font-black truncate max-w-[180px] ${activeTheme === 'noche' ? 'text-slate-100' : 'text-slate-800'}`}>{origin}</span>
                 </div>
-                <div className="flex items-center justify-between border-b border-slate-200/60 pb-1">
-                  <span className="font-bold text-slate-500">🏁 Destino:</span>
-                  <span className="font-black text-slate-800 truncate max-w-[180px]">{destination}</span>
+                <div className="flex items-center justify-between border-b border-slate-200/40 pb-1">
+                  <span className={`font-bold ${activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-500'}`}>🏁 Destino:</span>
+                  <span className={`font-black truncate max-w-[180px] ${activeTheme === 'noche' ? 'text-slate-100' : 'text-slate-800'}`}>{destination}</span>
                 </div>
-                <div className="flex items-center justify-between border-b border-slate-200/60 pb-1">
-                  <span className="font-bold text-slate-500">📦 Carga:</span>
-                  <span className="font-black text-emerald-700">{cargoType}</span>
+                <div className="flex items-center justify-between border-b border-slate-200/40 pb-1">
+                  <span className={`font-bold ${activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-500'}`}>📦 Carga:</span>
+                  <span className="font-black text-emerald-500">{cargoType}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-500">🚚 Vehículo / Tag:</span>
-                  <span className="font-black text-slate-800">{vehicle || 'Cualquier'} {tag ? `• ${tag}` : ''}</span>
+                  <span className={`font-bold ${activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-500'}`}>🚚 Vehículo / Tag:</span>
+                  <span className={`font-black ${activeTheme === 'noche' ? 'text-slate-100' : 'text-slate-800'}`}>{vehicle || 'Cualquier'} {tag ? `• ${tag}` : ''}</span>
                 </div>
               </div>
 
               {/* Interactive Price Modifier Box inside Modal */}
-              <div className="w-full bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 border-2 border-emerald-400 rounded-2xl p-3 mb-4 text-center shadow-sm">
-                <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider block mb-1">
+              <div className={`w-full border-2 rounded-2xl p-3 mb-4 text-center shadow-sm ${
+                activeTheme === 'noche' ? 'bg-slate-800 border-slate-700' : 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 border-emerald-400'
+              }`}>
+                <span className={`text-[10px] font-black uppercase tracking-wider block mb-1 ${
+                  activeTheme === 'noche' ? 'text-emerald-400' : 'text-emerald-800'
+                }`}>
                   💰 VALOR DEL FLETE OFRECIDO
                 </span>
                 
@@ -1365,13 +1414,17 @@ export default function Home({
                   <button
                     type="button"
                     onClick={() => setCustomPrice(prev => Math.max(60000, prev - 10000))}
-                    className="w-8 h-8 rounded-xl bg-white border border-emerald-300 text-emerald-700 font-black text-sm hover:bg-emerald-100 active:scale-95 shadow-xs flex items-center justify-center cursor-pointer"
+                    className={`w-8 h-8 rounded-xl border font-black text-sm active:scale-95 shadow-xs flex items-center justify-center cursor-pointer ${
+                      activeTheme === 'noche' ? 'bg-slate-700 border-slate-600 text-emerald-400 hover:bg-slate-600' : 'bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-100'
+                    }`}
                     title="- $10.000"
                   >
                     -
                   </button>
-                  <div className="flex items-center gap-1 bg-white border-2 border-emerald-500 rounded-xl px-3 py-1 shadow-inner">
-                    <span className="text-sm font-black text-emerald-700">$</span>
+                  <div className={`flex items-center gap-1 border-2 rounded-xl px-3 py-1 shadow-inner ${
+                    activeTheme === 'noche' ? 'bg-slate-900 border-emerald-600' : 'bg-white border-emerald-500'
+                  }`}>
+                    <span className="text-sm font-black text-emerald-500">$</span>
                     <input
                       type="number"
                       min="60000"
@@ -1379,13 +1432,17 @@ export default function Home({
                       step="5000"
                       value={customPrice}
                       onChange={(e) => setCustomPrice(Math.max(60000, Math.min(3000000, Number(e.target.value))))}
-                      className="w-28 text-base font-black text-emerald-900 bg-transparent text-center outline-none"
+                      className={`w-28 text-base font-black bg-transparent text-center outline-none ${
+                        activeTheme === 'noche' ? 'text-slate-100' : 'text-emerald-900'
+                      }`}
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => setCustomPrice(prev => Math.min(3000000, prev + 10000))}
-                    className="w-8 h-8 rounded-xl bg-white border border-emerald-300 text-emerald-700 font-black text-sm hover:bg-emerald-100 active:scale-95 shadow-xs flex items-center justify-center cursor-pointer"
+                    className={`w-8 h-8 rounded-xl border font-black text-sm active:scale-95 shadow-xs flex items-center justify-center cursor-pointer ${
+                      activeTheme === 'noche' ? 'bg-slate-700 border-slate-600 text-emerald-400 hover:bg-slate-600' : 'bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-100'
+                    }`}
                     title="+ $10.000"
                   >
                     +
@@ -1402,7 +1459,7 @@ export default function Home({
                   className="w-full h-2 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 mb-1"
                 />
                 
-                <div className="flex justify-between text-[10px] font-black text-emerald-700 px-1">
+                <div className="flex justify-between text-[10px] font-black text-emerald-500 px-1">
                   <span>$60.000</span>
                   <span>$3M</span>
                 </div>
@@ -1413,7 +1470,9 @@ export default function Home({
                 <button
                   type="button"
                   onClick={executePublishShipment}
-                  className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-[0_6px_0_#15803d] active:shadow-[0_2px_0_#15803d] active:translate-y-1 transition-all cursor-pointer flex items-center justify-center gap-2 border border-emerald-300"
+                  className={`w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 border border-emerald-300 ${
+                    activeTheme === 'original' ? 'shadow-[0_6px_0_#15803d] active:translate-y-1' : ''
+                  }`}
                 >
                   <Sparkles size={16} />
                   <span>🚀 Confirmar y Publicar Flete</span>
@@ -1422,7 +1481,9 @@ export default function Home({
                 <button
                   type="button"
                   onClick={() => setShowPriceConfirmModal(false)}
-                  className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-2xl transition cursor-pointer border border-slate-200"
+                  className={`w-full py-2.5 font-bold text-xs rounded-2xl transition cursor-pointer border ${
+                    activeTheme === 'noche' ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200'
+                  }`}
                 >
                   ← Cambiar Datos del Despacho
                 </button>

@@ -55,8 +55,20 @@ export default function Header({
     // Read persisted preference; default to true
     try { return localStorage.getItem('cf_notif_enabled') !== 'false'; } catch { return true; }
   });
-  const [activeTheme, setActiveTheme] = useState<string>('dia');
-  const [quickThemes, setQuickThemes] = useState<string[]>(['dia', 'cyber', 'kilo']);
+  const [activeTheme, setActiveTheme] = useState<string>(() => {
+    try { return localStorage.getItem('cf_theme') || 'original'; } catch { return 'original'; }
+  });
+  const [quickThemes, setQuickThemes] = useState<string[]>(['dia', 'noche', 'original']);
+  
+  const handleThemeSelect = (themeId: string) => {
+    setActiveTheme(themeId);
+    try {
+      localStorage.setItem('cf_theme', themeId);
+      document.documentElement.setAttribute('data-theme', themeId);
+      window.dispatchEvent(new CustomEvent('cargoflow:theme-changed', { detail: { theme: themeId } }));
+      window.dispatchEvent(new StorageEvent('storage', { key: 'cf_theme', newValue: themeId }));
+    } catch (_) {}
+  };
   // Local state for immediate UI feedback on availability toggle
   const [isAvailable, setIsAvailable] = useState(user.isAvailable ?? true);
 
@@ -111,7 +123,7 @@ export default function Header({
     const handleNotifEvent = (e: any) => {
       if (e?.detail?.key === 'cf_notif_enabled') {
         setNotificationsEnabled(Boolean(e.detail.value));
-      } else if (typeof e?.detail?.activated === 'boolean') {
+      } else if (e?.detail?.target === 'notification' && typeof e?.detail?.activated === 'boolean') {
         setNotificationsEnabled(e.detail.activated);
       } else {
         try {
@@ -123,12 +135,10 @@ export default function Header({
     handleStorage();
     window.addEventListener('storage', handleStorage);
     window.addEventListener('cargoflow:notif-settings-changed', handleNotifEvent);
-    window.addEventListener('cargoflow:toggle-confetti', handleNotifEvent);
 
     return () => {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('cargoflow:notif-settings-changed', handleNotifEvent);
-      window.removeEventListener('cargoflow:toggle-confetti', handleNotifEvent);
     };
   }, []);
   const [pwaInstallPrompt, setPwaInstallPrompt] = useState<any>(null);
@@ -578,25 +588,26 @@ export default function Header({
                 <div className="p-1.5 border-b border-surface-container">
                   <div className="flex items-center justify-between gap-1 p-1 bg-[var(--glass)] border border-[var(--glass-border)] rounded-xl">
                     {quickThemes.map(themeId => {
-                      let Icon = Sun;
+                      let iconEl = <Sun size={16} className="mb-1" />;
                       let label = 'Día';
-                      if (themeId === 'original') { Icon = Moon; label = 'Noche'; }
-                      if (themeId === 'glass') { Icon = Layers; label = 'Glass'; }
-                      if (themeId === 'cyber') { Icon = Terminal; label = 'Cyber'; }
-                      if (themeId === 'kilo') { Icon = Zap; label = 'Kilo'; }
+                      if (themeId === 'noche') { iconEl = <Moon size={16} className="mb-1" />; label = 'Noche'; }
+                      if (themeId === 'original') { iconEl = <span className="text-sm mb-0.5">🍄</span>; label = 'Gamer'; }
+                      if (themeId === 'glass') { iconEl = <Layers size={16} className="mb-1" />; label = 'Glass'; }
+                      if (themeId === 'cyber') { iconEl = <Terminal size={16} className="mb-1" />; label = 'Cyber'; }
+                      if (themeId === 'kilo') { iconEl = <Zap size={16} className="mb-1" />; label = 'Kilo'; }
 
                       return (
                         <button
                           key={themeId}
-                          onClick={() => setActiveTheme(themeId)}
+                          onClick={() => handleThemeSelect(themeId)}
                           className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg transition-all font-bold ${
                             activeTheme === themeId
-                              ? 'bg-[var(--accent)] text-black shadow-sm'
-                              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)]'
+                              ? 'bg-emerald-600 text-white shadow-sm'
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                           }`}
                         >
-                          <Icon size={16} className="mb-1" />
-                          <span className="text-[9px] font-semibold">{label}</span>
+                          {iconEl}
+                          <span className="text-[9px] font-bold">{label}</span>
                         </button>
                       );
                     })}
@@ -669,6 +680,7 @@ export default function Header({
                         window.dispatchEvent(new StorageEvent('storage', { key: 'cf_notif_enabled', newValue: String(next) }));
                         window.dispatchEvent(new CustomEvent('cargoflow:toggle-confetti', {
                           detail: {
+                            target: 'notification',
                             title: 'Actualización exitosa.',
                             subtitle: next ? 'Notificaciones activadas' : 'Notificaciones desactivadas',
                             statusText: next ? '🔔 Notificaciones Activadas' : '🔕 Notificaciones Desactivadas',
