@@ -965,7 +965,12 @@ export default function Home({
       {/* CREATE SHIPMENT MODAL / VIEW (2-Step Wizard UI) */}
       <AnimatePresence>
         {showShipmentModal && (
-          <div 
+          <motion.div
+            key="shipment-wizard-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[300] backdrop-blur-md bg-black/60 flex items-start sm:items-center justify-center p-4 pt-12 sm:pt-4 overflow-y-auto"
             onClick={() => setShowShipmentModal(false)}
           >
@@ -1401,7 +1406,7 @@ export default function Home({
                 )}
               </form>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 

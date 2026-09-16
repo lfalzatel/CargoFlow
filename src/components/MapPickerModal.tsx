@@ -58,90 +58,127 @@ export const MapPickerModal: React.FC<MapPickerModalProps> = ({
     setIsGeocoding(false);
   };
 
-  // Initialize Leaflet Map
+  // Initialize Leaflet Map — get GPS first, then create map centered on user
   useEffect(() => {
     if (!isOpen || !mapContainerRef.current) return;
 
-    // Default center initially fallback to selectedCoords or Medellín
-    let initialLat = selectedCoords.lat || 6.2442;
-    let initialLng = selectedCoords.lng || -75.5812;
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
-    // Delay init until modal animation is done
-    const initMap = () => {
-      if (!mapContainerRef.current) return;
+    // Try to get cached position from sessionStorage for instant load
+    const cachedPos = sessionStorage.getItem('cf_last_gps');
+    const fallbackLat = 6.2442;
+    const fallbackLng = -75.5812;
+    let startLat = fallbackLat;
+    let startLng = fallbackLng;
 
-      if (!mapInstanceRef.current) {
-        const map = L.map(mapContainerRef.current, {
-          center: [initialLat, initialLng],
-          zoom: 14,
-          zoomControl: true,
-        });
+    if (cachedPos) {
+      try {
+        const parsed = JSON.parse(cachedPos);
+        startLat = parsed.lat;
+        startLng = parsed.lng;
+      } catch {}
+    }
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors',
-          maxZoom: 19,
-        }).addTo(map);
+    const createMap = (lat: number, lng: number) => {
+      if (cancelled || !mapContainerRef.current) return;
 
-        // Custom Icon for Leaflet Marker
-        const customIcon = L.divIcon({
-          className: 'custom-picker-pin',
-          html: `<div style="font-size: 36px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transform: translate(-50%, -100%); line-height: 1;">${pinIconEmoji}</div>`,
-          iconSize: [40, 40],
-          iconAnchor: [20, 40],
-        });
-
-        const marker = L.marker([initialLat, initialLng], {
-          draggable: true,
-          icon: customIcon,
-        }).addTo(map);
-
-        markerInstanceRef.current = marker;
-        mapInstanceRef.current = map;
-
-        // Handle map drag / move to update coordinates & address
-        const handlePositionChange = (lat: number, lng: number) => {
-          setSelectedCoords({ lat, lng });
-          reverseGeocode(lat, lng);
-        };
-
-        map.on('click', (e: L.LeafletMouseEvent) => {
-          marker.setLatLng(e.latlng);
-          handlePositionChange(e.latlng.lat, e.latlng.lng);
-        });
-
-        marker.on('dragend', () => {
-          const pos = marker.getLatLng();
-          handlePositionChange(pos.lat, pos.lng);
-        });
-
-        // Automatically fetch GPS position to center on user location by default
-        if ('geolocation' in navigator) {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              const uLat = pos.coords.latitude;
-              const uLng = pos.coords.longitude;
-              setSelectedCoords({ lat: uLat, lng: uLng });
-              map.setView([uLat, uLng], 15);
-              marker.setLatLng([uLat, uLng]);
-              reverseGeocode(uLat, uLng);
-            },
-            (err) => console.warn('Geolocation auto-center fallback:', err),
-            { enableHighAccuracy: true, timeout: 6000 }
-          );
-        }
+      if (mapInstanceRef.current) {
+        // Map already exists, just recenter
+        mapInstanceRef.current.setView([lat, lng], 15);
+        markerInstanceRef.current?.setLatLng([lat, lng]);
+        setSelectedCoords({ lat, lng });
+        reverseGeocode(lat, lng);
+        [100, 300, 600].forEach(d => timers.push(setTimeout(() => mapInstanceRef.current?.invalidateSize(), d)));
+        return;
       }
 
-      // Fire invalidateSize multiple times to catch any async layout shifts
+      const map = L.map(mapContainerRef.current, {
+        center: [lat, lng],
+        zoom: 15,
+        zoomControl: true,
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      const customIcon = L.divIcon({
+        className: 'custom-picker-pin',
+        html: `<div style="font-size: 36px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transform: translate(-50%, -100%); line-height: 1;">${pinIconEmoji}</div>`,
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+      });
+
+      const marker = L.marker([lat, lng], {
+        draggable: true,
+        icon: customIcon,
+      }).addTo(map);
+
+      markerInstanceRef.current = marker;
+      mapInstanceRef.current = map;
+
+      setSelectedCoords({ lat, lng });
+      reverseGeocode(lat, lng);
+
+      const handlePositionChange = (newLat: number, newLng: number) => {
+        setSelectedCoords({ lat: newLat, lng: newLng });
+        reverseGeocode(newLat, newLng);
+      };
+
+      map.on('click', (e: L.LeafletMouseEvent) => {
+        marker.setLatLng(e.latlng);
+        handlePositionChange(e.latlng.lat, e.latlng.lng);
+      });
+
+      marker.on('dragend', () => {
+        const pos = marker.getLatLng();
+        handlePositionChange(pos.lat, pos.lng);
+      });
+
+      // Fire invalidateSize multiple times
       [100, 250, 400, 700].forEach(delay =>
-        setTimeout(() => mapInstanceRef.current?.invalidateSize(), delay)
+        timers.push(setTimeout(() => map.invalidateSize(), delay))
       );
     };
 
-    // Wait for modal spring animation (~300ms) before measuring
-    const initTimer = setTimeout(initMap, 50);
+    // Strategy: request GPS with a fast timeout. If we get it, create map at GPS.
+    // If it fails/times out, create map at cached or fallback coords.
+    const initTimer = setTimeout(() => {
+      if (cancelled) return;
+
+      if ('geolocation' in navigator) {
+        // Start with cached/fallback position immediately so user sees a map fast
+        createMap(startLat, startLng);
+
+        // Then try to get fresh GPS to recenter
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            if (cancelled) return;
+            const uLat = pos.coords.latitude;
+            const uLng = pos.coords.longitude;
+            sessionStorage.setItem('cf_last_gps', JSON.stringify({ lat: uLat, lng: uLng }));
+            // Recenter map to actual GPS position
+            if (mapInstanceRef.current && markerInstanceRef.current) {
+              mapInstanceRef.current.setView([uLat, uLng], 15);
+              markerInstanceRef.current.setLatLng([uLat, uLng]);
+              setSelectedCoords({ lat: uLat, lng: uLng });
+              reverseGeocode(uLat, uLng);
+            }
+          },
+          () => { /* GPS failed, stay at current position */ },
+          { enableHighAccuracy: true, timeout: 5000 }
+        );
+      } else {
+        createMap(startLat, startLng);
+      }
+    }, 50);
 
     return () => {
+      cancelled = true;
       clearTimeout(initTimer);
+      timers.forEach(t => clearTimeout(t));
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
