@@ -443,20 +443,20 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
         </section>
 
         {/* DOCUMENTACIÓN PERSONAL SECTION (Cédula & Licencia) */}
-        <section className="bg-white rounded-2xl p-5 border border-surface-container shadow-[0px_4px_20px_rgba(0,0,0,0.02)] flex flex-col gap-4">
-          <h3 className="text-xs font-bold text-outline uppercase tracking-wider">Documentación Personal</h3>
+        <section className="bg-surface-container-low rounded-2xl p-5 border border-surface-container shadow-xs flex flex-col gap-4">
+          <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Documentación Personal</h3>
           
           <div className="flex flex-col gap-3">
             {/* 1. Cédula Card */}
-            <div className="flex flex-col gap-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+            <div className="flex flex-col gap-3 p-4 bg-surface-container rounded-xl border border-surface-container-high">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                  <div className="bg-[#0b224d]/10 text-[#0b224d] p-2 rounded-lg">
+                  <div className="bg-blue-500/15 text-blue-400 p-2 rounded-lg">
                     <UserCheck size={20} />
                   </div>
                   <div>
                     <p className="text-sm font-extrabold text-on-surface">Cédula de Ciudadanía</p>
-                    <p className="text-[11px] text-outline font-bold">
+                    <p className="text-[11px] text-on-surface-variant font-bold">
                       {user.cedulaNumber ? `C.C. ${user.cedulaNumber}` : 'Sin registrar número'}
                     </p>
                   </div>
@@ -465,25 +465,25 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                 {/* State Tag */}
                 <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${
                   user.cedulaNumber && user.cedulaPhoto
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                    : 'bg-red-50 text-red-700 border-red-100'
+                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                    : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
                 }`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${
-                    user.cedulaNumber && user.cedulaPhoto ? 'bg-emerald-500' : 'bg-red-500'
+                    user.cedulaNumber && user.cedulaPhoto ? 'bg-emerald-500' : 'bg-rose-500'
                   }`}></span>
                   {user.cedulaNumber && user.cedulaPhoto ? 'Registrada' : 'Pendiente'}
                 </span>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 mt-1.5 pt-2 border-t border-slate-200/50">
+              <div className="flex gap-2 mt-1.5 pt-2 border-t border-surface-container-high">
                 {user.cedulaPhoto && (
                   <button
                     onClick={() => {
                       setViewDocPhoto(user.cedulaPhoto!);
                       setViewDocTitle('Cédula de Ciudadanía');
                     }}
-                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200/50"
+                    className="flex-1 py-2 bg-surface-container-high hover:bg-surface-container text-on-surface rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-surface-container-highest"
                   >
                     <Eye size={14} />
                     Ver Cédula
@@ -505,15 +505,15 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
 
             {/* 2. Licencia Card (Only for Conductores) */}
             {user.role === 'conductor' && (
-              <div className="flex flex-col gap-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+              <div className="flex flex-col gap-3 p-4 bg-surface-container rounded-xl border border-surface-container-high">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                    <div className="bg-[#0b224d]/10 text-[#0b224d] p-2 rounded-lg">
+                    <div className="bg-blue-500/15 text-blue-400 p-2 rounded-lg">
                       <FileText size={20} />
                     </div>
                     <div>
                       <p className="text-sm font-extrabold text-on-surface">Licencia de Conducción</p>
-                      <p className="text-[11px] text-outline">
+                      <p className="text-[11px] text-on-surface-variant">
                         {user.licenseExpiry ? `Vence: ${user.licenseExpiry}` : 'Sin registrar fecha'}
                       </p>
                     </div>
@@ -532,14 +532,14 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 mt-1.5 pt-2 border-t border-slate-200/50">
+                <div className="flex gap-2 mt-1.5 pt-2 border-t border-surface-container-high">
                   {user.licensePhoto && (
                     <button
                       onClick={() => {
                         setViewDocPhoto(user.licensePhoto!);
                         setViewDocTitle('Licencia de Conducir');
                       }}
-                      className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200/50"
+                      className="flex-1 py-2 bg-surface-container-high hover:bg-surface-container text-on-surface rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-surface-container-highest"
                     >
                       <Eye size={14} />
                       Ver Pase
@@ -564,12 +564,12 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
 
         {/* MIS VEHÍCULOS SECTION (SOAT, Tecno, Tarjeta Propiedad) */}
         {user.role === 'conductor' && (
-          <section className="bg-white rounded-2xl p-5 border border-surface-container shadow-[0px_4px_20px_rgba(0,0,0,0.02)] flex flex-col gap-4">
+          <section className="bg-surface-container-low rounded-2xl p-5 border border-surface-container shadow-xs flex flex-col gap-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-outline uppercase tracking-wider">Mis Vehículos (Flota)</h3>
+              <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Mis Vehículos (Flota)</h3>
               <button
                 onClick={() => setShowAddVehicleModal(true)}
-                className="text-xs font-black text-[#1E5EFF] hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-xs font-black text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <Plus size={14} strokeWidth={3} />
                 Agregar Vehículo
@@ -577,10 +577,10 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
             </div>
 
             {(!user.vehicles || user.vehicles.length === 0) ? (
-              <div className="text-center py-8 border border-dashed border-slate-200 rounded-xl bg-slate-50/50 flex flex-col items-center justify-center">
-                <Truck className="text-slate-300 mb-2" size={32} />
-                <p className="text-xs font-bold text-slate-400">Ningún vehículo registrado</p>
-                <p className="text-[10px] text-slate-400 mt-1 max-w-[200px] leading-relaxed">
+              <div className="text-center py-8 border border-dashed border-surface-container-high rounded-xl bg-surface-container flex flex-col items-center justify-center">
+                <Truck className="text-on-surface-variant/50 mb-2" size={32} />
+                <p className="text-xs font-bold text-on-surface-variant">Ningún vehículo registrado</p>
+                <p className="text-[10px] text-on-surface-variant/70 mt-1 max-w-[200px] leading-relaxed">
                   Registra tu primer camión o furgoneta para poder aceptar fletes.
                 </p>
               </div>
@@ -594,10 +594,10 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                   return (
                     <div 
                       key={vh.id} 
-                      className={`p-4 bg-slate-50/40 rounded-xl border flex flex-col gap-3 relative transition-all ${
+                      className={`p-4 bg-surface-container rounded-xl border flex flex-col gap-3 relative transition-all ${
                         isDefault 
-                          ? 'border-[#0b224d] shadow-[0px_4px_12px_rgba(11,34,77,0.06)] bg-white' 
-                          : 'border-slate-100'
+                          ? 'border-emerald-500 shadow-md bg-surface-container-low' 
+                          : 'border-surface-container-high'
                       }`}
                     >
                       

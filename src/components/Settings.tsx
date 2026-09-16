@@ -383,17 +383,17 @@ function ProfileModal({ user, onClose }: { user: UserProfile; onClose: () => voi
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 40 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+        className="bg-surface border border-surface-container rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-on-surface"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-2">
+        <div className="flex items-center justify-between px-5 pt-5 pb-2 border-b border-surface-container">
           <div className="flex items-center gap-2">
-            <button onClick={onClose} className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+            <button onClick={onClose} className="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant cursor-pointer">
               <ArrowLeft size={13} />
             </button>
-            <h3 className="font-bold text-slate-800 text-sm">Perfil del Usuario</h3>
+            <h3 className="font-bold text-on-surface text-sm">Perfil del Usuario</h3>
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant cursor-pointer">
             <X size={13} />
           </button>
         </div>
@@ -404,69 +404,69 @@ function ProfileModal({ user, onClose }: { user: UserProfile; onClose: () => voi
             <img
               src={user.photoURL}
               alt={user.name}
-              className="w-20 h-20 rounded-full object-cover ring-4 ring-[#0b224d]/20"
+              className="w-20 h-20 rounded-full object-cover ring-4 ring-emerald-500/20"
             />
           ) : (
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-200 to-blue-400 flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 flex items-center justify-center">
               <span className="text-2xl font-black text-white">{initials}</span>
             </div>
           )}
-          <span className="mt-2 text-[10px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full bg-[#0b224d] text-white">
+          <span className="mt-2 text-[10px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full bg-emerald-600 text-white">
             {user.role.toUpperCase()}
           </span>
-          <h2 className="mt-2 font-bold text-slate-800 text-base text-center px-4">{user.name}</h2>
-          <p className="text-xs text-slate-400">{user.email}</p>
-          {user.phone && <p className="text-xs text-slate-400">{user.phone}</p>}
+          <h2 className="mt-2 font-bold text-on-surface text-base text-center px-4">{user.name}</h2>
+          <p className="text-xs text-on-surface-variant">{user.email}</p>
+          {user.phone && <p className="text-xs text-on-surface-variant">{user.phone}</p>}
         </div>
 
         {/* Info cards */}
         <div className="px-4 pb-2 space-y-2">
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 flex items-center gap-3">
-            <Mail size={15} className="text-slate-400 flex-shrink-0" />
+          <div className="rounded-2xl border border-surface-container bg-surface-container-low p-3 flex items-center gap-3">
+            <Mail size={15} className="text-on-surface-variant flex-shrink-0" />
             <div className="min-w-0">
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Correo Electrónico</p>
-              <p className="text-sm font-semibold text-slate-700 truncate">{user.email}</p>
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">Correo Electrónico</p>
+              <p className="text-sm font-semibold text-on-surface truncate">{user.email}</p>
             </div>
           </div>
           {user.phone && (
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 flex items-center gap-3">
-              <Phone size={15} className="text-slate-400 flex-shrink-0" />
+            <div className="rounded-2xl border border-surface-container bg-surface-container-low p-3 flex items-center gap-3">
+              <Phone size={15} className="text-on-surface-variant flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Teléfono</p>
-                <p className="text-sm font-semibold text-slate-700">{user.phone}</p>
+                <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">Teléfono</p>
+                <p className="text-sm font-semibold text-on-surface">{user.phone}</p>
               </div>
             </div>
           )}
           {/* Rol */}
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-2">Rol del Sistema</p>
+          <div className="rounded-2xl border border-surface-container bg-surface-container-low p-3">
+            <p className="text-[10px] text-on-surface-variant uppercase tracking-wider mb-2">Rol del Sistema</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600">Nivel de acceso</span>
-              <span className="text-sm font-bold text-[#0b224d] px-3 py-1 bg-blue-50 rounded-xl border border-blue-100">
+              <span className="text-sm text-on-surface-variant">Nivel de acceso</span>
+              <span className="text-sm font-bold text-emerald-400 px-3 py-1 bg-emerald-500/15 rounded-xl border border-emerald-500/30">
                 {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
               </span>
             </div>
           </div>
           {/* Vehículo (conductor only) */}
           {user.role === 'conductor' && user.plateNumber && (
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-2">Estadísticas del Vehículo</p>
+            <div className="rounded-2xl border border-surface-container bg-surface-container-low p-3">
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-wider mb-2">Estadísticas del Vehículo</p>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <p className="text-[10px] text-slate-400 uppercase">Placa</p>
-                  <p className="text-sm font-bold text-[#0b224d]">{user.plateNumber}</p>
+                  <p className="text-[10px] text-on-surface-variant uppercase">Placa</p>
+                  <p className="text-sm font-bold text-on-surface">{user.plateNumber}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-400 uppercase">Tipo</p>
-                  <p className="text-sm font-bold text-[#0b224d] capitalize">{user.vehicleType || 'N/A'}</p>
+                  <p className="text-[10px] text-on-surface-variant uppercase">Tipo</p>
+                  <p className="text-sm font-bold text-on-surface capitalize">{user.vehicleType || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-400 uppercase">Calificación</p>
+                  <p className="text-[10px] text-on-surface-variant uppercase">Calificación</p>
                   <p className="text-sm font-bold text-amber-500">★ {user.rating}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-400 uppercase">Balance</p>
-                  <p className="text-sm font-bold text-emerald-600">
+                  <p className="text-[10px] text-on-surface-variant uppercase">Balance</p>
+                  <p className="text-sm font-bold text-emerald-400">
                     ${(user.balance || 0).toLocaleString('es-CO')}
                   </p>
                 </div>
@@ -479,7 +479,7 @@ function ProfileModal({ user, onClose }: { user: UserProfile; onClose: () => voi
         <div className="px-4 pb-5 pt-2">
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-2xl bg-slate-100 text-slate-600 text-sm font-semibold"
+            className="w-full py-3 rounded-2xl bg-surface-container-high text-on-surface text-sm font-semibold hover:bg-surface-container transition-colors cursor-pointer"
           >
             Cerrar
           </button>
@@ -592,41 +592,41 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
   ];
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 pt-20">
+    <div className="flex flex-col h-full bg-background pt-20 text-on-surface">
       {/* ── Header ──────────────────────────────────────────── */}
-      <div className="flex-none bg-white border-b border-slate-100 px-4 pt-5 pb-4">
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1">
+      <div className="flex-none bg-surface border-b border-surface-container px-4 pt-5 pb-4">
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant mb-1">
           CENTRO DE CONTROL
         </p>
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
-            className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors"
+            className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors cursor-pointer"
           >
             <ArrowLeft size={16} />
           </button>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Configuración</h1>
+          <h1 className="text-2xl font-black text-on-surface tracking-tight">Configuración</h1>
         </div>
       </div>
 
       {/* ── Scrollable content ───────────────────────────────── */}
       <div className="flex-1 min-h-0 overflow-y-auto pb-28">
-        <div className="bg-white mt-3 mx-3 rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="bg-surface-container-low mt-3 mx-3 rounded-3xl shadow-sm border border-surface-container overflow-hidden">
 
           {/* ── 1. Cuenta y Perfil ─────────────────────────── */}
           <Section title="Cuenta y Perfil" open={openSection === 'cuenta'} onToggle={() => toggle('cuenta')}>
             {/* Mi perfil */}
             <button
               onClick={() => setShowProfileModal(true)}
-              className="w-full text-left"
+              className="w-full text-left cursor-pointer"
             >
               <SettingRow
                 icon={<User size={16} />}
-                iconBg="bg-blue-50"
-                iconColor="#1d4ed8"
+                iconBg="bg-blue-500/15"
+                iconColor="#3b82f6"
                 title="Mi perfil"
                 subtitle="Ver foto, nombre, email y teléfono"
-                action={<ChevronRight size={15} className="text-slate-300" />}
+                action={<ChevronRight size={15} className="text-on-surface-variant" />}
               />
             </button>
 
