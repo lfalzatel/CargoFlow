@@ -384,14 +384,14 @@ export default function Header({
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-surface-container flex flex-col max-h-[85vh]"
+              className="w-full max-w-sm bg-surface rounded-2xl shadow-2xl overflow-hidden border border-surface-container flex flex-col max-h-[85vh] text-on-surface"
             >
-              <div className="p-4 border-b border-surface-container flex items-center justify-between bg-surface-container-lowest flex-shrink-0">
+              <div className="p-4 border-b border-surface-container flex items-center justify-between bg-surface-container-low flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <Bell size={18} className="text-primary-container" />
                   <h3 className="font-bold text-sm text-on-surface">Notificaciones</h3>
                 </div>
-                <span className="text-[11px] font-bold bg-blue-50 text-primary-container px-2 py-0.5 rounded-full">
+                <span className="text-[11px] font-bold bg-primary/15 text-primary-container px-2 py-0.5 rounded-full">
                   {localUnreadCount} Nuevas
                 </span>
               </div>
@@ -416,15 +416,15 @@ export default function Header({
                         onNavigateToView('activity');
                       }
                     }}
-                    className={`p-3.5 hover:bg-surface-container-low transition-colors cursor-pointer flex gap-3 ${
-                      n.unread ? 'bg-blue-50/30' : ''
+                    className={`p-3.5 hover:bg-surface-container-high transition-colors cursor-pointer flex gap-3 ${
+                      n.unread ? 'bg-primary/10' : ''
                     }`}
                   >
                     <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${n.unread ? 'bg-primary-container' : 'bg-outline-variant'}`} />
                     <div className="flex-1">
                       <h4 className="text-xs font-bold text-on-surface leading-snug">{n.title}</h4>
                       <p className="text-[12px] text-on-surface-variant mt-0.5 leading-relaxed">{n.desc}</p>
-                      <span className="text-[10px] text-outline font-medium mt-1 block">{n.time}</span>
+                      <span className="text-[10px] text-on-surface-variant/70 font-medium mt-1 block">{n.time}</span>
                     </div>
                   </div>
                 ))}
@@ -436,7 +436,7 @@ export default function Header({
                     setIsNotificationsOpen(false);
                     onNavigateToView('activity');
                   }} 
-                  className="text-xs font-bold text-primary hover:underline"
+                  className="text-xs font-bold text-primary-container hover:underline"
                 >
                   Ver todas las actividades
                 </button>
