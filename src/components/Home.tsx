@@ -1506,23 +1506,35 @@ export default function Home({
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-slate-200 my-auto"
+              className={`w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border my-auto ${
+                activeTheme === 'noche'
+                  ? 'bg-slate-900 border-slate-800 text-white'
+                  : 'bg-white border-slate-200 text-slate-900'
+              }`}
             >
               {/* Header */}
-              <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-3">
+              <div className={`flex justify-between items-center pb-3 border-b mb-3 ${
+                activeTheme === 'noche' ? 'border-slate-800' : 'border-slate-100'
+              }`}>
                 <div>
-                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <h3 className={`text-base font-black flex items-center gap-2 ${
+                    activeTheme === 'noche' ? 'text-white' : 'text-slate-900'
+                  }`}>
                     <span className="text-xl">📦</span>
                     <span>Seleccionar Tipo de Mercancía</span>
                   </h3>
-                  <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                  <p className={`text-[11px] font-bold uppercase tracking-wider mt-0.5 ${
+                    activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-400'
+                  }`}>
                     13 Categorías disponibles para tu flete
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowCargoTypeModal(false)}
-                  className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors cursor-pointer"
+                  className={`p-2 rounded-full transition-colors cursor-pointer ${
+                    activeTheme === 'noche' ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-400'
+                  }`}
                 >
                   <X size={20} />
                 </button>
@@ -1530,18 +1542,24 @@ export default function Home({
 
               {/* Search Filter Bar */}
               <div className="relative mb-3">
-                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search size={16} className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${
+                  activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-400'
+                }`} />
                 <input
                   type="text"
                   placeholder="Buscar categoría (ej. refrigerado, trasteos, alimentos, cemento...)"
                   value={cargoTypeSearch}
                   onChange={(e) => setCargoTypeSearch(e.target.value)}
-                  className="w-full h-11 pl-10 pr-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 transition-all shadow-xs"
+                  className={`w-full h-11 pl-10 pr-4 rounded-2xl border text-xs font-bold focus:outline-none focus:border-emerald-500 transition-all shadow-xs ${
+                    activeTheme === 'noche'
+                      ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400'
+                      : 'bg-slate-50 border-slate-200 text-slate-800'
+                  }`}
                 />
                 {cargoTypeSearch && (
                   <button
                     onClick={() => setCargoTypeSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 text-xs font-bold"
                   >
                     Limpiar
                   </button>
@@ -1568,23 +1586,31 @@ export default function Home({
                         }}
                         className={`w-full text-left p-3 rounded-2xl border transition-all flex items-start gap-3 cursor-pointer group ${
                           isSelected
-                            ? 'bg-emerald-50 border-emerald-500 shadow-sm'
-                            : 'bg-white hover:bg-slate-50 border-slate-200'
+                            ? (activeTheme === 'noche' ? 'bg-emerald-950/80 border-emerald-500 shadow-sm' : 'bg-emerald-50 border-emerald-500 shadow-sm')
+                            : (activeTheme === 'noche' ? 'bg-slate-800/80 hover:bg-slate-800 border-slate-700' : 'bg-white hover:bg-slate-50 border-slate-200')
                         }`}
                       >
-                        <span className="text-2xl p-2 rounded-2xl bg-slate-100 group-hover:bg-white transition-colors flex-shrink-0">
+                        <span className={`text-2xl p-2 rounded-2xl transition-colors flex-shrink-0 ${
+                          activeTheme === 'noche' ? 'bg-slate-700 group-hover:bg-slate-600' : 'bg-slate-100 group-hover:bg-white'
+                        }`}>
                           {cat.icon}
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <h4 className={`text-xs font-black truncate ${isSelected ? 'text-emerald-800' : 'text-slate-900'}`}>
+                            <h4 className={`text-xs font-black truncate ${
+                              isSelected
+                                ? (activeTheme === 'noche' ? 'text-emerald-400' : 'text-emerald-800')
+                                : (activeTheme === 'noche' ? 'text-slate-100' : 'text-slate-900')
+                            }`}>
                               {cat.title}
                             </h4>
                             {isSelected && (
-                              <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0" />
+                              <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
                             )}
                           </div>
-                          <p className="text-[11px] text-slate-500 font-medium leading-tight mt-0.5 line-clamp-2">
+                          <p className={`text-[11px] font-medium leading-tight mt-0.5 line-clamp-2 ${
+                            activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-500'
+                          }`}>
                             {cat.subtitle}
                           </p>
                         </div>
@@ -1610,28 +1636,40 @@ export default function Home({
               exit={{ scale: 0.85, opacity: 0, y: 30 }}
               transition={{ type: 'spring', damping: 22, stiffness: 350 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-[0_15px_40px_rgba(0,0,0,0.35)] overflow-hidden max-h-[90vh] flex flex-col border-4 border-amber-400 my-auto relative"
+              className={
+                activeTheme === 'noche'
+                  ? "bg-slate-900 text-white w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-[0_15px_40px_rgba(0,0,0,0.7)] overflow-hidden max-h-[90vh] flex flex-col border-2 border-slate-800 my-auto relative"
+                  : "bg-white w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-[0_15px_40px_rgba(0,0,0,0.35)] overflow-hidden max-h-[90vh] flex flex-col border-4 border-amber-400 my-auto relative"
+              }
             >
               {/* Top Decorative Mario Bar */}
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-400 via-red-500 to-emerald-400" />
 
               {/* Header */}
-              <div className="flex justify-between items-center pb-3 border-b-2 border-slate-100 mb-3 mt-1">
+              <div className={`flex justify-between items-center pb-3 border-b-2 mb-3 mt-1 ${
+                activeTheme === 'noche' ? 'border-slate-800' : 'border-slate-100'
+              }`}>
                 <div>
-                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <h3 className={`text-base font-black flex items-center gap-2 ${
+                    activeTheme === 'noche' ? 'text-white' : 'text-slate-900'
+                  }`}>
                     <span className="text-2xl p-1 bg-amber-100 rounded-xl shadow-xs border border-amber-300">🎮</span>
-                    <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent font-black">
+                    <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent font-black">
                       Seleccionar Tipo de Vehículo
                     </span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 font-extrabold uppercase tracking-wider mt-0.5">
+                  <p className={`text-[11px] font-extrabold uppercase tracking-wider mt-0.5 ${
+                    activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-500'
+                  }`}>
                     15 Opciones de vehículos disponibles
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowVehicleModal(false)}
-                  className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-700 transition-colors cursor-pointer border border-slate-200"
+                  className={`p-2 rounded-full transition-colors cursor-pointer border ${
+                    activeTheme === 'noche' ? 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border-slate-700' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700 border-slate-200'
+                  }`}
                 >
                   <X size={20} />
                 </button>
@@ -1645,12 +1683,16 @@ export default function Home({
                   placeholder="Buscar vehículo (ej. tractomula, furgón, motocarguera...)"
                   value={vehicleSearch}
                   onChange={(e) => setVehicleSearch(e.target.value)}
-                  className="w-full h-11 pl-10 pr-4 bg-amber-50/40 rounded-2xl border-2 border-amber-200 text-xs font-black text-slate-800 focus:outline-none focus:border-amber-500 transition-all shadow-xs"
+                  className={`w-full h-11 pl-10 pr-4 rounded-2xl border-2 text-xs font-black transition-all shadow-xs ${
+                    activeTheme === 'noche'
+                      ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400 focus:border-amber-500'
+                      : 'bg-amber-50/40 border-amber-200 text-slate-800 focus:border-amber-500'
+                  }`}
                 />
                 {vehicleSearch && (
                   <button
                     onClick={() => setVehicleSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-black"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 text-xs font-black"
                   >
                     Limpiar
                   </button>
@@ -1678,8 +1720,8 @@ export default function Home({
                         }}
                         className={`w-full text-left p-3.5 rounded-2xl border-2 transition-all flex items-center gap-3.5 cursor-pointer group relative overflow-hidden ${
                           isSelected
-                            ? 'bg-gradient-to-r from-amber-100 to-orange-100 border-amber-500 shadow-md scale-[1.01]'
-                            : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-amber-300'
+                            ? (activeTheme === 'noche' ? 'bg-amber-950/60 border-amber-500 shadow-md' : 'bg-gradient-to-r from-amber-100 to-orange-100 border-amber-500 shadow-md scale-[1.01]')
+                            : (activeTheme === 'noche' ? 'bg-slate-800/80 hover:bg-slate-800 border-slate-700 hover:border-amber-500/50' : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-amber-300')
                         }`}
                       >
                         {/* Vehicle Icon Badge */}
@@ -1690,19 +1732,27 @@ export default function Home({
                         {/* Text & Specs */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <h4 className={`text-xs font-black truncate ${isSelected ? 'text-amber-950' : 'text-slate-900'}`}>
+                            <h4 className={`text-xs font-black truncate ${
+                              isSelected
+                                ? (activeTheme === 'noche' ? 'text-amber-400' : 'text-amber-950')
+                                : (activeTheme === 'noche' ? 'text-white' : 'text-slate-900')
+                            }`}>
                               {v.title}
                             </h4>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shadow-2xs ${v.bgLight}`}>
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shadow-2xs ${
+                                activeTheme === 'noche' ? 'bg-slate-700 text-amber-300 border-slate-600' : v.bgLight
+                              }`}>
                                 {v.badge}
                               </span>
                               {isSelected && (
-                                <CheckCircle2 size={18} className="text-amber-600 flex-shrink-0" />
+                                <CheckCircle2 size={18} className="text-amber-500 flex-shrink-0" />
                               )}
                             </div>
                           </div>
-                          <p className="text-[11px] text-slate-500 font-bold leading-tight mt-1 line-clamp-2">
+                          <p className={`text-[11px] font-bold leading-tight mt-1 line-clamp-2 ${
+                            activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-500'
+                          }`}>
                             {v.subtitle}
                           </p>
                         </div>
@@ -1728,28 +1778,40 @@ export default function Home({
               exit={{ scale: 0.85, opacity: 0, y: 30 }}
               transition={{ type: 'spring', damping: 22, stiffness: 350 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-[0_15px_40px_rgba(0,0,0,0.35)] overflow-hidden max-h-[90vh] flex flex-col border-4 border-blue-400 my-auto relative"
+              className={
+                activeTheme === 'noche'
+                  ? "bg-slate-900 text-white w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-[0_15px_40px_rgba(0,0,0,0.7)] overflow-hidden max-h-[90vh] flex flex-col border-2 border-slate-800 my-auto relative"
+                  : "bg-white w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-[0_15px_40px_rgba(0,0,0,0.35)] overflow-hidden max-h-[90vh] flex flex-col border-4 border-blue-400 my-auto relative"
+              }
             >
               {/* Top Decorative Mario Bar */}
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500" />
 
               {/* Header */}
-              <div className="flex justify-between items-center pb-3 border-b-2 border-slate-100 mb-3 mt-1">
+              <div className={`flex justify-between items-center pb-3 border-b-2 mb-3 mt-1 ${
+                activeTheme === 'noche' ? 'border-slate-800' : 'border-slate-100'
+              }`}>
                 <div>
-                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <h3 className={`text-base font-black flex items-center gap-2 ${
+                    activeTheme === 'noche' ? 'text-white' : 'text-slate-900'
+                  }`}>
                     <span className="text-2xl p-1 bg-blue-100 rounded-xl shadow-xs border border-blue-300">🍄</span>
-                    <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-black">
+                    <span className="bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent font-black">
                       Seleccionar Especialidad
                     </span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 font-extrabold uppercase tracking-wider mt-0.5">
+                  <p className={`text-[11px] font-extrabold uppercase tracking-wider mt-0.5 ${
+                    activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-500'
+                  }`}>
                     Condiciones especiales para la carga
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowSpecialtyModal(false)}
-                  className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-700 transition-colors cursor-pointer border border-slate-200"
+                  className={`p-2 rounded-full transition-colors cursor-pointer border ${
+                    activeTheme === 'noche' ? 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border-slate-700' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700 border-slate-200'
+                  }`}
                 >
                   <X size={20} />
                 </button>
@@ -1769,8 +1831,8 @@ export default function Home({
                       }}
                       className={`w-full text-left p-3.5 rounded-2xl border-2 transition-all flex items-center gap-3.5 cursor-pointer group relative overflow-hidden ${
                         isSelected
-                          ? 'bg-gradient-to-r from-blue-100 to-indigo-100 border-blue-500 shadow-md scale-[1.01]'
-                          : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-blue-300'
+                          ? (activeTheme === 'noche' ? 'bg-blue-950/60 border-blue-500 shadow-md' : 'bg-gradient-to-r from-blue-100 to-indigo-100 border-blue-500 shadow-md scale-[1.01]')
+                          : (activeTheme === 'noche' ? 'bg-slate-800/80 hover:bg-slate-800 border-slate-700 hover:border-blue-500/50' : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-blue-300')
                       }`}
                     >
                       {/* Icon Badge */}
@@ -1781,19 +1843,27 @@ export default function Home({
                       {/* Text Details */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <h4 className={`text-xs font-black truncate ${isSelected ? 'text-blue-950' : 'text-slate-900'}`}>
+                          <h4 className={`text-xs font-black truncate ${
+                            isSelected
+                              ? (activeTheme === 'noche' ? 'text-blue-400' : 'text-blue-950')
+                              : (activeTheme === 'noche' ? 'text-white' : 'text-slate-900')
+                          }`}>
                             {s.title}
                           </h4>
                           <div className="flex items-center gap-1.5 flex-shrink-0">
-                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shadow-2xs ${s.bgLight}`}>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shadow-2xs ${
+                              activeTheme === 'noche' ? 'bg-slate-700 text-blue-300 border-slate-600' : s.bgLight
+                            }`}>
                               {s.badge}
                             </span>
                             {isSelected && (
-                              <CheckCircle2 size={18} className="text-blue-600 flex-shrink-0" />
+                              <CheckCircle2 size={18} className="text-blue-500 flex-shrink-0" />
                             )}
                           </div>
                         </div>
-                        <p className="text-[11px] text-slate-500 font-bold leading-tight mt-1 line-clamp-2">
+                        <p className={`text-[11px] font-bold leading-tight mt-1 line-clamp-2 ${
+                          activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-500'
+                        }`}>
                           {s.subtitle}
                         </p>
                       </div>
@@ -1814,12 +1884,14 @@ export default function Home({
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full border border-slate-100 flex flex-col gap-4"
+              className={`rounded-3xl p-6 shadow-2xl max-w-sm w-full border flex flex-col gap-4 ${
+                activeTheme === 'noche' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-100 text-slate-900'
+              }`}
             >
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="text-base font-black text-[#0b224d]">Asignar Vehículo</h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Selecciona el camión para este viaje</p>
+                  <h3 className={`text-base font-black ${activeTheme === 'noche' ? 'text-white' : 'text-[#0b224d]'}`}>Asignar Vehículo</h3>
+                  <p className={`text-[10px] font-bold uppercase mt-0.5 ${activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-400'}`}>Selecciona el camión para este viaje</p>
                 </div>
                 <button 
                   type="button"
@@ -1827,7 +1899,9 @@ export default function Home({
                     setShowVehicleSelector(false);
                     setActionToPerform(null);
                   }} 
-                  className="p-1 hover:bg-slate-100 rounded-full text-slate-400 cursor-pointer"
+                  className={`p-1 rounded-full cursor-pointer ${
+                    activeTheme === 'noche' ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-400'
+                  }`}
                 >
                   <X size={18} />
                 </button>
@@ -1856,18 +1930,28 @@ export default function Home({
                       setShowVehicleSelector(false);
                       setActionToPerform(null);
                     }}
-                    className="w-full p-3.5 bg-slate-50 hover:bg-slate-100/80 rounded-2xl border border-slate-100 hover:border-[#0b224d]/30 text-left transition-all flex justify-between items-center group cursor-pointer"
+                    className={`w-full p-3.5 rounded-2xl border text-left transition-all flex justify-between items-center group cursor-pointer ${
+                      activeTheme === 'noche'
+                        ? 'bg-slate-800/80 hover:bg-slate-800 border-slate-700 hover:border-emerald-500/50'
+                        : 'bg-slate-50 hover:bg-slate-100/80 border-slate-100 hover:border-[#0b224d]/30'
+                    }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[#0b224d]/5 text-[#0b224d] rounded-lg group-hover:bg-[#0b224d] group-hover:text-white transition-colors">
+                      <div className={`p-2 rounded-lg transition-colors ${
+                        activeTheme === 'noche' ? 'bg-slate-700 text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white' : 'bg-[#0b224d]/5 text-[#0b224d] group-hover:bg-[#0b224d] group-hover:text-white'
+                      }`}>
                         <Truck size={16} />
                       </div>
                       <div>
-                        <p className="text-xs font-black text-on-surface">{vh.type}</p>
+                        <p className={`text-xs font-black ${activeTheme === 'noche' ? 'text-white' : 'text-on-surface'}`}>{vh.type}</p>
                         {vh.model && <p className="text-[9px] text-slate-400 font-bold">Mod. {vh.model}</p>}
                       </div>
                     </div>
-                    <span className="text-xs font-black bg-white px-2.5 py-1 border border-slate-200 rounded-md tracking-wider text-[#0b224d] group-hover:bg-[#0b224d] group-hover:text-white group-hover:border-transparent transition-all">
+                    <span className={`text-xs font-black px-2.5 py-1 border rounded-md tracking-wider transition-all ${
+                      activeTheme === 'noche'
+                        ? 'bg-slate-900 border-slate-700 text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-transparent'
+                        : 'bg-white border-slate-200 text-[#0b224d] group-hover:bg-[#0b224d] group-hover:text-white group-hover:border-transparent'
+                    }`}>
                       {vh.plate}
                     </span>
                   </button>
@@ -1880,7 +1964,9 @@ export default function Home({
                   setShowVehicleSelector(false);
                   setActionToPerform(null);
                 }}
-                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-750 font-bold rounded-xl text-xs transition-all cursor-pointer"
+                className={`w-full py-2.5 font-bold rounded-xl text-xs transition-all cursor-pointer ${
+                  activeTheme === 'noche' ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-750'
+                }`}
               >
                 Cancelar
               </button>
