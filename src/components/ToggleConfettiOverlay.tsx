@@ -50,9 +50,6 @@ export default function ToggleConfettiOverlay({
   }, [isOpen, activated, title, subtitle, statusText]);
 
   if (!isOpen) return null;
-  if (typeof window !== 'undefined' && localStorage.getItem('cf_gamification_anim_enabled') === 'false') {
-    return null;
-  }
 
   return (
     <div

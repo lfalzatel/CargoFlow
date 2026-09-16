@@ -576,8 +576,8 @@ export default function Header({
                     {renderAvatar(user.photoURL, user.name, "w-full h-full text-sm")}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate text-slate-800">{user.name || 'Usuario CargoFlow'}</p>
-                    <p className="text-xs truncate text-slate-500">{user.email || 'usuario@cargoflow.co'}</p>
+                    <p className="text-sm font-semibold truncate text-[var(--text-primary)]">{user.name || 'Usuario CargoFlow'}</p>
+                    <p className="text-xs truncate text-[var(--text-secondary)]">{user.email || 'usuario@cargoflow.co'}</p>
                     <span className="inline-block mt-1 text-[9px] px-2 py-0.5 uppercase tracking-widest font-bold rounded-full bg-[var(--accent-glow)] border border-[var(--accent)] text-[var(--accent)]">
                       {user.role.toUpperCase()}
                     </span>
@@ -603,7 +603,7 @@ export default function Header({
                           className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg transition-all font-bold ${
                             activeTheme === themeId
                               ? 'bg-emerald-600 text-white shadow-sm'
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-strong)]'
                           }`}
                         >
                           {iconEl}

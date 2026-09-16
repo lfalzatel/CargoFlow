@@ -162,10 +162,40 @@ export default function App() {
     activated?: boolean;
   } | null>(null);
 
+  // Inicialización y sincronización de tema visual
+  useEffect(() => {
+    const applyTheme = (themeId?: string) => {
+      const activeTheme = themeId || localStorage.getItem('cf_theme') || 'dia';
+      document.documentElement.setAttribute('data-theme', activeTheme);
+    };
+
+    applyTheme();
+
+    const handleThemeChange = (e: any) => {
+      const themeId = e?.detail?.theme || localStorage.getItem('cf_theme');
+      applyTheme(themeId);
+    };
+
+    window.addEventListener('cargoflow:theme-changed', handleThemeChange);
+    window.addEventListener('storage', handleThemeChange);
+
+    return () => {
+      window.removeEventListener('cargoflow:theme-changed', handleThemeChange);
+      window.removeEventListener('storage', handleThemeChange);
+    };
+  }, []);
+
   // Escuchar evento cargoflow:toggle-confetti para lluvia de confeti al cambiar toggles
   useEffect(() => {
     const handleToggleConfetti = (e: Event) => {
       const detail = (e as CustomEvent).detail || {};
+      const animEnabled = typeof window === 'undefined' || localStorage.getItem('cf_gamification_anim_enabled') !== 'false';
+
+      // Si las animaciones están desactivadas y NO es el toggle de animación en sí, no mostrar modal
+      if (!animEnabled && detail.target !== 'anim_toggle') {
+        return;
+      }
+
       setConfettiOverlay({
         isOpen: true,
         title: detail.title || 'Actualización exitosa.',

@@ -42,7 +42,130 @@
 body {
   font-family: var(--font-sans);
   background-color: var(--color-background);
-  color: var(--color-on-background);
+  color: var(--color-on-surface);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ── THEME PALETTES ────────────────────────────────────── */
+
+/* 1. Modo Día (Light Corporate) y Modo Gamer / Original */
+[data-theme="dia"], [data-theme="original"] {
+  --color-primary: #0047d3;
+  --color-primary-container: #1e5eff;
+  --color-background: #fcf9f8;
+  --color-surface: #ffffff;
+  --color-surface-container: #f0eded;
+  --color-surface-container-low: #f6f3f2;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-high: #eae7e7;
+  --color-surface-container-highest: #e5e2e1;
+  --color-on-surface: #1c1b1b;
+  --color-on-surface-variant: #434656;
+  --color-outline: #737688;
+  --color-outline-variant: #c3c5d9;
+  --accent: #00e5a0;
+  --accent-glow: rgba(0, 229, 160, 0.15);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass: rgba(0, 0, 0, 0.03);
+  --glass-strong: rgba(0, 0, 0, 0.06);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+}
+
+/* 2. Modo Noche (Dark Elegant) */
+[data-theme="noche"] {
+  --color-primary: #10b981;
+  --color-primary-container: #059669;
+  --color-background: #09152b;
+  --color-surface: #0b224d;
+  --color-surface-container: #132f65;
+  --color-surface-container-low: #0f2756;
+  --color-surface-container-lowest: #0b224d;
+  --color-surface-container-high: #193a79;
+  --color-surface-container-highest: #1e458e;
+  --color-on-surface: #f8fafc;
+  --color-on-surface-variant: #cbd5e1;
+  --color-outline: #64748b;
+  --color-outline-variant: #334155;
+  --accent: #fbbf24;
+  --accent-glow: rgba(251, 191, 36, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass: rgba(255, 255, 255, 0.06);
+  --glass-strong: rgba(255, 255, 255, 0.12);
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+}
+
+/* 3. Modo Cyberpunk (Vibrant Neon) */
+[data-theme="cyber"] {
+  --color-primary: #00f0ff;
+  --color-primary-container: #00b8d4;
+  --color-background: #050814;
+  --color-surface: #0b1120;
+  --color-surface-container: #131c31;
+  --color-surface-container-low: #0e1628;
+  --color-surface-container-lowest: #0b1120;
+  --color-surface-container-high: #1a2744;
+  --color-surface-container-highest: #223358;
+  --color-on-surface: #f0fdf4;
+  --color-on-surface-variant: #94a3b8;
+  --color-outline: #00f0ff;
+  --color-outline-variant: #ff007f;
+  --accent: #00f0ff;
+  --accent-glow: rgba(0, 240, 255, 0.25);
+  --glass-border: rgba(0, 240, 255, 0.3);
+  --glass: rgba(0, 240, 255, 0.08);
+  --glass-strong: rgba(0, 240, 255, 0.15);
+  --text-primary: #f0fdf4;
+  --text-secondary: #94a3b8;
+}
+
+/* 4. Modo Glassmorphism Transparente */
+[data-theme="glass"] {
+  --color-primary: #06b6d4;
+  --color-primary-container: #0891b2;
+  --color-background: #0f172a;
+  --color-surface: rgba(255, 255, 255, 0.08);
+  --color-surface-container: rgba(255, 255, 255, 0.12);
+  --color-surface-container-low: rgba(255, 255, 255, 0.05);
+  --color-surface-container-lowest: rgba(255, 255, 255, 0.08);
+  --color-surface-container-high: rgba(255, 255, 255, 0.16);
+  --color-surface-container-highest: rgba(255, 255, 255, 0.2);
+  --color-on-surface: #f8fafc;
+  --color-on-surface-variant: #e2e8f0;
+  --color-outline: rgba(255, 255, 255, 0.25);
+  --color-outline-variant: rgba(255, 255, 255, 0.12);
+  --accent: #38bdf8;
+  --accent-glow: rgba(56, 189, 248, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.25);
+  --glass: rgba(255, 255, 255, 0.08);
+  --glass-strong: rgba(255, 255, 255, 0.16);
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+}
+
+/* 5. Modo Kilo (Catppuccin Code) */
+[data-theme="kilo"] {
+  --color-primary: #cba6f7;
+  --color-primary-container: #b4befe;
+  --color-background: #181825;
+  --color-surface: #1e1e2e;
+  --color-surface-container: #313244;
+  --color-surface-container-low: #24273a;
+  --color-surface-container-lowest: #1e1e2e;
+  --color-surface-container-high: #45475a;
+  --color-surface-container-highest: #585b70;
+  --color-on-surface: #cdd6f4;
+  --color-on-surface-variant: #a6adc8;
+  --color-outline: #cba6f7;
+  --color-outline-variant: #6c7086;
+  --accent: #cba6f7;
+  --accent-glow: rgba(203, 166, 247, 0.2);
+  --glass-border: rgba(203, 166, 247, 0.25);
+  --glass: rgba(203, 166, 247, 0.08);
+  --glass-strong: rgba(203, 166, 247, 0.15);
+  --text-primary: #cdd6f4;
+  --text-secondary: #a6adc8;
 }
 
 /* BottomNav Custom Reference Animations */
@@ -148,9 +271,17 @@ body {
   background: hsla(0, 0%, 100%, 0.95);
   backdrop-filter: blur(24px) saturate(200%);
   -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.30);
   transition: background .2s, border-color .2s;
+}
+
+[data-theme="noche"] .glass-dropdown,
+[data-theme="cyber"] .glass-dropdown,
+[data-theme="glass"] .glass-dropdown,
+[data-theme="kilo"] .glass-dropdown {
+  background: rgba(11, 34, 77, 0.96);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 @keyframes slideDown {

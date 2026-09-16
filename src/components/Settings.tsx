@@ -509,11 +509,9 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
     };
     window.addEventListener('storage', handleSync);
     window.addEventListener('cargoflow:notif-settings-changed', handleSync);
-    window.addEventListener('cargoflow:toggle-confetti', handleSync);
     return () => {
       window.removeEventListener('storage', handleSync);
       window.removeEventListener('cargoflow:notif-settings-changed', handleSync);
-      window.removeEventListener('cargoflow:toggle-confetti', handleSync);
     };
   }, []);
 
@@ -906,6 +904,7 @@ export default function Settings({ user, onBack, onLogout, onInstallApp, onShare
                 <Toggle
                   checked={gamificationAnimEnabled}
                   label="Animaciones 3D y Confeti"
+                  target="anim_toggle"
                   onChange={(v) => {
                     setGamificationAnimEnabled(v);
                     localStorage.setItem('cf_gamification_anim_enabled', String(v));
