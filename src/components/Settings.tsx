@@ -118,11 +118,11 @@ function SettingRow({
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-semibold leading-tight ${danger ? 'text-red-500' : 'text-slate-800'}`}>
+        <p className={`text-sm font-semibold leading-tight ${danger ? 'text-red-500' : 'text-on-surface'}`}>
           {title}
         </p>
         {subtitle && (
-          <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">{subtitle}</p>
+          <p className="text-[11px] text-on-surface-variant mt-0.5 leading-snug">{subtitle}</p>
         )}
       </div>
       {action}
@@ -145,22 +145,22 @@ function Section({
   danger?: boolean;
 }) {
   return (
-    <div className="border-b border-slate-100 last:border-0">
+    <div className="border-b border-surface-container last:border-0">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-4 text-left"
+        className="w-full flex items-center justify-between px-4 py-4 text-left cursor-pointer"
       >
         <span
           className={`text-sm font-bold tracking-tight ${
-            danger ? 'text-red-500' : 'text-slate-700'
+            danger ? 'text-red-500' : 'text-on-surface'
           }`}
         >
           {title}
         </span>
         {open ? (
-          <ChevronUp size={16} className={danger ? 'text-red-400' : 'text-slate-400'} />
+          <ChevronUp size={16} className={danger ? 'text-red-400' : 'text-on-surface-variant'} />
         ) : (
-          <ChevronDown size={16} className={danger ? 'text-red-400' : 'text-slate-400'} />
+          <ChevronDown size={16} className={danger ? 'text-red-400' : 'text-on-surface-variant'} />
         )}
       </button>
 
@@ -173,7 +173,7 @@ function Section({
             transition={{ duration: 0.22, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="mx-3 mb-3 rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden divide-y divide-slate-50">
+            <div className="mx-3 mb-3 rounded-2xl border border-surface-container bg-surface-container-low shadow-sm overflow-hidden divide-y divide-surface-container">
               {children}
             </div>
           </motion.div>

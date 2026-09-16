@@ -102,32 +102,17 @@ export default function Activity({
   };
 
   return (<>
-    <div className="bg-background min-h-screen pt-20">
-      {/* Top App Bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm flex items-center justify-between px-6 h-16">
-        <button className="text-primary-container p-2 -ml-2 rounded-full hover:bg-surface-container transition-colors">
-          <Truck size={24} fill="currentColor" />
-        </button>
-        <h1 className="text-xl font-black text-primary-container tracking-tight">CargoFlow</h1>
-        <div className="w-9 h-9 rounded-full overflow-hidden border border-surface-container">
-          <img
-            alt="Profile Avatar"
-            className="w-full h-full object-cover"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbr_Tmwf_quiZEewMYi9pnva_unlJ7hkWZKvWCXD8j7F1nM2xZGJ_dWOqjzbyR_rtWI12sF26VSy8f6FzbS_9ULOdd7CePKg175BzGSIG9FlCqZYclEyZA2DYQ1N9NDTkg31_XYb8CZO6HaAyD3rmcH2God7g4E3lILm8rFgx16vGqWdy6k9xDM4RJt7sVRJSiuAcMdqR0u51DtO3MbLRQvMN8EyKPLHtXasdhdN-cRcOdjfI9ngSi"
-          />
-        </div>
-      </header>
-
+    <div className="bg-background min-h-screen pt-20 pb-24">
       {/* Main Content */}
-      <main className="px-6 max-w-3xl mx-auto flex flex-col gap-6">
+      <main className="px-4 sm:px-6 max-w-3xl mx-auto flex flex-col gap-6">
         <div className="flex items-center justify-between pt-4">
           <h2 className="text-2xl font-extrabold text-on-surface">Actividad</h2>
-          <div className="flex space-x-2 bg-surface-container p-1 rounded-full border border-surface-container-high">
+          <div className="flex space-x-1.5 bg-surface-container p-1 rounded-full border border-surface-container-high">
             <button
               onClick={() => setFilter('activos')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 filter === 'activos'
-                  ? 'bg-white text-on-surface shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-on-surface-variant hover:text-on-surface'
               }`}
             >
@@ -135,9 +120,9 @@ export default function Activity({
             </button>
             <button
               onClick={() => setFilter('historial')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 filter === 'historial'
-                  ? 'bg-white text-on-surface shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-on-surface-variant hover:text-on-surface'
               }`}
             >
@@ -149,10 +134,10 @@ export default function Activity({
         {/* Trips List */}
         <div className="flex flex-col gap-4">
           {filteredTrips.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-surface-container p-6">
-              <Truck size={48} className="mx-auto text-outline-variant mb-4" strokeWidth={1.2} />
+            <div className="text-center py-16 bg-surface-container-low rounded-2xl border border-surface-container p-6">
+              <Truck size={48} className="mx-auto text-on-surface-variant/60 mb-4" strokeWidth={1.2} />
               <p className="text-sm font-bold text-on-surface">No hay despachos en esta sección</p>
-              <p className="text-xs text-outline mt-1">
+              <p className="text-xs text-on-surface-variant mt-1">
                 Crea un nuevo despacho pulsando en la barra de búsqueda en el mapa.
               </p>
             </div>
@@ -165,7 +150,7 @@ export default function Activity({
                   layout
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`bg-white rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.03)] p-5 border border-surface-container flex flex-col gap-4 transition-all ${
+                  className={`bg-surface-container-low rounded-2xl shadow-sm p-5 border border-surface-container flex flex-col gap-4 transition-all ${
                     !isActive ? 'opacity-75 hover:opacity-90' : ''
                   }`}
                 >
@@ -174,9 +159,9 @@ export default function Activity({
                       <span
                         className={`inline-block font-bold text-[10px] tracking-wider px-2 py-0.5 rounded-sm mb-2 uppercase ${
                           trip.status === 'EN CAMINO'
-                            ? 'bg-blue-100 text-primary-container'
+                            ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
                             : trip.status === 'PENDIENTE'
-                            ? 'bg-amber-100 text-amber-800'
+                            ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
                             : 'bg-surface-container-high text-on-surface'
                         }`}
                       >
@@ -220,9 +205,9 @@ export default function Activity({
                   </div>
 
                   {trip.notes && (
-                    <div className="mt-3 p-3 bg-amber-50/50 border border-amber-100 rounded-xl">
-                      <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-wider mb-1">Notas del cliente</p>
-                      <p className="text-xs text-amber-800 font-medium">{trip.notes}</p>
+                    <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                      <p className="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider mb-1">Notas del cliente</p>
+                      <p className="text-xs text-amber-400 font-medium">{trip.notes}</p>
                     </div>
                   )}
 
@@ -239,15 +224,15 @@ export default function Activity({
                     // 1. Admin special double-column overview
                     if (user.role === 'admin') {
                       return (
-                        <div className="mt-2 p-3 bg-slate-50 border border-slate-100 rounded-xl flex flex-col gap-2">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Detalles de Participantes (Panel Admin)</p>
-                          <div className="grid grid-cols-2 gap-4 divide-x divide-slate-200">
+                        <div className="mt-2 p-3 bg-surface-container border border-surface-container-high rounded-xl flex flex-col gap-2">
+                          <p className="text-[9px] font-black text-on-surface-variant/70 uppercase tracking-wider">Detalles de Participantes (Panel Admin)</p>
+                          <div className="grid grid-cols-2 gap-4 divide-x divide-surface-container-high">
                             {/* Cliente column */}
                             <div className="flex items-center gap-2 min-w-0">
                               {renderAvatar(clientePhoto || undefined, clienteName, "w-8 h-8 text-xs")}
                               <div className="min-w-0">
-                                <p className="text-[8px] font-black text-blue-600 uppercase tracking-widest">Cliente</p>
-                                <p className="text-[11px] font-bold text-slate-700 truncate">{clienteName}</p>
+                                <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Cliente</p>
+                                <p className="text-[11px] font-bold text-on-surface truncate">{clienteName}</p>
                               </div>
                             </div>
 
@@ -255,17 +240,17 @@ export default function Activity({
                             <div className="flex items-center gap-2 pl-3 min-w-0">
                               {trip.status === 'PENDIENTE' ? (
                                 <div className="min-w-0">
-                                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Conductor</p>
-                                  <p className="text-[11px] text-slate-400 italic font-medium truncate">Buscando conductor...</p>
+                                  <p className="text-[8px] font-black text-on-surface-variant/60 uppercase tracking-widest">Conductor</p>
+                                  <p className="text-[11px] text-on-surface-variant/70 italic font-medium truncate">Buscando conductor...</p>
                                 </div>
                               ) : (
                                 <>
                                   {renderAvatar(conductorPhoto || undefined, conductorName, "w-8 h-8 text-xs")}
                                   <div className="min-w-0">
-                                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Conductor</p>
-                                    <p className="text-[11px] font-bold text-slate-700 truncate">{conductorName}</p>
+                                    <p className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Conductor</p>
+                                    <p className="text-[11px] font-bold text-on-surface truncate">{conductorName}</p>
                                     {trip.conductorPlate && (
-                                      <p className="text-[9px] text-slate-500 font-extrabold truncate">Placa: {trip.conductorPlate}</p>
+                                      <p className="text-[9px] text-on-surface-variant font-extrabold truncate">Placa: {trip.conductorPlate}</p>
                                     )}
                                   </div>
                                 </>
@@ -280,20 +265,20 @@ export default function Activity({
                     if (trip.status === 'PENDIENTE') return null;
 
                     return (
-                      <div className="mt-2 p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-3">
+                      <div className="mt-2 p-3 bg-surface-container border border-surface-container-high rounded-xl flex items-center gap-3">
                         {user.email === trip.clienteId ? (
                           <>
                             {renderAvatar(conductorPhoto || (trip.conductorId === user.email ? user.photoURL : undefined), conductorName, "w-10 h-10 text-xs")}
                             <div className="flex-1">
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Conductor Asignado</p>
-                              <p className="text-xs font-bold text-slate-700">{conductorName}</p>
+                              <p className="text-[10px] font-black text-on-surface-variant/70 uppercase tracking-wider">Conductor Asignado</p>
+                              <p className="text-xs font-bold text-on-surface">{conductorName}</p>
                               <div className="flex items-center gap-2 mt-0.5">
                                 {(trip.conductorPlate || user.plateNumber) && (
-                                  <span className="text-[10px] font-black bg-slate-900 text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                  <span className="text-[10px] font-black bg-emerald-600 text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
                                     Placa: {trip.conductorPlate || user.plateNumber}
                                   </span>
                                 )}
-                                {trip.conductorVehicleType && <span className="text-[10px] text-slate-500 font-medium truncate">{trip.conductorVehicleType}</span>}
+                                {trip.conductorVehicleType && <span className="text-[10px] text-on-surface-variant font-medium truncate">{trip.conductorVehicleType}</span>}
                               </div>
                             </div>
                           </>
@@ -301,11 +286,11 @@ export default function Activity({
                           <>
                             {renderAvatar(clientePhoto || (trip.clienteId === user.email ? user.photoURL : undefined), clienteName, "w-10 h-10 text-xs")}
                             <div className="flex-1">
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Cliente Solicitante</p>
-                              <p className="text-xs font-bold text-slate-700">{clienteName}</p>
+                              <p className="text-[10px] font-black text-on-surface-variant/70 uppercase tracking-wider">Cliente Solicitante</p>
+                              <p className="text-xs font-bold text-on-surface">{clienteName}</p>
                               {(trip.conductorPlate || user.plateNumber) && (
                                 <div className="mt-1">
-                                  <span className="text-[10px] font-black bg-slate-900 text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                  <span className="text-[10px] font-black bg-emerald-600 text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
                                     Placa Asignada: {trip.conductorPlate || user.plateNumber}
                                   </span>
                                 </div>

@@ -229,14 +229,14 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
     : `Rendimiento — ${getMonthLabel(monthOffset)}`;
 
   return (
-    <div className="bg-slate-50 pt-20">
+    <div className="bg-background pt-20 pb-24 min-h-screen text-on-surface">
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-slate-100 px-5 pt-5 pb-4">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">
+      <div className="bg-surface border-b border-surface-container px-5 pt-5 pb-4">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant mb-1">
           {user.role === 'admin' ? 'PANEL DE CONTROL GENERAL' : 'HISTORIAL FINANCIERO'}
         </p>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-black text-on-surface tracking-tight">
             {user.role === 'admin' ? 'Dashboard' : user.role === 'conductor' ? 'Ganancias' : 'Reportes'}
           </h1>
           <div className="flex items-center gap-2">
@@ -244,7 +244,7 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
             <button
               onClick={downloadReport}
               title="Descargar reporte CSV"
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors cursor-pointer"
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant hover:bg-emerald-500/20 hover:text-emerald-400 transition-colors cursor-pointer"
             >
               <Download size={15} />
             </button>
@@ -253,13 +253,13 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
               onClick={() => setShowHeatCalendar(v => !v)}
               title="Calendario de actividad"
               className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors cursor-pointer ${
-                showHeatCalendar ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-700'
+                showHeatCalendar ? 'bg-emerald-600 text-white shadow-sm' : 'bg-surface-container-high text-on-surface-variant hover:bg-blue-500/20 hover:text-blue-400'
               }`}
             >
               <CalendarDays size={15} />
             </button>
             {/* Role badge */}
-            <span className="text-xs font-black px-3 py-1 bg-slate-100 text-slate-700 rounded-full border border-slate-200 uppercase tracking-widest">
+            <span className="text-xs font-black px-3 py-1 bg-surface-container text-on-surface rounded-full border border-surface-container-high uppercase tracking-widest">
               {user.role}
             </span>
           </div>
@@ -274,22 +274,22 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="mt-4 bg-slate-50 rounded-2xl p-4 border border-slate-200">
+              <div className="mt-4 bg-surface-container-low rounded-2xl p-4 border border-surface-container">
                 {/* Calendar month navigation */}
                 <div className="flex items-center justify-between mb-3">
                   <button
                     onClick={() => setCalMonthOffset(o => o - 1)}
-                    className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-600 cursor-pointer transition-colors"
+                    className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container text-on-surface-variant cursor-pointer transition-colors"
                   >
                     <ChevronLeft size={16} />
                   </button>
-                  <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                  <span className="text-xs font-black text-on-surface uppercase tracking-wider">
                     {MONTH_NAMES[calMonth.getMonth()]} {calMonth.getFullYear()}
                   </span>
                   <button
                     onClick={() => setCalMonthOffset(o => Math.min(o + 1, 0))}
                     disabled={calMonthOffset >= 0}
-                    className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-600 cursor-pointer transition-colors disabled:opacity-30"
+                    className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container text-on-surface-variant cursor-pointer transition-colors disabled:opacity-30"
                   >
                     <ChevronRight size={16} />
                   </button>
@@ -298,7 +298,7 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
                 {/* Day-of-week headers (Mon first) */}
                 <div className="grid grid-cols-7 mb-1">
                   {['Lu','Ma','Mi','Ju','Vi','Sá','Do'].map(d => (
-                    <div key={d} className="text-center text-[9px] font-black text-slate-400 uppercase">{d}</div>
+                    <div key={d} className="text-center text-[9px] font-black text-on-surface-variant uppercase">{d}</div>
                   ))}
                 </div>
 
@@ -328,7 +328,7 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
                           setShowHeatCalendar(false);
                         }}
                         className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-[10px] font-black transition-all cursor-pointer border-2 ${
-                          isToday ? 'border-blue-500' : 'border-transparent'
+                          isToday ? 'border-emerald-500' : 'border-transparent'
                         } ${getHeatColor(count)} hover:scale-105`}
                         title={count > 0 ? `${count} servicio${count > 1 ? 's' : ''}` : 'Sin actividad'}
                       >
@@ -342,14 +342,14 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
                 {/* Legend */}
                 <div className="flex items-center gap-3 mt-3 justify-end">
                   {[
-                    { color: 'bg-slate-100', label: '0' },
+                    { color: 'bg-surface-container-high', label: '0' },
                     { color: 'bg-blue-200', label: '1' },
                     { color: 'bg-blue-400', label: '2-3' },
                     { color: 'bg-blue-700', label: '4+' },
                   ].map(({ color, label }) => (
                     <div key={label} className="flex items-center gap-1">
                       <div className={`w-3 h-3 rounded-sm ${color}`} />
-                      <span className="text-[9px] text-slate-500 font-semibold">{label}</span>
+                      <span className="text-[9px] text-on-surface-variant font-semibold">{label}</span>
                     </div>
                   ))}
                 </div>
@@ -359,7 +359,7 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
         </AnimatePresence>
 
         {/* Period Selector Tabs */}
-        <div className="flex mt-4 bg-slate-100 p-1 rounded-2xl border border-slate-200/50">
+        <div className="flex mt-4 bg-surface-container p-1 rounded-2xl border border-surface-container-high">
           {(['hoy', 'semana', 'mes'] as const).map((p) => (
             <button
               key={p}
@@ -370,8 +370,8 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
               }}
               className={`flex-1 text-center py-2.5 rounded-xl font-bold text-xs capitalize transition-all cursor-pointer ${
                 period === p
-                  ? 'bg-[#0b224d] text-white shadow-md'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-on-surface-variant hover:text-on-surface'
               }`}
             >
               {p === 'hoy' ? 'Hoy' : p === 'semana' ? 'Esta Semana' : 'Este Mes'}
@@ -384,19 +384,19 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
           <motion.div
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mt-3 bg-slate-50 rounded-xl px-3 py-2 border border-slate-200"
+            className="flex items-center justify-between mt-3 bg-surface-container-low rounded-xl px-3 py-2 border border-surface-container"
           >
             <button
               onClick={() => setWeekOffset(o => o - 1)}
-              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-600 cursor-pointer transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container text-on-surface-variant cursor-pointer transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="text-xs font-black text-slate-700">{getWeekLabel(weekOffset)}</span>
+            <span className="text-xs font-black text-on-surface">{getWeekLabel(weekOffset)}</span>
             <button
               onClick={() => setWeekOffset(o => Math.min(o + 1, 0))}
               disabled={weekOffset >= 0}
-              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-600 cursor-pointer transition-colors disabled:opacity-30"
+              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container text-on-surface-variant cursor-pointer transition-colors disabled:opacity-30"
             >
               <ChevronRight size={16} />
             </button>
@@ -408,19 +408,19 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
           <motion.div
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mt-3 bg-slate-50 rounded-xl px-3 py-2 border border-slate-200"
+            className="flex items-center justify-between mt-3 bg-surface-container-low rounded-xl px-3 py-2 border border-surface-container"
           >
             <button
               onClick={() => setMonthOffset(o => o - 1)}
-              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-600 cursor-pointer transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container text-on-surface-variant cursor-pointer transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="text-xs font-black text-slate-700">{getMonthLabel(monthOffset)}</span>
+            <span className="text-xs font-black text-on-surface">{getMonthLabel(monthOffset)}</span>
             <button
               onClick={() => setMonthOffset(o => Math.min(o + 1, 0))}
               disabled={monthOffset >= 0}
-              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-600 cursor-pointer transition-colors disabled:opacity-30"
+              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container text-on-surface-variant cursor-pointer transition-colors disabled:opacity-30"
             >
               <ChevronRight size={16} />
             </button>
@@ -435,7 +435,7 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
         {user.role === 'conductor' && (
           <>
             {/* Primary metric */}
-            <div className="bg-[#0b224d] text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+            <div className="bg-gradient-to-br from-[#0b224d] to-slate-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden border border-white/10">
               <div className="absolute -right-4 -bottom-4 opacity-10 text-white">
                 <Landmark size={150} />
               </div>
@@ -459,16 +459,16 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
 
             {/* Grid secondary cards */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Viajes Realizados</p>
+              <div className="bg-surface-container-low p-4 rounded-2xl border border-surface-container shadow-xs">
+                <p className="text-[9px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Viajes Realizados</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-slate-800">{totalCompletedCount}</span>
-                  <span className="text-xs text-slate-400 font-semibold">fletes</span>
+                  <span className="text-2xl font-black text-on-surface">{totalCompletedCount}</span>
+                  <span className="text-xs text-on-surface-variant font-semibold">fletes</span>
                 </div>
               </div>
-              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Promedio por flete</p>
-                <span className="text-base font-black text-slate-800">${Math.round(avgEarningPerTrip).toLocaleString('es-CO')}</span>
+              <div className="bg-surface-container-low p-4 rounded-2xl border border-surface-container shadow-xs">
+                <p className="text-[9px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Promedio por flete</p>
+                <span className="text-base font-black text-on-surface">${Math.round(avgEarningPerTrip).toLocaleString('es-CO')}</span>
               </div>
             </div>
           </>
@@ -477,28 +477,28 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
         {/* ── 2. CLIENT VIEW ─────────────────────────────────────────── */}
         {user.role === 'cliente' && (
           <>
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col relative overflow-hidden">
-              <div className="absolute right-4 top-4 w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+            <div className="bg-surface-container-low rounded-3xl p-6 shadow-sm border border-surface-container flex flex-col relative overflow-hidden">
+              <div className="absolute right-4 top-4 w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-400">
                 <Landmark size={20} />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Gastos de Fletes</p>
-              <h2 className="text-3xl font-black tracking-tight text-[#0b224d]">${totalSpent.toLocaleString('es-CO')}</h2>
-              <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md text-[10px] font-bold w-fit mt-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-1">Gastos de Fletes</p>
+              <h2 className="text-3xl font-black tracking-tight text-on-surface">${totalSpent.toLocaleString('es-CO')}</h2>
+              <div className="flex items-center gap-1 text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-md text-[10px] font-bold w-fit mt-3">
                 <TrendingDown size={12} />
                 <span>12% ahorro logístico en plataforma</span>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Fletes Solicitados</p>
+              <div className="bg-surface-container-low p-4 rounded-2xl border border-surface-container shadow-xs">
+                <p className="text-[9px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Fletes Solicitados</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-slate-800">{totalShipmentsCount}</span>
-                  <span className="text-xs text-slate-400 font-semibold">fletes</span>
+                  <span className="text-2xl font-black text-on-surface">{totalShipmentsCount}</span>
+                  <span className="text-xs text-on-surface-variant font-semibold">fletes</span>
                 </div>
               </div>
-              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Fletes Completados</p>
-                <span className="text-2xl font-black text-emerald-600">{clientCompletedCount}</span>
+              <div className="bg-surface-container-low p-4 rounded-2xl border border-surface-container shadow-xs">
+                <p className="text-[9px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Fletes Completados</p>
+                <span className="text-2xl font-black text-emerald-400">{clientCompletedCount}</span>
               </div>
             </div>
           </>
@@ -507,7 +507,7 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
         {/* ── 3. ADMIN VIEW ──────────────────────────────────────────── */}
         {user.role === 'admin' && (
           <>
-            <div className="bg-gradient-to-br from-[#0b224d] to-slate-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+            <div className="bg-gradient-to-br from-[#0b224d] to-slate-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden border border-white/10">
               <div className="absolute -right-4 -bottom-4 opacity-10 text-white">
                 <BarChart3 size={150} />
               </div>
@@ -521,57 +521,57 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex flex-col justify-between">
+              <div className="bg-surface-container-low p-4 rounded-2xl border border-surface-container shadow-xs flex flex-col justify-between">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-7 h-7 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center"><Truck size={14} /></div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Fletes Activos</p>
+                  <div className="w-7 h-7 bg-blue-500/15 text-blue-400 rounded-full flex items-center justify-center"><Truck size={14} /></div>
+                  <p className="text-[9px] font-black text-on-surface-variant uppercase tracking-widest">Fletes Activos</p>
                 </div>
-                <span className="text-2xl font-black text-slate-800">{globalActiveCount}</span>
+                <span className="text-2xl font-black text-on-surface">{globalActiveCount}</span>
               </div>
-              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex flex-col justify-between">
+              <div className="bg-surface-container-low p-4 rounded-2xl border border-surface-container shadow-xs flex flex-col justify-between">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-7 h-7 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center"><UserCheck size={14} /></div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Conductores</p>
+                  <div className="w-7 h-7 bg-emerald-500/15 text-emerald-400 rounded-full flex items-center justify-center"><UserCheck size={14} /></div>
+                  <p className="text-[9px] font-black text-on-surface-variant uppercase tracking-widest">Conductores</p>
                 </div>
-                <span className="text-2xl font-black text-slate-800">{totalRegisteredDrivers}</span>
+                <span className="text-2xl font-black text-on-surface">{totalRegisteredDrivers}</span>
               </div>
-              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex flex-col justify-between">
+              <div className="bg-surface-container-low p-4 rounded-2xl border border-surface-container shadow-xs flex flex-col justify-between">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-7 h-7 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center"><Users size={14} /></div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Clientes</p>
+                  <div className="w-7 h-7 bg-purple-500/15 text-purple-400 rounded-full flex items-center justify-center"><Users size={14} /></div>
+                  <p className="text-[9px] font-black text-on-surface-variant uppercase tracking-widest">Clientes</p>
                 </div>
-                <span className="text-2xl font-black text-slate-800">{totalRegisteredClients}</span>
+                <span className="text-2xl font-black text-on-surface">{totalRegisteredClients}</span>
               </div>
-              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex flex-col justify-between">
+              <div className="bg-surface-container-low p-4 rounded-2xl border border-surface-container shadow-xs flex flex-col justify-between">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-7 h-7 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center"><Star size={14} /></div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Propinas</p>
+                  <div className="w-7 h-7 bg-amber-500/15 text-amber-400 rounded-full flex items-center justify-center"><Star size={14} /></div>
+                  <p className="text-[9px] font-black text-on-surface-variant uppercase tracking-widest">Propinas</p>
                 </div>
-                <span className="text-base font-black text-slate-800">${globalTips.toLocaleString('es-CO')}</span>
+                <span className="text-base font-black text-on-surface">${globalTips.toLocaleString('es-CO')}</span>
               </div>
             </div>
           </>
         )}
 
         {/* ── 4. CHART ───────────────────────────────────────────────── */}
-        <section className="bg-white rounded-3xl p-5 border border-slate-100 shadow-xs mt-1">
+        <section className="bg-surface-container-low rounded-3xl p-5 border border-surface-container shadow-xs mt-1">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-              <BarChart3 size={15} className="text-blue-600" />
+            <h3 className="text-xs font-black text-on-surface uppercase tracking-wider flex items-center gap-1.5">
+              <BarChart3 size={15} className="text-emerald-500" />
               {chartTitle}
             </h3>
-            <span className="text-[10px] font-black text-[#0b224d] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+            <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">
               ${chartTotal.toLocaleString('es-CO')}
             </span>
           </div>
-          <div className="h-36 flex items-end justify-between gap-3 pt-6 px-2 border-b border-slate-100">
+          <div className="h-36 flex items-end justify-between gap-3 pt-6 px-2 border-b border-surface-container-high">
             {chartData.map((data, index) => (
               <div key={index} className="flex flex-col items-center gap-2 w-full group relative">
                 <div
                   className={`w-full rounded-t-lg transition-all duration-300 relative cursor-pointer ${
                     data.value > 0
-                      ? 'bg-blue-600 hover:bg-[#0b224d] shadow-[0_0_12px_rgba(37,99,235,0.2)]'
-                      : 'bg-slate-100'
+                      ? 'bg-emerald-500 hover:bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                      : 'bg-surface-container-high'
                   }`}
                   style={{ height: `${data.heightPercent}%` }}
                 >
@@ -579,7 +579,7 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
                     {data.value.toLocaleString('es-CO')}
                   </div>
                 </div>
-                <span className="text-[10px] font-black text-slate-400">{data.label}</span>
+                <span className="text-[10px] font-black text-on-surface-variant">{data.label}</span>
               </div>
             ))}
           </div>
@@ -587,14 +587,14 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
 
         {/* ── 5. RECENT TRIPS ────────────────────────────────────────── */}
         <section className="mt-1">
-          <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider px-1 mb-3">
+          <h3 className="text-xs font-black text-on-surface uppercase tracking-wider px-1 mb-3">
             {user.role === 'admin' ? 'Todos los viajes recientes' : 'Viajes Recientes'}
           </h3>
           <div className="flex flex-col gap-2.5">
             {myTrips.length === 0 ? (
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 text-center">
-                <ClipboardList className="mx-auto text-slate-300 mb-2" size={32} />
-                <p className="text-xs text-slate-500 font-semibold">No hay viajes registrados en este período.</p>
+              <div className="bg-surface-container-low rounded-2xl p-6 border border-surface-container text-center">
+                <ClipboardList className="mx-auto text-on-surface-variant/50 mb-2" size={32} />
+                <p className="text-xs text-on-surface-variant font-semibold">No hay viajes registrados en este período.</p>
               </div>
             ) : (
               myTrips.slice(0, 5).map((trip) => {
@@ -604,30 +604,30 @@ export default function Dashboard({ user, trips, usersList, onNavigateToView }: 
                   <div
                     key={trip.id}
                     onClick={() => onNavigateToView('activity')}
-                    className="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs flex items-center justify-between hover:bg-slate-50 active:scale-99 transition-all cursor-pointer"
+                    className="bg-surface-container-low rounded-2xl p-4 border border-surface-container shadow-xs flex items-center justify-between hover:bg-surface-container active:scale-99 transition-all cursor-pointer text-on-surface"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
-                        isCompletado ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+                        isCompletado ? 'bg-emerald-500/15 text-emerald-400' : 'bg-blue-500/15 text-blue-400'
                       }`}>
                         <Truck size={16} />
                       </div>
                       <div className="min-w-0 flex flex-col gap-0.5">
-                        <div className="flex items-center gap-1 text-[11px] font-bold text-slate-800">
+                        <div className="flex items-center gap-1 text-[11px] font-bold text-on-surface">
                           <span className="truncate max-w-[80px]">{trip.origin}</span>
-                          <ArrowRight size={10} className="text-slate-400 flex-shrink-0" />
+                          <ArrowRight size={10} className="text-on-surface-variant flex-shrink-0" />
                           <span className="truncate max-w-[80px]">{trip.destination}</span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-medium">
+                        <span className="text-[10px] text-on-surface-variant font-medium">
                           ID: #{trip.id} {trip.vehicleType && `• ${trip.vehicleType}`}
                         </span>
                       </div>
                     </div>
                     <div className="text-right flex flex-col items-end gap-1 flex-shrink-0">
-                      <span className="text-xs font-black text-slate-800">{formattedPrice}</span>
+                      <span className="text-xs font-black text-on-surface">{formattedPrice}</span>
                       <span className={`text-[8px] font-black px-2 py-0.5 rounded-full ${
-                        trip.status === 'COMPLETADO' ? 'bg-emerald-100 text-emerald-700' :
-                        trip.status === 'EN CAMINO' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+                        trip.status === 'COMPLETADO' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' :
+                        trip.status === 'EN CAMINO' ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30' : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
                       }`}>
                         {trip.status}
                       </span>
