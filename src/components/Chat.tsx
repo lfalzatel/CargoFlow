@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Phone, Shield, Send, Paperclip, Camera, Check, CheckCheck, Maximize2, X, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatMessage, UserProfile, Trip } from '../types';
+import { showAlert } from './AppAlertModal';
 
 interface ChatProps {
   user: UserProfile;
@@ -384,7 +385,7 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
         </div>
 
         <button 
-          onClick={() => alert(`Llamando a ${chatPartnerName}...`)}
+          onClick={() => showAlert(`Iniciando llamada telefónica con ${chatPartnerName}...`, { title: 'Llamada Telefónica', variant: 'info' })}
           className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high text-primary-container transition-colors active:scale-95 focus:outline-none"
         >
           <Phone size={16} fill="currentColor" />

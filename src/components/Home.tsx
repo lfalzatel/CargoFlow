@@ -6,6 +6,7 @@ import { HybridMapContainer } from '../maps/components/HybridMapContainer';
 import { COLOMBIA_LOGISTICS_PLACES } from '../maps/services/search/SearchCatalog';
 import { fleetSimulationService } from '../maps/services/fleet/FleetSimulationService';
 import { MapPickerModal } from './MapPickerModal';
+import { showAlert } from './AppAlertModal';
 
 export interface CargoTypeItem {
   id: string;
@@ -818,7 +819,7 @@ export default function Home({
                             const plate = user.plateNumber || (user.vehicles?.[0]?.plate) || '';
                             const vtype = user.vehicleType || (user.vehicles?.[0]?.type) || '';
                             onCounterOfferTrip(pendingTrip.id, counterOfferPrice, plate, vtype);
-                            alert('¡Tu contraoferta ha sido enviada al cliente!');
+                            showAlert('¡Tu contraoferta ha sido enviada al cliente!', { title: 'Contraoferta Enviada', variant: 'success', icon: '💰' });
                             setIsCounterOffering(false);
                             onNavigateToView('activity');
                           }
@@ -1004,7 +1005,7 @@ export default function Home({
                   type="button"
                   onClick={() => {
                     if (!origin.trim() || !destination.trim()) {
-                      alert('Por favor especifica Origen y Destino antes de continuar.');
+                      showAlert('Por favor especifica Origen y Destino antes de continuar.', { title: 'Ubicación Requerida', variant: 'warning', icon: '📍' });
                       return;
                     }
                     setShipmentStep(2);
@@ -1159,7 +1160,7 @@ export default function Home({
                       type="button"
                       onClick={() => {
                         if (!origin.trim() || !destination.trim()) {
-                          alert('Por favor indica Origen y Destino para continuar.');
+                          showAlert('Por favor indica Origen y Destino para continuar.', { title: 'Ubicación Requerida', variant: 'warning', icon: '📍' });
                           return;
                         }
                         setShipmentStep(2);

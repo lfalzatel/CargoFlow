@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, Trip } from '../types';
 import CargoFlowLogo from './CargoFlowLogo';
 import { notify, scheduleNotification } from '../services/notificationService';
+import { showAlert } from './AppAlertModal';
 
 interface HeaderProps {
   user: UserProfile;
@@ -206,7 +207,7 @@ export default function Header({
       }
     } else {
       await navigator.clipboard.writeText(shareUrl);
-      alert(`¡Enlace copiado al portapapeles!\n${shareUrl}`);
+      showAlert(`¡Enlace copiado al portapapeles!\n${shareUrl}`, { title: 'Compartir App', variant: 'success' });
     }
   };
 
@@ -220,7 +221,7 @@ export default function Header({
         setPwaInstallPrompt(null);
       }
     } else {
-      alert('Instrucciones para instalar CargoFlow:\n\n1. Presiona el botón Compartir o Menú en tu navegador\n2. Selecciona "Agregar a la pantalla de inicio"');
+      showAlert('Instrucciones para instalar CargoFlow:\n\n1. Presiona el botón Compartir o Menú en tu navegador\n2. Selecciona "Agregar a la pantalla de inicio"', { title: 'Instalar CargoFlow', variant: 'info' });
     }
   };
 

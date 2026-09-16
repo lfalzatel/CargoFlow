@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, Vehicle, Trip } from '../types';
 import { ConfirmModal } from './ConfirmModal';
 import RatingBurstAnimation from './RatingBurstAnimation';
+import { showAlert } from './AppAlertModal';
 
 interface ProfileProps {
   user: UserProfile;
@@ -752,7 +753,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
         <section className="flex flex-col gap-2">
           {/* Payment Methods */}
           <button 
-            onClick={() => alert('Métodos de Pago: Visa **** 5678, Bancolombia, Efectivo.')}
+            onClick={() => showAlert('Métodos de Pago registrados: Visa **** 5678, Bancolombia, Efectivo.', { title: 'Métodos de Pago', variant: 'info' })}
             className="flex items-center justify-between w-full p-4 bg-surface-container-low rounded-2xl shadow-xs border border-surface-container hover:bg-surface-container transition-colors group cursor-pointer"
           >
             <div className="flex items-center gap-4">
@@ -766,7 +767,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
 
           {/* Help Center */}
           <button 
-            onClick={() => alert('Centro de Ayuda CargoFlow. Soporte 24/7 vía Chat.')}
+            onClick={() => showAlert('Centro de Ayuda CargoFlow. Soporte activo 24/7 vía Chat y teléfono.', { title: 'Centro de Ayuda', variant: 'info' })}
             className="flex items-center justify-between w-full p-4 bg-surface-container-low rounded-2xl shadow-xs border border-surface-container hover:bg-surface-container transition-colors group cursor-pointer"
           >
             <div className="flex items-center gap-4">

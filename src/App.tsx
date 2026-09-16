@@ -18,6 +18,7 @@ import Rating from './components/Rating';
 import GamificationUnlockModal from './components/GamificationUnlockModal';
 import ToggleConfettiOverlay from './components/ToggleConfettiOverlay';
 import { NotificationPromptModal } from './components/NotificationPromptModal';
+import { AppAlertModal } from './components/AppAlertModal';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './config/firebase';
 import { doc, getDoc, updateDoc, setDoc, deleteField } from 'firebase/firestore';
@@ -1811,20 +1812,20 @@ export default function App() {
               }
               setActiveToast(null);
             }}
-            className="fixed top-18 left-4 right-4 z-50 bg-white/95 text-slate-900 p-3.5 rounded-2xl shadow-xl backdrop-blur-md border border-slate-200/90 flex flex-col gap-2 cursor-pointer active:scale-98 transition-all overflow-hidden"
+            className="fixed top-18 left-4 right-4 z-50 bg-surface/95 text-on-surface p-3.5 rounded-2xl shadow-xl backdrop-blur-md border border-surface-container flex flex-col gap-2 cursor-pointer active:scale-98 transition-all overflow-hidden"
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg flex-shrink-0 border border-emerald-100">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary-container flex items-center justify-center text-lg flex-shrink-0 border border-surface-container">
                   {activeToast.title.includes('Finalizado') ? '🎉' : activeToast.title.includes('Mensaje') ? '💬' : '📦'}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-black text-slate-900 truncate">{activeToast.title}</p>
-                  <p className="text-xs font-semibold text-slate-600 truncate">{activeToast.message}</p>
+                  <p className="text-xs font-black text-on-surface truncate">{activeToast.title}</p>
+                  <p className="text-xs font-semibold text-on-surface-variant truncate">{activeToast.message}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] px-3 py-1.5 rounded-xl shadow-xs transition-colors">
+                <span className="bg-primary-container text-white font-extrabold text-[11px] px-3 py-1.5 rounded-xl shadow-xs transition-colors">
                   Responder
                 </span>
                 <button
@@ -1832,7 +1833,7 @@ export default function App() {
                     e.stopPropagation();
                     setActiveToast(null);
                   }}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors"
                 >
                   ✕
                 </button>
@@ -1843,11 +1844,14 @@ export default function App() {
               initial={{ scaleX: 1 }}
               animate={{ scaleX: 0 }}
               transition={{ duration: 5, ease: 'linear' }}
-              className="h-1 bg-emerald-500 rounded-full origin-left -mx-3.5 -mb-3.5 mt-1"
+              className="h-1 bg-primary-container rounded-full origin-left -mx-3.5 -mb-3.5 mt-1"
             />
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* App Global Alert Modal */}
+      <AppAlertModal />
 
       {/* Render Bottom navigation on main dashboards */}
       {['home', 'activity', 'chat', 'dashboard', 'profile', 'settings'].includes(view) && (
