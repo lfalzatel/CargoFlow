@@ -62,9 +62,9 @@ export const MapPickerModal: React.FC<MapPickerModalProps> = ({
   useEffect(() => {
     if (!isOpen || !mapContainerRef.current) return;
 
-    // Default center: Medellín
-    const initialLat = 6.2442;
-    const initialLng = -75.5812;
+    // Default center initially fallback to selectedCoords or Medellín
+    let initialLat = selectedCoords.lat || 6.2442;
+    let initialLng = selectedCoords.lng || -75.5812;
 
     // Delay init until modal animation is done
     const initMap = () => {
@@ -113,6 +113,22 @@ export const MapPickerModal: React.FC<MapPickerModalProps> = ({
           const pos = marker.getLatLng();
           handlePositionChange(pos.lat, pos.lng);
         });
+
+        // Automatically fetch GPS position to center on user location by default
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const uLat = pos.coords.latitude;
+              const uLng = pos.coords.longitude;
+              setSelectedCoords({ lat: uLat, lng: uLng });
+              map.setView([uLat, uLng], 15);
+              marker.setLatLng([uLat, uLng]);
+              reverseGeocode(uLat, uLng);
+            },
+            (err) => console.warn('Geolocation auto-center fallback:', err),
+            { enableHighAccuracy: true, timeout: 6000 }
+          );
+        }
       }
 
       // Fire invalidateSize multiple times to catch any async layout shifts

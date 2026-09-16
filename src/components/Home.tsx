@@ -388,7 +388,8 @@ export default function Home({
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [mapPickerTarget, setMapPickerTarget] = useState<'origin' | 'destination'>('origin');
   const [notes, setNotes] = useState('');
-  const [customPrice, setCustomPrice] = useState(1250000);
+  const [customPrice, setCustomPrice] = useState(255000);
+  const [showPriceConfirmModal, setShowPriceConfirmModal] = useState(false);
   const [isCounterOffering, setIsCounterOffering] = useState(false);
   const [counterOfferPrice, setCounterOfferPrice] = useState(pendingTrip?.price || 1250000);
 
@@ -404,7 +405,7 @@ export default function Home({
       setVehicle(editingTrip.vehicleType);
       setTag(editingTrip.tag || '');
       setNotes(editingTrip.notes || '');
-      setCustomPrice(editingTrip.price);
+      setCustomPrice(editingTrip.price || 255000);
       setShowShipmentModal(true);
     }
   }, [editingTrip]);
@@ -418,7 +419,11 @@ export default function Home({
   const handleCreateShipmentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!origin || !destination) return;
+    // Open Mario Bros confirmation modal to review & allow editing price before publishing
+    setShowPriceConfirmModal(true);
+  };
 
+  const executePublishShipment = () => {
     if (editingTrip && onEditShipment) {
       const updatedTrip: Trip = {
         ...editingTrip,
@@ -448,6 +453,7 @@ export default function Home({
       onCreateShipment(newTrip);
     }
 
+    setShowPriceConfirmModal(false);
     setShowShipmentModal(false);
     onNavigateToView('activity'); // go to activity screen to see it
   };
@@ -1152,9 +1158,8 @@ export default function Home({
                     <div className="grid grid-cols-2 gap-3">
                       {/* Vehiculo Trigger Button */}
                       <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                           Tipo Vehículo
-                          <span className="text-[9px] font-bold text-slate-400 normal-case tracking-normal">(Opcional)</span>
                         </label>
                         <button
                           type="button"
@@ -1207,38 +1212,39 @@ export default function Home({
                       </div>
                     </div>
 
-                    {/* Precio Deseado (Flete Ofrecido - Inicia en 0) */}
+                    {/* Precio Deseado (Flete Ofrecido - Inicia en 60.000, máx 3.000.000) */}
                     <div className="flex flex-col gap-1.5 bg-emerald-50/60 border-2 border-emerald-300 p-3 rounded-2xl shadow-sm">
                       <div className="flex justify-between items-center">
                         <label className="text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
-                          <span>💰 Flete Ofrecido</span>
+                          <span>💰 FLETE OFRECIDO</span>
                           <span className="text-[10px] text-emerald-600 font-bold bg-white px-2 py-0.5 rounded-full border border-emerald-200">COP</span>
                         </label>
                         <div className="flex items-center gap-1 bg-white border-2 border-emerald-400 rounded-xl px-2.5 py-1 shadow-xs">
                           <span className="text-xs font-black text-emerald-700">$</span>
                           <input 
                             type="number"
-                            min="0"
-                            step="1000"
+                            min="60000"
+                            max="3000000"
+                            step="5000"
                             value={customPrice}
-                            onChange={(e) => setCustomPrice(Math.max(0, Number(e.target.value)))}
+                            onChange={(e) => setCustomPrice(Math.max(60000, Math.min(3000000, Number(e.target.value))))}
                             className="w-24 bg-transparent text-xs font-black text-emerald-900 outline-none"
                           />
                         </div>
                       </div>
                       <input
                         type="range"
-                        min="0"
-                        max="5000000"
+                        min="60000"
+                        max="3000000"
                         step="5000"
                         value={customPrice}
-                        onChange={(e) => setCustomPrice(Math.max(0, Number(e.target.value)))}
+                        onChange={(e) => setCustomPrice(Math.max(60000, Math.min(3000000, Number(e.target.value))))}
                         className="w-full h-2.5 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 mt-1"
                       />
                       <div className="flex justify-between text-[10px] text-emerald-700 font-black">
-                        <span>$0</span>
+                        <span>$60.000</span>
                         <span>Ofrecido: ${customPrice.toLocaleString('es-CO')}</span>
-                        <span>$5M</span>
+                        <span>$3M</span>
                       </div>
                     </div>
 
@@ -1279,6 +1285,148 @@ export default function Home({
                   </div>
                 )}
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── MARIO BROS CONFIRMATION & PRICE ADJUSTMENT MODAL ── */}
+      <AnimatePresence>
+        {showPriceConfirmModal && (
+          <div 
+            className="fixed inset-0 z-[450] backdrop-blur-md bg-black/75 flex items-center justify-center p-4 animate-fade-in"
+            onClick={() => setShowPriceConfirmModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 30 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden border-4 border-amber-400 flex flex-col items-center relative text-center my-auto"
+            >
+              {/* Decorative Top Bar */}
+              <div className="absolute top-0 left-0 right-0 h-2.5 bg-gradient-to-r from-amber-400 via-orange-500 to-emerald-500" />
+              
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setShowPriceConfirmModal(false)}
+                className="absolute top-3.5 right-3.5 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors border border-slate-200 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Header Badge */}
+              <div className="w-full bg-gradient-to-br from-amber-100 via-orange-50 to-amber-200 rounded-2xl p-3 border-2 border-amber-300 mb-3 mt-2 flex flex-col items-center shadow-inner relative overflow-hidden">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 border-2 border-white shadow-md flex items-center justify-center mb-1 animate-bounce-subtle">
+                  <Truck size={28} className="text-white drop-shadow-md" fill="currentColor" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white px-3 py-0.5 rounded-full shadow-xs">
+                  🍄 CONFIRMAR PUBLICACIÓN
+                </span>
+              </div>
+
+              {/* Title */}
+              <h3 className="text-base font-black text-slate-900 leading-tight mb-1">
+                ¿El precio ofrecido es correcto?
+              </h3>
+              <p className="text-xs font-bold text-slate-500 mb-3">
+                Verifica el resumen de tu despacho y ajusta el valor si lo deseas.
+              </p>
+
+              {/* Shipment Details Summary Box */}
+              <div className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 mb-3 text-left space-y-1.5 text-xs">
+                <div className="flex items-center justify-between border-b border-slate-200/60 pb-1">
+                  <span className="font-bold text-slate-500">📍 Origen:</span>
+                  <span className="font-black text-slate-800 truncate max-w-[180px]">{origin}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-slate-200/60 pb-1">
+                  <span className="font-bold text-slate-500">🏁 Destino:</span>
+                  <span className="font-black text-slate-800 truncate max-w-[180px]">{destination}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-slate-200/60 pb-1">
+                  <span className="font-bold text-slate-500">📦 Carga:</span>
+                  <span className="font-black text-emerald-700">{cargoType}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-500">🚚 Vehículo / Tag:</span>
+                  <span className="font-black text-slate-800">{vehicle || 'Cualquier'} {tag ? `• ${tag}` : ''}</span>
+                </div>
+              </div>
+
+              {/* Interactive Price Modifier Box inside Modal */}
+              <div className="w-full bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 border-2 border-emerald-400 rounded-2xl p-3 mb-4 text-center shadow-sm">
+                <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider block mb-1">
+                  💰 VALOR DEL FLETE OFRECIDO
+                </span>
+                
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setCustomPrice(prev => Math.max(60000, prev - 10000))}
+                    className="w-8 h-8 rounded-xl bg-white border border-emerald-300 text-emerald-700 font-black text-sm hover:bg-emerald-100 active:scale-95 shadow-xs flex items-center justify-center cursor-pointer"
+                    title="- $10.000"
+                  >
+                    -
+                  </button>
+                  <div className="flex items-center gap-1 bg-white border-2 border-emerald-500 rounded-xl px-3 py-1 shadow-inner">
+                    <span className="text-sm font-black text-emerald-700">$</span>
+                    <input
+                      type="number"
+                      min="60000"
+                      max="3000000"
+                      step="5000"
+                      value={customPrice}
+                      onChange={(e) => setCustomPrice(Math.max(60000, Math.min(3000000, Number(e.target.value))))}
+                      className="w-28 text-base font-black text-emerald-900 bg-transparent text-center outline-none"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCustomPrice(prev => Math.min(3000000, prev + 10000))}
+                    className="w-8 h-8 rounded-xl bg-white border border-emerald-300 text-emerald-700 font-black text-sm hover:bg-emerald-100 active:scale-95 shadow-xs flex items-center justify-center cursor-pointer"
+                    title="+ $10.000"
+                  >
+                    +
+                  </button>
+                </div>
+
+                <input
+                  type="range"
+                  min="60000"
+                  max="3000000"
+                  step="5000"
+                  value={customPrice}
+                  onChange={(e) => setCustomPrice(Math.max(60000, Math.min(3000000, Number(e.target.value))))}
+                  className="w-full h-2 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 mb-1"
+                />
+                
+                <div className="flex justify-between text-[10px] font-black text-emerald-700 px-1">
+                  <span>$60.000</span>
+                  <span>$3M</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="w-full flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={executePublishShipment}
+                  className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-[0_6px_0_#15803d] active:shadow-[0_2px_0_#15803d] active:translate-y-1 transition-all cursor-pointer flex items-center justify-center gap-2 border border-emerald-300"
+                >
+                  <Sparkles size={16} />
+                  <span>🚀 Confirmar y Publicar Flete</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowPriceConfirmModal(false)}
+                  className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-2xl transition cursor-pointer border border-slate-200"
+                >
+                  ← Cambiar Datos del Despacho
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
