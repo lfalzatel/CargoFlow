@@ -962,41 +962,66 @@ export default function Home({
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-md rounded-3xl p-5 sm:p-6 shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar border border-slate-200 my-auto relative z-10"
+              className={
+                activeTheme === 'original'
+                  ? "bg-white w-full max-w-md rounded-3xl p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-y-auto max-h-[90vh] no-scrollbar border-4 border-amber-400 my-auto relative z-10"
+                  : activeTheme === 'noche'
+                  ? "bg-slate-900 text-white w-full max-w-md rounded-3xl p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-y-auto max-h-[90vh] no-scrollbar border-2 border-slate-800 my-auto relative z-10"
+                  : "bg-white text-slate-900 w-full max-w-md rounded-3xl p-5 sm:p-6 shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar border-2 border-slate-200 my-auto relative z-10"
+              }
             >
+              {/* Header Decorative Accent Bar */}
+              {activeTheme === 'original' ? (
+                <div className="absolute top-0 left-0 right-0 h-2.5 bg-gradient-to-r from-amber-400 via-orange-500 to-emerald-400" />
+              ) : (
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-emerald-500" />
+              )}
+
               {/* Header */}
-              <div className="flex justify-between items-start mb-4 pb-3 border-b border-slate-100">
+              <div className={`flex justify-between items-start mb-4 pb-3 border-b ${
+                activeTheme === 'noche' ? 'border-slate-800' : 'border-slate-100'
+              }`}>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
-                    <Truck size={20} className="text-emerald-600" fill="currentColor" />
+                  <h3 className={`text-lg font-black flex items-center gap-2 ${
+                    activeTheme === 'noche' ? 'text-white' : 'text-slate-900'
+                  }`}>
+                    <Truck size={20} className="text-emerald-500" fill="currentColor" />
                     <span>{editingTrip ? 'Editar Flete' : 'Nuevo Despacho'}</span>
                   </h3>
-                  <p className="text-xs font-black text-emerald-600 mt-0.5">
+                  <p className={`text-xs font-black mt-0.5 ${
+                    activeTheme === 'noche' ? 'text-emerald-400' : 'text-emerald-600'
+                  }`}>
                     ¿A dónde enviamos tu carga hoy?
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowShipmentModal(false)}
-                  className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors cursor-pointer"
+                  className={`p-2 rounded-full transition-colors cursor-pointer border ${
+                    activeTheme === 'noche'
+                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border-slate-700'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 border-slate-200'
+                  }`}
                 >
                   <X size={20} />
                 </button>
               </div>
 
               {/* Step Navigation Bar */}
-              <div className="flex items-center gap-2 mb-5 bg-slate-100 p-1 rounded-2xl">
+              <div className={`flex items-center gap-2 mb-5 p-1 rounded-2xl ${
+                activeTheme === 'noche' ? 'bg-slate-800/80 border border-slate-700' : 'bg-slate-100'
+              }`}>
                 <button
                   type="button"
                   onClick={() => setShipmentStep(1)}
                   className={`flex-1 py-2 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     shipmentStep === 1 
-                      ? 'bg-white text-emerald-700 shadow-md border border-slate-200/80' 
-                      : 'text-slate-500 hover:text-slate-800'
+                      ? (activeTheme === 'noche' ? 'bg-slate-900 text-emerald-400 shadow-md border border-slate-700' : 'bg-white text-emerald-700 shadow-md border border-slate-200/80')
+                      : (activeTheme === 'noche' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800')
                   }`}
                 >
                   <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                    shipmentStep === 1 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                    shipmentStep === 1 ? 'bg-emerald-600 text-white' : (activeTheme === 'noche' ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-600')
                   }`}>1</span>
                   <span>Ruta y Carga</span>
                 </button>
@@ -1012,12 +1037,12 @@ export default function Home({
                   }}
                   className={`flex-1 py-2 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     shipmentStep === 2 
-                      ? 'bg-white text-emerald-700 shadow-md border border-slate-200/80' 
-                      : 'text-slate-500 hover:text-slate-800'
+                      ? (activeTheme === 'noche' ? 'bg-slate-900 text-emerald-400 shadow-md border border-slate-700' : 'bg-white text-emerald-700 shadow-md border border-slate-200/80')
+                      : (activeTheme === 'noche' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800')
                   }`}
                 >
                   <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                    shipmentStep === 2 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                    shipmentStep === 2 ? 'bg-emerald-600 text-white' : (activeTheme === 'noche' ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-600')
                   }`}>2</span>
                   <span>Vehículo y Precio</span>
                 </button>
@@ -1030,15 +1055,21 @@ export default function Home({
                     {/* ORIGEN DE LA CARGA */}
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                          <MapPin size={14} className="text-emerald-600" />
+                        <label className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                          activeTheme === 'noche' ? 'text-slate-300' : 'text-slate-700'
+                        }`}>
+                          <MapPin size={14} className="text-emerald-500" />
                           Origen de la Carga (Recogida)
                         </label>
                         <button
                           type="button"
                           onClick={handleGetGpsOrigin}
                           disabled={isLocatingGps}
-                          className="text-[11px] font-black text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-full flex items-center gap-1 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                          className={`text-[11px] font-black border px-2.5 py-1 rounded-full flex items-center gap-1 transition-all cursor-pointer active:scale-95 shadow-2xs ${
+                            activeTheme === 'noche'
+                              ? 'bg-slate-800 hover:bg-slate-700 text-emerald-400 border-slate-700'
+                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300'
+                          }`}
                         >
                           <Crosshair size={12} className={isLocatingGps ? 'animate-spin' : ''} />
                           <span>{isLocatingGps ? 'Ubicando...' : '🎯 Usar GPS'}</span>
@@ -1051,12 +1082,16 @@ export default function Home({
                           placeholder="Escribe o selecciona dirección de origen"
                           value={origin}
                           onChange={(e) => setOrigin(e.target.value)}
-                          className="w-full h-11 px-3.5 bg-slate-50 rounded-2xl border-2 border-slate-200 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white font-bold text-slate-800 transition-all shadow-xs"
+                          className={`w-full h-11 px-3.5 rounded-2xl border-2 text-xs focus:outline-none focus:border-emerald-500 font-bold transition-all shadow-xs ${
+                            activeTheme === 'noche'
+                              ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400 focus:bg-slate-800'
+                              : 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'
+                          }`}
                           required
                         />
                       </div>
 
-                      {/* Mario Bros Style Action Button: Seleccionar en Mapa */}
+                      {/* Action Button: Seleccionar en Mapa */}
                       <button
                         type="button"
                         onClick={() => {
@@ -1073,8 +1108,10 @@ export default function Home({
                     {/* DESTINO DE LA CARGA */}
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                          <MapPin size={14} className="text-blue-600" />
+                        <label className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                          activeTheme === 'noche' ? 'text-slate-300' : 'text-slate-700'
+                        }`}>
+                          <MapPin size={14} className="text-blue-500" />
                           Destino de la Carga (Entrega)
                         </label>
                       </div>
@@ -1085,12 +1122,16 @@ export default function Home({
                           placeholder="Escribe o selecciona dirección de destino"
                           value={destination}
                           onChange={(e) => setDestination(e.target.value)}
-                          className="w-full h-11 px-3.5 bg-slate-50 rounded-2xl border-2 border-slate-200 text-xs focus:outline-none focus:border-blue-500 focus:bg-white font-bold text-slate-800 transition-all shadow-xs"
+                          className={`w-full h-11 px-3.5 rounded-2xl border-2 text-xs focus:outline-none focus:border-blue-500 font-bold transition-all shadow-xs ${
+                            activeTheme === 'noche'
+                              ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400 focus:bg-slate-800'
+                              : 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'
+                          }`}
                           required
                         />
                       </div>
 
-                      {/* Mario Bros Style Action Button: Seleccionar en Mapa */}
+                      {/* Action Button: Seleccionar en Mapa */}
                       <button
                         type="button"
                         onClick={() => {
@@ -1107,13 +1148,15 @@ export default function Home({
                     {/* Tipo de Mercancía (Visual Custom Category Selector) */}
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                        <label className={`text-xs font-black uppercase tracking-wider ${
+                          activeTheme === 'noche' ? 'text-slate-300' : 'text-slate-700'
+                        }`}>
                           Tipo de Mercancía
                         </label>
                         <button
                           type="button"
                           onClick={() => setShowCargoTypeModal(true)}
-                          className="text-[11px] font-extrabold text-emerald-600 hover:underline cursor-pointer"
+                          className="text-[11px] font-extrabold text-emerald-500 hover:underline cursor-pointer"
                         >
                           Ver 13 categorías ➔
                         </button>
@@ -1122,7 +1165,11 @@ export default function Home({
                       <button
                         type="button"
                         onClick={() => setShowCargoTypeModal(true)}
-                        className="w-full h-11 px-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl flex items-center justify-between font-bold text-xs text-slate-800 transition-all cursor-pointer shadow-xs active:scale-[0.99]"
+                        className={`w-full h-11 px-3.5 border rounded-2xl flex items-center justify-between font-bold text-xs transition-all cursor-pointer shadow-xs active:scale-[0.99] ${
+                          activeTheme === 'noche'
+                            ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-white'
+                            : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-800'
+                        }`}
                       >
                         <div className="flex items-center gap-2 truncate">
                           <span className="text-base flex-shrink-0">
@@ -1130,7 +1177,7 @@ export default function Home({
                           </span>
                           <span className="truncate">{cargoType}</span>
                         </div>
-                        <ChevronDown size={16} className="text-slate-400 flex-shrink-0" />
+                        <ChevronDown size={16} className={activeTheme === 'noche' ? 'text-slate-400' : 'text-slate-400'} />
                       </button>
 
                       {/* Quick Chips */}
@@ -1145,7 +1192,7 @@ export default function Home({
                               className={`text-[10px] font-bold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
                                 cargoType === catTitle
                                   ? 'bg-emerald-600 text-white border-emerald-600'
-                                  : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                                  : (activeTheme === 'noche' ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200')
                               }`}
                             >
                               {catObj?.icon} {catTitle.split('/')[0]}
@@ -1178,20 +1225,24 @@ export default function Home({
                     <div className="grid grid-cols-2 gap-3">
                       {/* Vehiculo Trigger Button */}
                       <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        <label className={`text-xs font-bold uppercase tracking-wider ${
+                          activeTheme === 'noche' ? 'text-slate-300' : 'text-slate-700'
+                        }`}>
                           Tipo Vehículo
                         </label>
                         <button
                           type="button"
                           onClick={() => setShowVehicleModal(true)}
-                          className={`w-full h-11 px-3 hover:from-amber-100 hover:to-orange-100 border-2 rounded-2xl flex items-center justify-between text-xs font-black text-slate-800 transition-all shadow-sm active:scale-95 cursor-pointer group ${
+                          className={`w-full h-11 px-3 border-2 rounded-2xl flex items-center justify-between text-xs font-black transition-all shadow-sm active:scale-95 cursor-pointer group ${
                             vehicle
-                              ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300'
-                              : 'bg-slate-50 border-slate-200 border-dashed'
+                              ? (activeTheme === 'noche' ? 'bg-amber-950/60 border-amber-600/80 text-amber-300' : 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300 text-slate-800')
+                              : (activeTheme === 'noche' ? 'bg-slate-800 border-slate-700 text-slate-300 border-dashed' : 'bg-slate-50 border-slate-200 text-slate-800 border-dashed')
                           }`}
                         >
                           <div className="flex items-center gap-2 truncate">
-                            <span className="text-base p-1 bg-white rounded-xl shadow-2xs group-hover:scale-110 transition-transform">
+                            <span className={`text-base p-1 rounded-xl shadow-2xs group-hover:scale-110 transition-transform ${
+                              activeTheme === 'noche' ? 'bg-slate-700' : 'bg-white'
+                            }`}>
                               {vehicle
                                 ? (VEHICLES_CATALOG.find(v => v.title === vehicle || vehicle.includes(v.title))?.icon || '🚚')
                                 : '🚛'}
@@ -1200,13 +1251,13 @@ export default function Home({
                               {vehicle || 'Cualquier vehículo'}
                             </span>
                           </div>
-                          <ChevronDown size={14} className="text-amber-600 group-hover:text-amber-800 transition-colors flex-shrink-0" />
+                          <ChevronDown size={14} className="text-amber-500 group-hover:text-amber-400 transition-colors flex-shrink-0" />
                         </button>
                         {vehicle && (
                           <button
                             type="button"
                             onClick={() => setVehicle('')}
-                            className="text-[10px] text-slate-400 hover:text-slate-600 text-right font-semibold"
+                            className="text-[10px] text-slate-400 hover:text-slate-300 text-right font-semibold"
                           >
                             × Quitar selección
                           </button>
@@ -1215,32 +1266,48 @@ export default function Home({
 
                       {/* Especialidad Trigger Button */}
                       <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Especialidad</label>
+                        <label className={`text-xs font-bold uppercase tracking-wider ${
+                          activeTheme === 'noche' ? 'text-slate-300' : 'text-slate-700'
+                        }`}>Especialidad</label>
                         <button
                           type="button"
                           onClick={() => setShowSpecialtyModal(true)}
-                          className="w-full h-11 px-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-2 border-blue-300 rounded-2xl flex items-center justify-between text-xs font-black text-slate-800 transition-all shadow-sm active:scale-95 cursor-pointer group"
+                          className={`w-full h-11 px-3 border-2 rounded-2xl flex items-center justify-between text-xs font-black transition-all shadow-sm active:scale-95 cursor-pointer group ${
+                            activeTheme === 'noche'
+                              ? 'bg-blue-950/60 border-blue-700/80 text-blue-300 hover:bg-blue-900/60'
+                              : 'bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-300 text-slate-800'
+                          }`}
                         >
                           <div className="flex items-center gap-2 truncate">
-                            <span className="text-base p-1 bg-white rounded-xl shadow-2xs group-hover:scale-110 transition-transform">
+                            <span className={`text-base p-1 rounded-xl shadow-2xs group-hover:scale-110 transition-transform ${
+                              activeTheme === 'noche' ? 'bg-slate-700' : 'bg-white'
+                            }`}>
                               {SPECIALTIES_CATALOG.find(s => s.value === tag || (tag === '' && s.value === ''))?.icon || '⚡'}
                             </span>
                             <span className="truncate">{tag ? tag : 'Ninguna'}</span>
                           </div>
-                          <ChevronDown size={14} className="text-blue-600 group-hover:text-blue-800 transition-colors flex-shrink-0" />
+                          <ChevronDown size={14} className="text-blue-500 group-hover:text-blue-400 transition-colors flex-shrink-0" />
                         </button>
                       </div>
                     </div>
 
                     {/* Precio Deseado (Flete Ofrecido - Inicia en 60.000, min 6.000, máx 3.000.000) */}
-                    <div className="flex flex-col gap-1.5 bg-emerald-50/60 border-2 border-emerald-300 p-3 rounded-2xl shadow-sm">
+                    <div className={`flex flex-col gap-1.5 p-3 rounded-2xl shadow-sm border-2 ${
+                      activeTheme === 'noche' ? 'bg-slate-800 border-slate-700' : 'bg-emerald-50/60 border-emerald-300'
+                    }`}>
                       <div className="flex justify-between items-center">
-                        <label className="text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <label className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                          activeTheme === 'noche' ? 'text-emerald-400' : 'text-emerald-900'
+                        }`}>
                           <span>💰 FLETE OFRECIDO</span>
-                          <span className="text-[10px] text-emerald-600 font-bold bg-white px-2 py-0.5 rounded-full border border-emerald-200">COP</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                            activeTheme === 'noche' ? 'bg-slate-900 text-emerald-400 border-emerald-700' : 'bg-white text-emerald-600 border-emerald-200'
+                          }`}>COP</span>
                         </label>
-                        <div className="flex items-center gap-1 bg-white border-2 border-emerald-400 rounded-xl px-2.5 py-1 shadow-xs">
-                          <span className="text-xs font-black text-emerald-700">$</span>
+                        <div className={`flex items-center gap-1 border-2 rounded-xl px-2.5 py-1 shadow-xs ${
+                          activeTheme === 'noche' ? 'bg-slate-900 border-emerald-600' : 'bg-white border-emerald-400'
+                        }`}>
+                          <span className="text-xs font-black text-emerald-500">$</span>
                           <input 
                             type="number"
                             min="6000"
@@ -1248,7 +1315,9 @@ export default function Home({
                             step="5000"
                             value={customPrice}
                             onChange={(e) => setCustomPrice(Math.max(6000, Math.min(3000000, Number(e.target.value))))}
-                            className="w-24 bg-transparent text-xs font-black text-emerald-900 outline-none"
+                            className={`w-24 bg-transparent text-xs font-black outline-none ${
+                              activeTheme === 'noche' ? 'text-white' : 'text-emerald-900'
+                            }`}
                           />
                         </div>
                       </div>
@@ -1261,7 +1330,9 @@ export default function Home({
                         onChange={(e) => setCustomPrice(Math.max(6000, Math.min(3000000, Number(e.target.value))))}
                         className="w-full h-2.5 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 mt-1"
                       />
-                      <div className="flex justify-between text-[10px] text-emerald-700 font-black">
+                      <div className={`flex justify-between text-[10px] font-black ${
+                        activeTheme === 'noche' ? 'text-emerald-400' : 'text-emerald-700'
+                      }`}>
                         <span>$6.000</span>
                         <span>Ofrecido: ${customPrice.toLocaleString('es-CO')}</span>
                         <span>$3M</span>
@@ -1270,12 +1341,18 @@ export default function Home({
 
                     {/* Notas / Observaciones */}
                     <div className="flex flex-col gap-1">
-                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Notas u Observaciones (Opcional)</label>
+                      <label className={`text-xs font-bold uppercase tracking-wider ${
+                        activeTheme === 'noche' ? 'text-slate-300' : 'text-slate-700'
+                      }`}>Notas u Observaciones (Opcional)</label>
                       <textarea
                         placeholder="Ej. Entregar en portería 3, frágil..."
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        className="w-full h-16 p-2.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-500 font-bold text-slate-800 resize-none"
+                        className={`w-full h-16 p-2.5 rounded-2xl border text-xs focus:outline-none focus:border-emerald-500 font-bold resize-none ${
+                          activeTheme === 'noche'
+                            ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400'
+                            : 'bg-slate-50 border-slate-200 text-slate-800'
+                        }`}
                       />
                     </div>
 
@@ -1284,7 +1361,11 @@ export default function Home({
                       <button
                         type="button"
                         onClick={() => setShipmentStep(1)}
-                        className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-2xl transition cursor-pointer"
+                        className={`px-4 py-3 font-bold text-xs rounded-2xl transition cursor-pointer ${
+                          activeTheme === 'noche'
+                            ? 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                        }`}
                       >
                         ← Volver
                       </button>
