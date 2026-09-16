@@ -9,10 +9,27 @@ interface BottomNavProps {
   userRole?: 'cliente' | 'conductor' | 'admin';
 }
 
-const ACCENT = '#0b224d';
-
 export default function BottomNav({ currentView, onViewChange, unreadChatCount = 0, userRole = 'cliente' }: BottomNavProps) {
   const [animatingId, setAnimatingId] = useState<string | null>(currentView);
+  const [activeTheme, setActiveTheme] = useState<string>(() => {
+    try { return localStorage.getItem('cf_theme') || 'original'; } catch { return 'original'; }
+  });
+
+  useEffect(() => {
+    const handleThemeChange = (e: any) => {
+      if (e?.detail?.theme) {
+        setActiveTheme(e.detail.theme);
+      } else {
+        try { setActiveTheme(localStorage.getItem('cf_theme') || 'original'); } catch {}
+      }
+    };
+    window.addEventListener('cargoflow:theme-changed', handleThemeChange);
+    window.addEventListener('storage', handleThemeChange);
+    return () => {
+      window.removeEventListener('cargoflow:theme-changed', handleThemeChange);
+      window.removeEventListener('storage', handleThemeChange);
+    };
+  }, []);
 
   useEffect(() => {
     // Re-trigger push-and-settle animation on every view change
@@ -29,6 +46,11 @@ export default function BottomNav({ currentView, onViewChange, unreadChatCount =
     return 'Reportes';
   };
 
+  const isDarkTheme = activeTheme === 'noche' || activeTheme === 'cyber' || activeTheme === 'glass' || activeTheme === 'kilo';
+  const activeBg = isDarkTheme ? '#10b981' : '#0b224d';
+  const activeColor = '#ffffff';
+  const inactiveColor = isDarkTheme ? '#e2e8f0' : '#0b224d';
+
   const navItems = [
     { id: 'home' as const, label: 'Inicio', icon: Home },
     { id: 'activity' as const, label: 'Actividad', icon: Truck },
@@ -43,6 +65,7 @@ export default function BottomNav({ currentView, onViewChange, unreadChatCount =
         const Icon = item.icon;
         const isActive = currentView === item.id;
         const isPushing = animatingId === item.id;
+        const currentColor = isActive ? activeColor : inactiveColor;
 
         return (
           <button
@@ -52,7 +75,7 @@ export default function BottomNav({ currentView, onViewChange, unreadChatCount =
               onViewChange(item.id);
             }}
             className="relative flex flex-col items-center justify-center flex-1 h-full focus:outline-none cursor-pointer"
-            style={{ color: isActive ? '#fff' : ACCENT }}
+            style={{ color: currentColor }}
           >
             {/*
               Inner container: receives both classes simultaneously when active.
@@ -69,8 +92,8 @@ export default function BottomNav({ currentView, onViewChange, unreadChatCount =
               style={
                 isActive
                   ? {
-                      backgroundColor: ACCENT,
-                      boxShadow: '0 4px 16px rgba(11, 34, 77, 0.4)',
+                      backgroundColor: activeBg,
+                      boxShadow: isDarkTheme ? '0 4px 16px rgba(16, 185, 129, 0.4)' : '0 4px 16px rgba(11, 34, 77, 0.4)',
                     }
                   : {
                       backgroundColor: 'transparent',
@@ -101,7 +124,7 @@ export default function BottomNav({ currentView, onViewChange, unreadChatCount =
               {/* Label */}
               <span
                 className="text-[9px] font-bold tracking-tight leading-none"
-                style={{ color: isActive ? '#fff' : ACCENT }}
+                style={{ color: currentColor }}
               >
                 {item.label}
               </span>

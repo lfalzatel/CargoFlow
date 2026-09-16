@@ -228,7 +228,7 @@ body {
   animation: floatBounce 2.2s ease-in-out infinite;
 }
 
-/* Glassmorphism Ultra Premium Navbar - Light/Day mode adaptive */
+/* Glassmorphism Ultra Premium Navbar - Light/Day/Night mode adaptive */
 .glass-nav-container {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(20px) saturate(180%);
@@ -236,7 +236,34 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
   position: relative;
-  /* No overflow:hidden — active items scale/translate outside bounds */
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+[data-theme="noche"] .glass-nav-container {
+  background: rgba(11, 34, 77, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="cyber"] .glass-nav-container {
+  background: rgba(11, 17, 32, 0.94);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+}
+
+[data-theme="glass"] .glass-nav-container {
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="kilo"] .glass-nav-container {
+  background: rgba(30, 30, 46, 0.94);
+  border: 1px solid rgba(203, 166, 247, 0.3);
+}
+
+header[data-top-header="true"] {
+  background-color: var(--color-surface);
+  border-bottom-color: var(--glass-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Bottom edge gradient light reflection - simulates 3D glass bottom edge */

@@ -446,7 +446,7 @@ export default function Header({
         )}
       </AnimatePresence>
 
-      <header data-top-header="true" className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-surface-container h-16 px-2.5 sm:px-4 md:px-8 flex items-center justify-between shadow-sm transition-all">
+      <header data-top-header="true" className="fixed top-0 left-0 right-0 z-[100] backdrop-blur-md border-b border-[var(--glass-border)] h-16 px-2.5 sm:px-4 md:px-8 flex items-center justify-between shadow-sm transition-all duration-300">
         {/* Left: Animated Circular Logo Icon (Triggers Fullscreen Splash Modal on Click) */}
         <div 
           onClick={() => setShowSplashModal(true)} 
@@ -456,7 +456,7 @@ export default function Header({
           <div className="group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
             <CargoFlowLogo size="sm" />
           </div>
-          <span className="font-headline-md text-base font-extrabold text-primary-container tracking-tight">CargoFlow</span>
+          <span className="font-headline-md text-base font-extrabold text-[var(--color-on-surface)] tracking-tight">CargoFlow</span>
         </div>
 
         {/* Right Actions: WhatsApp Support, Notifications, Profile Capsule */}
@@ -466,7 +466,7 @@ export default function Header({
             href="https://wa.me/573000000000?text=Hola,%20necesito%20soporte%20en%20CargoFlow"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 flex items-center justify-center transition-all active:scale-95 shadow-xs flex-shrink-0"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[var(--glass-strong)] text-emerald-500 border border-[var(--glass-border)] hover:bg-[var(--glass)] flex items-center justify-center transition-all active:scale-95 shadow-xs flex-shrink-0"
             title="Soporte WhatsApp"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5 fill-current" viewBox="0 0 24 24">
@@ -513,7 +513,7 @@ export default function Header({
                   })();
                 }
               }}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-all relative active:scale-95"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[var(--glass-strong)] hover:bg-[var(--glass)] text-[var(--color-on-surface)] border border-[var(--glass-border)] flex items-center justify-center transition-all relative active:scale-95"
               title="Notificaciones"
             >
               <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -534,8 +534,8 @@ export default function Header({
               }}
               className={`flex items-center gap-1 sm:gap-2 p-1 pl-1.5 pr-2 rounded-full border transition-all duration-200 active:scale-95 ${
                 isMenuOpen 
-                  ? 'bg-blue-50 border-primary-container/40 shadow-sm' 
-                  : 'bg-surface-container-low border-surface-container hover:bg-surface-container'
+                  ? 'bg-[var(--glass-strong)] border-[var(--accent)] shadow-sm' 
+                  : 'bg-[var(--glass-strong)] border-[var(--glass-border)] hover:bg-[var(--glass)]'
               }`}
             >
               {/* User Profile Avatar from Google/Registration */}
@@ -543,24 +543,24 @@ export default function Header({
 
               {/* Name & Role Badge (Optimized responsive text) */}
               <div className="flex flex-col text-left min-w-0 max-w-[70px] sm:max-w-[110px]">
-                <span className="text-[11px] sm:text-xs font-bold text-on-surface leading-tight truncate">
+                <span className="text-[11px] sm:text-xs font-bold text-[var(--color-on-surface)] leading-tight truncate">
                   {getFirstName(user.name)}
                 </span>
-                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-tight text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded-full w-fit truncate">
+                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-tight text-emerald-600 bg-emerald-500/15 border border-emerald-500/30 px-1 py-0.2 rounded-full w-fit truncate">
                   {user.role.toUpperCase()}
                 </span>
               </div>
 
               {/* Stars Badge stacked vertically above Chevron */}
-              <div className="flex flex-col items-center justify-center pl-1.5 border-l border-slate-200/60 ml-0.5 min-w-[28px] select-none">
+              <div className="flex flex-col items-center justify-center pl-1.5 border-l border-[var(--glass-border)] ml-0.5 min-w-[28px] select-none">
                 <div className="flex items-center gap-0.5 px-1 py-0.2 bg-amber-500 text-amber-950 font-black text-[9px] rounded-full border border-amber-400 leading-none shadow-sm mb-0.5">
                   <Star size={8} fill="currentColor" className="text-amber-950" />
                   <span className="text-[8px] leading-none">{displayStarsVal}</span>
                 </div>
                 {isMenuOpen ? (
-                  <ChevronUp size={10} className="text-primary-container leading-none" />
+                  <ChevronUp size={10} className="text-[var(--accent)] leading-none" />
                 ) : (
-                  <ChevronDown size={10} className="text-outline leading-none" />
+                  <ChevronDown size={10} className="text-[var(--color-outline)] leading-none" />
                 )}
               </div>
             </motion.button>
