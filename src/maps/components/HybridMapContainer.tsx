@@ -4,6 +4,7 @@ import { LatLng, MapProviderType, PlaceSearchResult, RouteInfo } from '../models
 import { MapControls } from './MapControls';
 import { MapStatusBadge } from './MapStatusBadge';
 import { RegionDownloadModal } from './RegionDownloadModal';
+import { OfflineNavigationGuide } from './OfflineNavigationGuide';
 
 interface HybridMapContainerProps {
   className?: string;
@@ -16,6 +17,7 @@ export const HybridMapContainer: React.FC<HybridMapContainerProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isRegionModalOpen, setIsRegionModalOpen] = useState(false);
+  const [isNavigationGuideOpen, setIsNavigationGuideOpen] = useState(false);
 
   const [mapState, setMapState] = useState({
     activeProvider: mapService.getActiveProvider().type,
@@ -84,11 +86,14 @@ export const HybridMapContainer: React.FC<HybridMapContainerProps> = ({
   };
 
   const handleCalculateRoute = async (origin: LatLng, destination: LatLng): Promise<RouteInfo> => {
-    return mapService.calculateRoute(origin, destination);
+    const route = await mapService.calculateRoute(origin, destination);
+    setIsNavigationGuideOpen(true);
+    return route;
   };
 
   const handleClearRoute = () => {
     mapService.setRoute(null);
+    setIsNavigationGuideOpen(false);
   };
 
   const handleToggleProvider = (providerType: MapProviderType) => {
@@ -120,6 +125,17 @@ export const HybridMapContainer: React.FC<HybridMapContainerProps> = ({
         />
       </div>
 
+      {/* Offline Transport Navigation Guide (Top Left / Overlay) */}
+      {isNavigationGuideOpen && mapState.activeRoute && (
+        <div className="absolute top-16 left-4 right-4 md:right-auto md:max-w-md z-20">
+          <OfflineNavigationGuide
+            route={mapState.activeRoute}
+            isOnline={mapState.isOnline}
+            onClose={() => setIsNavigationGuideOpen(false)}
+          />
+        </div>
+      )}
+
       {/* Bottom Overlay: Search & Route Controls */}
       <div className="absolute bottom-4 left-4 right-4 z-10 pointer-events-none flex justify-center">
         <MapControls
@@ -136,6 +152,8 @@ export const HybridMapContainer: React.FC<HybridMapContainerProps> = ({
           onToggleAutoSwitch={handleToggleAutoSwitch}
           onToggleTraffic={handleToggleTraffic}
           userLocation={mapState.userLocation}
+          onToggleNavigationGuide={() => setIsNavigationGuideOpen(!isNavigationGuideOpen)}
+          isNavigationGuideOpen={isNavigationGuideOpen}
         />
       </div>
 

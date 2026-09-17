@@ -10,19 +10,19 @@ export const COLOMBIA_LOGISTICS_PLACES: PlaceSearchResult[] = [
   },
   {
     id: 'med_ter_norte',
-    title: 'Terminal de Transportes del Norte',
+    title: 'Terminal de Transportes del Norte (Medellín)',
     address: 'Carrera 64 #78-58, Medellín, Antioquia',
     position: { lat: 6.273, lng: -75.568 },
   },
   {
     id: 'med_ter_sur',
-    title: 'Terminal de Transportes del Sur',
+    title: 'Terminal de Transportes del Sur (Medellín)',
     address: 'Carrera 65 #8B-91, Medellín, Antioquia',
     position: { lat: 6.212, lng: -75.587 },
   },
   {
     id: 'rio_mde_airport',
-    title: 'Aeropuerto Internacional José María Córdova',
+    title: 'Aeropuerto Internacional José María Córdova (Rionegro)',
     address: 'Vía Aeropuerto, Rionegro, Antioquia',
     position: { lat: 6.1645, lng: -75.4231 },
   },
@@ -34,7 +34,7 @@ export const COLOMBIA_LOGISTICS_PLACES: PlaceSearchResult[] = [
   },
   {
     id: 'itagui_central',
-    title: 'Central Mayorista de Antioquia',
+    title: 'Central Mayorista de Antioquia (Itagüí)',
     address: 'Calle 85 #48-01, Itagüí, Antioquia',
     position: { lat: 6.183, lng: -75.599 },
   },
@@ -48,7 +48,7 @@ export const COLOMBIA_LOGISTICS_PLACES: PlaceSearchResult[] = [
   // Bogotá & Cundinamarca
   {
     id: 'bog_salitre',
-    title: 'Terminal de Transportes Salitre',
+    title: 'Terminal de Transportes Salitre (Bogotá)',
     address: 'Diagonal 23 #69-60, Bogotá D.C.',
     position: { lat: 4.654, lng: -74.112 },
   },
@@ -110,12 +110,12 @@ export const COLOMBIA_LOGISTICS_PLACES: PlaceSearchResult[] = [
   },
   {
     id: 'palmira_clo',
-    title: 'Aeropuerto Internacional Alfonso Bonilla Aragón',
+    title: 'Aeropuerto Internacional Alfonso Bonilla Aragón (Cali/Palmira)',
     address: 'Palmira, Valle del Cauca',
     position: { lat: 3.543, lng: -76.381 },
   },
 
-  // Costa Caribe (Barranquilla, Cartagena, Santa Marta)
+  // Costa Caribe (Barranquilla, Cartagena, Santa Marta, Montería, Valledupar)
   {
     id: 'baq_puerto',
     title: 'Puerto de Barranquilla (Sociedad Portuaria)',
@@ -134,8 +134,20 @@ export const COLOMBIA_LOGISTICS_PLACES: PlaceSearchResult[] = [
     address: 'Carrera 1 #10A-12, Santa Marta, Magdalena',
     position: { lat: 11.244, lng: -74.218 },
   },
+  {
+    id: 'monteria_centro',
+    title: 'Montería - Terminal de Transporte',
+    address: 'Calle 41 #23-45, Montería, Córdoba',
+    position: { lat: 8.757, lng: -75.881 },
+  },
+  {
+    id: 'valledupar_centro',
+    title: 'Valledupar - Zona Comercial y Carga',
+    address: 'Avenida Salguero, Valledupar, Cesar',
+    position: { lat: 10.463, lng: -73.253 },
+  },
 
-  // Santanderes & Eje Cafetero
+  // Santanderes, Eje Cafetero & Llanos
   {
     id: 'bga_centro',
     title: 'Bucaramanga - Central de Abastos',
@@ -147,6 +159,12 @@ export const COLOMBIA_LOGISTICS_PLACES: PlaceSearchResult[] = [
     title: 'Pereira - Aeropuerto Internacional Matecaña',
     address: 'Vía Aeropuerto, Pereira, Risaralda',
     position: { lat: 4.814, lng: -75.738 },
+  },
+  {
+    id: 'armenia_centro',
+    title: 'Armenia - Central Mayorista Mercar',
+    address: 'Vía Montenegro, Armenia, Quindío',
+    position: { lat: 4.533, lng: -75.681 },
   },
   {
     id: 'mzles_centro',
@@ -166,6 +184,30 @@ export const COLOMBIA_LOGISTICS_PLACES: PlaceSearchResult[] = [
     address: 'Vía Tienditas, Cúcuta, Norte de Santander',
     position: { lat: 7.893, lng: -72.508 },
   },
+  {
+    id: 'vavicencio_centro',
+    title: 'Villavicencio - Terminal del Llano',
+    address: 'Anillo Vial Km 1, Villavicencio, Meta',
+    position: { lat: 4.142, lng: -73.626 },
+  },
+  {
+    id: 'pasto_centro',
+    title: 'Pasto - Centro Logístico Sur',
+    address: 'Panamericana Sur, Pasto, Nariño',
+    position: { lat: 1.213, lng: -77.281 },
+  },
+  {
+    id: 'neiva_centro',
+    title: 'Neiva - Parque Industrial Sur',
+    address: 'Zona Industrial, Neiva, Huila',
+    position: { lat: 2.927, lng: -75.281 },
+  },
+  {
+    id: 'tunja_centro',
+    title: 'Tunja - Terminal de Transportes',
+    address: 'Variante Tunja, Tunja, Boyacá',
+    position: { lat: 5.532, lng: -73.361 },
+  }
 ];
 
 export function searchCatalogPlaces(query: string): PlaceSearchResult[] {
@@ -179,3 +221,54 @@ export function searchCatalogPlaces(query: string): PlaceSearchResult[] {
     return tokens.every((token) => fullText.includes(token));
   });
 }
+
+export async function hybridSearchPlaces(query: string): Promise<PlaceSearchResult[]> {
+  const localResults = searchCatalogPlaces(query);
+  const q = query.trim();
+  if (!q || q.length < 2) return localResults;
+
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    return localResults;
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        q
+      )}&countrycodes=co&limit=5&addressdetails=1`,
+      {
+        headers: {
+          'Accept-Language': 'es',
+        },
+        signal: controller.signal,
+      }
+    );
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      const onlineResults: PlaceSearchResult[] = data.map((item: any) => ({
+        id: `nom_${item.place_id}`,
+        title: item.display_name.split(',')[0] || item.display_name,
+        address: item.display_name,
+        position: {
+          lat: parseFloat(item.lat),
+          lng: parseFloat(item.lon),
+        },
+      }));
+
+      // Merge online and local results without duplicates
+      const ids = new Set(onlineResults.map((r) => r.id));
+      const filteredLocal = localResults.filter((r) => !ids.has(r.id));
+      return [...onlineResults, ...filteredLocal];
+    }
+  } catch (err) {
+    console.warn('Online geocoding search fallback to offline catalog:', err);
+  }
+
+  return localResults;
+}
+

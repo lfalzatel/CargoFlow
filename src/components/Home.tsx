@@ -3,6 +3,8 @@ import { Search, MapPin, History, Menu, Truck, Star, Info, X, Navigation, Refres
 import { motion, AnimatePresence } from 'motion/react';
 import { Trip, UserProfile } from '../types';
 import { HybridMapContainer } from '../maps/components/HybridMapContainer';
+import { AddressAutocompleteInput } from './common/AddressAutocompleteInput';
+
 
 interface HomeProps {
   user: UserProfile;
@@ -741,37 +743,26 @@ export default function Home({
               </div>
 
               <form onSubmit={handleCreateShipmentSubmit} className="flex flex-col gap-4">
-                {/* Origen */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-outline uppercase tracking-wider">Ciudad de Origen</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={16} />
-                    <input
-                      type="text"
-                      placeholder="Ej. Bogotá, Cundinamarca"
-                      value={origin}
-                      onChange={(e) => setOrigin(e.target.value)}
-                      className="w-full h-11 pl-10 pr-4 bg-surface rounded-xl border border-outline-variant text-sm focus:outline-none focus:border-primary-container font-semibold"
-                      required
-                    />
-                  </div>
-                </div>
+                {/* Origen con Autocompletado & GPS */}
+                <AddressAutocompleteInput
+                  label="Ciudad o Dirección de Origen"
+                  value={origin}
+                  onChange={(val) => setOrigin(val)}
+                  placeholder="Ej. Bogotá, Cundinamarca, Terminal..."
+                  iconColor="text-emerald-500"
+                  required
+                />
 
-                {/* Destino */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-outline uppercase tracking-wider">Ciudad de Destino</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-container" size={16} />
-                    <input
-                      type="text"
-                      placeholder="Ej. Medellín, Antioquia"
-                      value={destination}
-                      onChange={(e) => setDestination(e.target.value)}
-                      className="w-full h-11 pl-10 pr-4 bg-surface rounded-xl border border-outline-variant text-sm focus:outline-none focus:border-primary-container font-semibold"
-                      required
-                    />
-                  </div>
-                </div>
+                {/* Destino con Autocompletado & GPS */}
+                <AddressAutocompleteInput
+                  label="Ciudad o Dirección de Destino"
+                  value={destination}
+                  onChange={(val) => setDestination(val)}
+                  placeholder="Ej. Medellín, Antioquia, Puerto..."
+                  iconColor="text-rose-500"
+                  required
+                />
+
 
                 {/* Tipo de Carga */}
                 <div className="flex flex-col gap-1">

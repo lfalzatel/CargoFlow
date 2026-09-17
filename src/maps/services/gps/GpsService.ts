@@ -106,6 +106,60 @@ export class GpsService {
     });
   }
 
+  public requestInstantLocation(): Promise<LatLng> {
+    return new Promise((resolve) => {
+      if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const loc: LatLng = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+              altitude: position.coords.altitude || undefined,
+              accuracy: position.coords.accuracy,
+              speed: position.coords.speed || 0,
+              heading: position.coords.heading || 0,
+              timestamp: position.timestamp,
+            };
+            this.handleNewLocation(loc);
+            resolve(loc);
+          },
+          (error) => {
+            console.warn('Instant geolocation request failed, returning current location:', error.message);
+            resolve(this.currentLocation);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 8000,
+            maximumAge: 0,
+          }
+        );
+      } else {
+        resolve(this.currentLocation);
+      }
+    });
+  }
+
+  public async reverseGeocode(pos: LatLng): Promise<string> {
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.display_name) {
+            const parts = data.display_name.split(',');
+            const city = parts[0] + (parts[1] ? `, ${parts[1].trim()}` : '');
+            return city;
+          }
+        }
+      } catch (e) {
+        console.warn('Reverse geocode fetch failed:', e);
+      }
+    }
+    return `Ubicación GPS (${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)})`;
+  }
+
   public getCurrentLocation(): LatLng {
     return this.currentLocation;
   }
@@ -133,3 +187,4 @@ export class GpsService {
 }
 
 export const gpsService = new GpsService();
+
