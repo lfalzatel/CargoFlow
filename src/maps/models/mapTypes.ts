@@ -21,6 +21,8 @@ export interface MapMarker {
   title: string;
   subtitle?: string;
   type: 'user' | 'driver' | 'origin' | 'destination' | 'waypoint' | 'custom';
+  vehicleType?: string;
+  heading?: number;
   iconUrl?: string;
   draggable?: boolean;
 }

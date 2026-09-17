@@ -71,6 +71,15 @@ export interface Trip {
   ratedByConductor?: boolean;
   clienteRating?: { stars: number; comment?: string; tip?: number };
   conductorRating?: { stars: number; comment?: string };
+  completionRequestedBy?: string;
+  completionRequestedAt?: string;
+  driverArrivedAtOrigin?: boolean;
+  driverArrivedAtOriginAt?: string;
+  clientConfirmedArrivalAtOrigin?: boolean;
+  clientConfirmedArrivalAtOriginAt?: string;
+  tripStarted?: boolean;
+  tripStartedAt?: string;
+  deliveryPhotoURL?: string;
 }
 
 export interface ChatMessage {

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { UserProfile, Trip, ChatMessage, UserRole } from './types';
 import Login from './components/Login';
+import AdminLogin from './components/AdminLogin';
+import Landing from './components/Landing';
 import CompleteProfile from './components/CompleteProfile';
 import Home from './components/Home';
 import Activity from './components/Activity';
@@ -13,15 +15,21 @@ import Header from './components/Header';
 import SplashScreen from './components/SplashScreen';
 import NotificationToast from './components/NotificationToast';
 import Rating from './components/Rating';
+import GamificationUnlockModal from './components/GamificationUnlockModal';
+import ToggleConfettiOverlay from './components/ToggleConfettiOverlay';
+import { NotificationPromptModal } from './components/NotificationPromptModal';
+import { AppAlertModal } from './components/AppAlertModal';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './config/firebase';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, deleteField } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
+import { CheckCircle2 } from 'lucide-react';
 import {
   requestNotificationPermission,
   listenForSWMessages,
   sendInAppNotification,
 } from './services/notificationService';
+import { playGeneralUiSound } from './lib/soundEffects';
 
 const INITIAL_TRIPS: Trip[] = [];
 
@@ -49,7 +57,17 @@ const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
 ];
 
 export default function App() {
-  const [view, setView] = useState<'login' | 'complete_profile' | 'home' | 'activity' | 'chat' | 'dashboard' | 'profile' | 'settings'>('login');
+  const [view, setView] = useState<'landing' | 'login' | 'admin_login' | 'complete_profile' | 'home' | 'activity' | 'chat' | 'dashboard' | 'profile' | 'settings'>(() => {
+    if (typeof window !== 'undefined' && window.location.pathname.includes('/admin')) {
+      return 'admin_login';
+    }
+    const savedView = localStorage.getItem('cf_active_view');
+    const savedUser = localStorage.getItem('cf_user_profile');
+    if (savedUser && savedView && ['home', 'activity', 'chat', 'dashboard', 'profile', 'settings'].includes(savedView)) {
+      return savedView as any;
+    }
+    return savedUser ? 'home' : 'landing';
+  });
   
   // Splash Screen State
   const [isSplashActive, setIsSplashActive] = useState<boolean>(true);
@@ -65,21 +83,54 @@ export default function App() {
 
   const [splashSound, setSplashSound] = useState<string | undefined>(getSysTone('login'));
 
+  // Escuchador global de clics en la interfaz
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const interactiveEl = target.closest('button, a, [role="button"], input[type="button"], input[type="submit"]');
+      if (!interactiveEl) return;
+      if (interactiveEl.closest('nav, .bottom-nav, [data-bottom-nav]')) return;
+      playGeneralUiSound();
+    };
+    window.addEventListener('click', handleGlobalClick, { capture: true });
+    return () => window.removeEventListener('click', handleGlobalClick, { capture: true });
+  }, []);
+
   // Selected role
-  const [selectedRole, setSelectedRole] = useState<UserRole>('conductor');
-  
-  // Current user state
-  const [user, setUser] = useState<UserProfile>({
-    name: 'Carlos Rodríguez',
-    email: 'carlos.rod@cargoflow.co',
-    phone: '+57 311 456 7890',
-    role: 'conductor',
-    isVerified: true,
-    rating: 4.9,
-    balance: 1250000,
-    plateNumber: 'WYZ-789',
-    vehicleType: 'Furgón Mediano',
+  const [selectedRole, setSelectedRole] = useState<UserRole>(() => {
+    return (localStorage.getItem('cf_last_role') as UserRole) || 'conductor';
   });
+  
+  // Current user state (persisted in localStorage to preserve email & role on page refresh)
+  const [user, setUser] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem('cf_user_profile');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.email) return parsed;
+      } catch (_) {}
+    }
+    return {
+      name: 'Carlos Rodríguez',
+      email: 'carlos.rod@cargoflow.co',
+      phone: '+57 311 456 7890',
+      role: 'conductor',
+      isVerified: true,
+      rating: 4.9,
+      balance: 1250000,
+      plateNumber: 'WYZ-789',
+      vehicleType: 'Furgón Mediano',
+    };
+  });
+
+  // Automatically sync user profile to localStorage whenever user changes
+  useEffect(() => {
+    if (user && user.email) {
+      localStorage.setItem('cf_user_profile', JSON.stringify(user));
+      localStorage.setItem('cf_last_role', user.role);
+    }
+  }, [user]);
 
   // Database of shipments (trips)
   const [trips, setTrips] = useState<Trip[]>(INITIAL_TRIPS);
@@ -92,6 +143,81 @@ export default function App() {
   const [activeToast, setActiveToast] = useState<{ id: string; title: string; message: string; type?: string; tag?: string; tripId?: string } | null>(null);
   const [ratingTrip, setRatingTrip] = useState<Trip | null>(null);
   const [usersList, setUsersList] = useState<UserProfile[]>([]);
+  const [gamificationModal, setGamificationModal] = useState<{
+    isOpen: boolean;
+    title?: string;
+    stars?: number;
+    rewardText?: string;
+    badgeName?: string;
+    senderName?: string;
+    role?: 'cliente' | 'conductor';
+    isSenderFeedback?: boolean;
+  } | null>(null);
+  const shownRatingModalRef = useRef<Set<string>>(new Set());
+
+  const [confettiOverlay, setConfettiOverlay] = useState<{
+    isOpen: boolean;
+    title?: string;
+    subtitle?: string;
+    statusText?: string;
+    activated?: boolean;
+  } | null>(null);
+
+  // Inicialización y sincronización de tema visual
+  useEffect(() => {
+    const applyTheme = (themeId?: string) => {
+      const activeTheme = themeId || localStorage.getItem('cf_theme') || 'dia';
+      document.documentElement.setAttribute('data-theme', activeTheme);
+    };
+
+    applyTheme();
+
+    const handleThemeChange = (e: any) => {
+      const themeId = e?.detail?.theme || localStorage.getItem('cf_theme');
+      applyTheme(themeId);
+    };
+
+    window.addEventListener('cargoflow:theme-changed', handleThemeChange);
+    window.addEventListener('storage', handleThemeChange);
+
+    return () => {
+      window.removeEventListener('cargoflow:theme-changed', handleThemeChange);
+      window.removeEventListener('storage', handleThemeChange);
+    };
+  }, []);
+
+  // Escuchar evento cargoflow:toggle-confetti para lluvia de confeti al cambiar toggles
+  useEffect(() => {
+    const handleToggleConfetti = (e: Event) => {
+      const detail = (e as CustomEvent).detail || {};
+      const animEnabled = typeof window === 'undefined' || localStorage.getItem('cf_gamification_anim_enabled') !== 'false';
+
+      // Si las animaciones están desactivadas y NO es el toggle de animación en sí, no mostrar modal
+      if (!animEnabled && detail.target !== 'anim_toggle') {
+        return;
+      }
+
+      setConfettiOverlay({
+        isOpen: true,
+        title: detail.title || 'Actualización exitosa.',
+        subtitle: detail.subtitle || 'Configuración guardada correctamente',
+        statusText: detail.statusText || '🌟 Estado Actualizado Exitosamente',
+        activated: detail.activated ?? true,
+      });
+    };
+
+    window.addEventListener('cargoflow:toggle-confetti', handleToggleConfetti);
+    return () => window.removeEventListener('cargoflow:toggle-confetti', handleToggleConfetti);
+  }, []);
+
+  // Auto-dismiss in-app activeToast banner after 5 seconds
+  useEffect(() => {
+    if (!activeToast) return;
+    const timer = setTimeout(() => {
+      setActiveToast(null);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [activeToast]);
 
   // Listen to all users for profile sync (photos, names, ratings)
   useEffect(() => {
@@ -133,6 +259,250 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  // Helper for case-insensitive email comparison
+  const sameEmail = (a?: string, b?: string) => Boolean(a && b && a.trim().toLowerCase() === b.trim().toLowerCase());
+
+  // ── Mutual Confirmation & Phase Handlers ───────────────────────
+  const handleDriverArrivedAtOrigin = async (trip: Trip) => {
+    const isAllowedRole = user.role === 'conductor' || user.role === 'admin';
+    const isConductor = sameEmail(user.email, trip.conductorId) || isAllowedRole;
+    if (!isConductor || trip.status !== 'EN CAMINO' || trip.driverArrivedAtOrigin) {
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+    setTrips(prev => prev.map(t => t.id === trip.id ? { ...t, driverArrivedAtOrigin: true, driverArrivedAtOriginAt: nowIso } : t));
+
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'trips', trip.id), {
+        driverArrivedAtOrigin: true,
+        driverArrivedAtOriginAt: nowIso
+      });
+
+      if (trip.clienteId) {
+        const { sendDbNotification } = await import('./services/notificationService');
+        const cleanTripId = trip.id.startsWith('#') ? trip.id : `#${trip.id}`;
+        sendDbNotification(
+          trip.clienteId,
+          '📍 Conductor en Punto de Cargue',
+          `El conductor (${user.name}) ha llegado al punto de recolección en ${trip.origin} para el flete ${cleanTripId}.`,
+          `trip-arrived-${trip.id}`,
+          'info'
+        );
+      }
+
+      setActiveToast({
+        id: `arr-done-${Date.now()}`,
+        title: '📍 Notificación enviada',
+        message: 'Has notificado al cliente que estás en el punto de cargue.',
+        type: 'info'
+      });
+    } catch (e) {
+      console.warn('Error marking arrival at origin:', e);
+    }
+  };
+
+  const handleClientConfirmArrivalAtOrigin = async (trip: Trip) => {
+    const isAllowedRole = user.role === 'cliente' || user.role === 'admin';
+    const isClient = sameEmail(user.email, trip.clienteId) || isAllowedRole;
+    if (!isClient || trip.status !== 'EN CAMINO' || trip.clientConfirmedArrivalAtOrigin) {
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+    setTrips(prev => prev.map(t => {
+      if (t.id === trip.id) {
+        const updated = {
+          ...t,
+          driverArrivedAtOrigin: true,
+          driverArrivedAtOriginAt: t.driverArrivedAtOriginAt || nowIso,
+          clientConfirmedArrivalAtOrigin: true,
+          clientConfirmedArrivalAtOriginAt: nowIso
+        };
+        delete updated.completionRequestedBy;
+        delete updated.completionRequestedAt;
+        return updated;
+      }
+      return t;
+    }));
+
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc, deleteField } = await import('firebase/firestore');
+      
+      const updateData: Record<string, any> = {
+        driverArrivedAtOrigin: true,
+        driverArrivedAtOriginAt: trip.driverArrivedAtOriginAt || nowIso,
+        clientConfirmedArrivalAtOrigin: true,
+        clientConfirmedArrivalAtOriginAt: nowIso
+      };
+
+      if (trip.completionRequestedBy) {
+        updateData.completionRequestedBy = deleteField();
+        updateData.completionRequestedAt = deleteField();
+      }
+
+      await updateDoc(doc(db, 'trips', trip.id), updateData);
+
+      if (trip.conductorId) {
+        const { sendDbNotification } = await import('./services/notificationService');
+        const cleanTripId = trip.id.startsWith('#') ? trip.id : `#${trip.id}`;
+        sendDbNotification(
+          trip.conductorId,
+          '✅ Llegada Confirmada por Cliente',
+          `El cliente (${user.name}) ha confirmado tu llegada al punto de cargue en ${trip.origin} para el flete ${cleanTripId}.`,
+          `arrival-confirmed-${trip.id}`,
+          'info'
+        );
+      }
+
+      setActiveToast({
+        id: `conf-arr-${Date.now()}`,
+        title: '✓ Llegada Confirmada',
+        message: 'Has confirmado la llegada del vehículo al punto de cargue.',
+        type: 'info'
+      });
+    } catch (e) {
+      console.warn('Error confirming arrival at origin:', e);
+    }
+  };
+
+  const handleStartTrip = async (trip: Trip) => {
+    const isAllowedRole = user.role === 'conductor' || user.role === 'admin';
+    const isConductor = sameEmail(user.email, trip.conductorId) || isAllowedRole;
+    if (!isConductor || trip.status !== 'EN CAMINO' || trip.tripStarted) {
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+    setTrips(prev => prev.map(t => t.id === trip.id ? { ...t, tripStarted: true, tripStartedAt: nowIso } : t));
+
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'trips', trip.id), {
+        tripStarted: true,
+        tripStartedAt: nowIso
+      });
+
+      if (trip.clienteId) {
+        const { sendDbNotification } = await import('./services/notificationService');
+        const cleanTripId = trip.id.startsWith('#') ? trip.id : `#${trip.id}`;
+        sendDbNotification(
+          trip.clienteId,
+          '🚀 Viaje Iniciado hacia Destino',
+          `El conductor (${user.name}) ha iniciado el trayecto hacia ${trip.destination} para el flete ${cleanTripId}.`,
+          `trip-started-${trip.id}`,
+          'info'
+        );
+      }
+
+      setActiveToast({
+        id: `start-trip-${Date.now()}`,
+        title: '🚀 Viaje Iniciado',
+        message: `Has iniciado el trayecto hacia ${trip.destination}.`,
+        type: 'info'
+      });
+    } catch (e) {
+      console.warn('Error starting trip journey:', e);
+    }
+  };
+
+  const handleRequestCompletion = async (trip: Trip) => {
+    const isAllowedRole = user.role === 'conductor' || user.role === 'admin';
+    const isConductor = sameEmail(user.email, trip.conductorId) || isAllowedRole;
+    if (!isConductor || trip.status !== 'EN CAMINO' || trip.completionRequestedBy) {
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+    setTrips(prev => prev.map(t => t.id === trip.id ? { ...t, completionRequestedBy: user.email, completionRequestedAt: nowIso } : t));
+
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'trips', trip.id), {
+        completionRequestedBy: user.email,
+        completionRequestedAt: nowIso
+      });
+
+      const { sendDbNotification } = await import('./services/notificationService');
+      const counterpartEmail = sameEmail(user.email, trip.clienteId) ? trip.conductorId : trip.clienteId;
+      if (counterpartEmail) {
+        const requesterRoleName = user.role === 'conductor' ? 'El conductor' : 'El cliente';
+        sendDbNotification(
+          counterpartEmail,
+          '🏁 Solicitud de Finalización',
+          `${requesterRoleName} (${user.name}) solicita finalizar el servicio #${trip.id}. Ingresa a Actividad para confirmar la entrega.`,
+          `completion-req-${trip.id}`
+        );
+      }
+
+      setActiveToast({
+        id: `req-done-${Date.now()}`,
+        title: '🏁 Solicitud enviada',
+        message: 'Esperando confirmación de la contraparte para cerrar el servicio.',
+        type: 'info'
+      });
+    } catch (e) {
+      console.warn('Error requesting trip completion:', e);
+    }
+  };
+
+  const handleConfirmCompletion = async (trip: Trip) => {
+    const isAllowedRole = user.role === 'cliente' || user.role === 'admin';
+    const isClient = sameEmail(user.email, trip.clienteId) || isAllowedRole;
+    if (!isClient || trip.status !== 'EN CAMINO' || (trip.completionRequestedBy && !sameEmail(trip.completionRequestedBy, trip.conductorId) && user.role !== 'admin')) {
+      return;
+    }
+
+    await handleCompleteTrip(trip);
+  };
+
+  const handleRejectCompletion = async (trip: Trip) => {
+    const requesterEmail = trip.completionRequestedBy;
+    setTrips(prev => prev.map(t => {
+      if (t.id === trip.id) {
+        const copy = { ...t };
+        delete copy.completionRequestedBy;
+        delete copy.completionRequestedAt;
+        return copy;
+      }
+      return t;
+    }));
+
+    try {
+      const { db } = await import('./config/firebase');
+      const { doc, updateDoc, deleteField } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'trips', trip.id), {
+        completionRequestedBy: deleteField(),
+        completionRequestedAt: deleteField()
+      });
+
+      if (requesterEmail) {
+        const { sendDbNotification } = await import('./services/notificationService');
+        sendDbNotification(
+          requesterEmail,
+          '❌ Solicitud Rechazada',
+          `La solicitud de finalización para el flete #${trip.id} fue rechazada por la contraparte.`,
+          `completion-rej-${trip.id}`,
+          'warning'
+        );
+      }
+
+      setActiveToast({
+        id: `req-rej-${Date.now()}`,
+        title: 'Solicitud rechazada',
+        message: 'Has rechazado la solicitud de finalización del servicio.',
+        type: 'info'
+      });
+    } catch (e) {
+      console.warn('Error rejecting trip completion:', e);
+    }
+  };
+
   const handleCompleteTrip = async (trip: Trip) => {
     setTrips(prev => prev.map(t => t.id === trip.id ? { ...t, status: 'COMPLETADO' } : t));
     setRatingTrip(trip);
@@ -142,7 +512,9 @@ export default function App() {
       const { doc, updateDoc, collection, addDoc, serverTimestamp } = await import('firebase/firestore');
       await updateDoc(doc(db, 'trips', trip.id), {
         status: 'COMPLETADO',
-        completedAt: new Date().toISOString()
+        completedAt: new Date().toISOString(),
+        completionRequestedBy: deleteField(),
+        completionRequestedAt: deleteField()
       });
 
       // Transaction: Deduct client, credit driver (minus 10% platform fee)
@@ -178,10 +550,11 @@ export default function App() {
       const { sendDbNotification } = await import('./services/notificationService');
       const targetEmail = user.email === trip.clienteId ? trip.conductorId : trip.clienteId;
       if (targetEmail) {
+        const cleanTripId = trip.id.startsWith('#') ? trip.id : `#${trip.id}`;
         sendDbNotification(
           targetEmail,
           '🎉 Servicio Finalizado',
-          `El flete #${trip.id} ha sido completado. ¡Por favor califica la experiencia!`,
+          `El flete ${cleanTripId} ha sido completado. ¡Por favor califica la experiencia!`,
           `trip-completed-${trip.id}`,
           'info'
         );
@@ -203,6 +576,22 @@ export default function App() {
 
     const currentTrip = ratingTrip;
     setRatingTrip(null);
+
+    // Disparar animación 3D de feedback inmediato al usuario emisor de la calificación
+    const partnerName = isClient
+      ? (currentTrip.conductorName || 'Conductor')
+      : (currentTrip.clienteName || 'Cliente');
+
+    setGamificationModal({
+      isOpen: true,
+      title: '¡CALIFICACIÓN ENVIADA!',
+      stars,
+      rewardText: `¡Has calificado la experiencia con ${stars} estrellas!`,
+      badgeName: user.role === 'cliente' ? 'Cliente Excelente' : 'Conductor Top',
+      senderName: partnerName,
+      role: user.role,
+      isSenderFeedback: true,
+    });
 
     try {
       const { db } = await import('./config/firebase');
@@ -334,15 +723,32 @@ export default function App() {
             const data = change.doc.data();
             if (change.type === 'added' && !data.read) {
               if (!isInitial) {
-                playNotificationSound();
-                setActiveToast({
-                  id: change.doc.id,
-                  title: data.title || 'Nueva Notificación',
-                  message: data.body || data.message || '',
-                  type: data.type || (data.tag?.includes('chat') || data.title?.includes('Mensaje') ? 'chat' : 'info'),
-                  tag: data.tag || undefined,
-                  tripId: data.tag?.startsWith('chat-') ? data.tag.replace('chat-', '') : undefined,
-                });
+                // ── Master switch ────────────────────────────────────────────
+                const notifEnabled = localStorage.getItem('cf_notif_enabled') !== 'false';
+                if (!notifEnabled) return; // user muted all notifications
+
+                const isFreightOffer = data.userId === 'all_conductors' || data.tag?.startsWith('trip-new-') || data.title?.includes('Flete');
+                const isConductorInactive = user.role === 'conductor' && user.isAvailable === false;
+
+                // Silence new freight offer notifications if conductor is set to Inactive / No Disponible
+                if (!isFreightOffer || !isConductorInactive) {
+                  // ── Sound toggle (cf_notif_sound) ────────────────────────
+                  const soundEnabled = localStorage.getItem('cf_notif_sound') !== 'false';
+                  if (soundEnabled) playNotificationSound();
+
+                  // ── In-app toast toggle (cf_notif_inapp) ─────────────────
+                  const inAppEnabled = localStorage.getItem('cf_notif_inapp') !== 'false';
+                  if (inAppEnabled) {
+                    setActiveToast({
+                      id: change.doc.id,
+                      title: data.title || 'Nueva Notificación',
+                      message: data.body || data.message || '',
+                      type: data.type || (data.tag?.includes('chat') || data.title?.includes('Mensaje') ? 'chat' : 'info'),
+                      tag: data.tag || undefined,
+                      tripId: data.tag?.startsWith('chat-') ? data.tag.replace('chat-', '') : undefined,
+                    });
+                  }
+                }
               }
             }
           });
@@ -401,28 +807,10 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Request notification permission once user is logged in
-  // and listen for SW notification click messages
-  const notifPermRequestedRef = useRef(false);
+  // Listen for SW notification click messages -> navigate within app
   useEffect(() => {
     if (!['home', 'activity', 'chat', 'profile'].includes(view)) return;
-    if (notifPermRequestedRef.current) return;
-    notifPermRequestedRef.current = true;
 
-    // Ask for permission after a short delay (avoids permission prompt on first render)
-    const t = setTimeout(() => {
-      requestNotificationPermission().then((perm) => {
-        if (perm === 'granted') {
-          sendInAppNotification({
-            title: '¡Notificaciones activadas!',
-            body:  'Recibirás alertas de fletes, estado de envíos y mensajes.',
-            tag:   'cargoflow-success',
-          });
-        }
-      });
-    }, 3000);
-
-    // Listen for SW notification click -> navigate within app
     const unlistenSW = listenForSWMessages((url) => {
       if (url.includes('chat'))     setView('chat');
       else if (url.includes('activity')) setView('activity');
@@ -430,7 +818,6 @@ export default function App() {
     });
 
     return () => {
-      clearTimeout(t);
       unlistenSW();
     };
   }, [view]);
@@ -439,66 +826,65 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Always merge base auth data first and FORCE admin if email matches
+        // Merge base auth data first
         setUser(prev => ({
           ...prev,
           name: firebaseUser.displayName || prev.name,
           email: firebaseUser.email || prev.email,
           photoURL: firebaseUser.photoURL || prev.photoURL,
-          role: firebaseUser.email === 'lfalzatel@gmail.com' ? 'admin' : prev.role,
         }));
-        
-        // Auto-upgrade developer email to admin
-        if (firebaseUser.email === 'lfalzatel@gmail.com') {
-          try {
-            const { doc, updateDoc } = await import('firebase/firestore');
-            await updateDoc(doc(db, 'users', `${firebaseUser.uid}_conductor`), { role: 'admin' }).catch(() => null);
-            await updateDoc(doc(db, 'users', `${firebaseUser.uid}_cliente`), { role: 'admin' }).catch(() => null);
-          } catch (e) {}
-        }
+
         // Read the persisted Firestore profile to get isComplete and role-specific fields
         try {
-          const lastRole = localStorage.getItem('cf_last_role') || 'cliente';
+          const lastRole = (localStorage.getItem('cf_last_role') as UserRole) || 'cliente';
           const docRef = doc(db, 'users', `${firebaseUser.uid}_${lastRole}`);
           const snap = await getDoc(docRef);
           if (snap.exists()) {
             const firestoreProfile = snap.data() as UserProfile;
-            const forcedRole = firebaseUser.email === 'lfalzatel@gmail.com' ? 'admin' : (firestoreProfile.role || lastRole as any);
+            const activeRole = (firestoreProfile.role === 'admin' ? 'admin' : lastRole) as UserRole;
             setUser(prev => ({
               ...prev,
               ...firestoreProfile,
-              role: forcedRole,
+              role: activeRole,
               name: firebaseUser.displayName || firestoreProfile.name || prev.name,
               email: firebaseUser.email || firestoreProfile.email || prev.email,
               photoURL: firebaseUser.photoURL || firestoreProfile.photoURL || prev.photoURL,
             }));
-            if (firestoreProfile.isComplete || forcedRole === 'admin') {
-              setView('home');
-            } else {
-              setView('complete_profile');
-            }
+            // Only set view if currently on login / admin_login / landing screens (don't interrupt active user navigation)
+            setView(currentView => {
+              if (currentView === 'login' || currentView === 'admin_login' || currentView === 'landing') {
+                return (firestoreProfile.isComplete || activeRole === 'admin') 
+                  ? (activeRole === 'admin' ? 'dashboard' : 'home') 
+                  : 'complete_profile';
+              }
+              return currentView;
+            });
           } else {
-            // Fallback to checking both if lastRole didn't match (for new devices)
-            for (const role of ['conductor', 'cliente']) {
+            // Fallback to checking both if lastRole didn't match (for new devices), prioritizing lastRole choice
+            const rolesToCheck = lastRole === 'cliente' ? ['cliente', 'conductor'] : ['conductor', 'cliente'];
+            for (const role of rolesToCheck) {
               const docRef = doc(db, 'users', `${firebaseUser.uid}_${role}`);
               const snap = await getDoc(docRef);
               if (snap.exists()) {
                 const firestoreProfile = snap.data() as UserProfile;
-                const forcedRole = firebaseUser.email === 'lfalzatel@gmail.com' ? 'admin' : (firestoreProfile.role || role as any);
+                const activeRole = firestoreProfile.role || role as any;
                 localStorage.setItem('cf_last_role', role);
                 setUser(prev => ({
                   ...prev,
                   ...firestoreProfile,
-                  role: forcedRole,
+                  role: activeRole,
                   name: firebaseUser.displayName || firestoreProfile.name || prev.name,
                   email: firebaseUser.email || firestoreProfile.email || prev.email,
                   photoURL: firebaseUser.photoURL || firestoreProfile.photoURL || prev.photoURL,
                 }));
-                if (firestoreProfile.isComplete || forcedRole === 'admin') {
-                  setView('home');
-                } else {
-                  setView('complete_profile');
-                }
+                setView(currentView => {
+                  if (currentView === 'login' || currentView === 'admin_login' || currentView === 'landing') {
+                    return (firestoreProfile.isComplete || activeRole === 'admin') 
+                      ? (activeRole === 'admin' ? 'dashboard' : 'home') 
+                      : 'complete_profile';
+                  }
+                  return currentView;
+                });
                 break;
               }
             }
@@ -531,6 +917,10 @@ export default function App() {
 
   // Bottom Navigation View Change
   const handleViewChange = (newView: 'home' | 'activity' | 'chat' | 'dashboard' | 'profile') => {
+    if (newView !== 'chat') {
+      setActiveChatTrip(null);
+    }
+    localStorage.setItem('cf_active_view', newView);
     setView(newView);
   };
 
@@ -813,6 +1203,8 @@ export default function App() {
         console.warn('Could not accept counter offer:', e);
       }
     } else {
+      const offeringConductor = trip.counterOffer?.conductorId;
+
       // Reject offer
       setTrips(prev => prev.map(t => 
         t.id === tripId 
@@ -826,6 +1218,18 @@ export default function App() {
         await updateDoc(doc(db, 'trips', tripId), {
           counterOffer: deleteField()
         });
+
+        if (offeringConductor) {
+          const { sendDbNotification } = await import('./services/notificationService');
+          const cleanTripId = tripId.startsWith('#') ? tripId : `#${tripId}`;
+          sendDbNotification(
+            offeringConductor,
+            '❌ Oferta No Aceptada',
+            `El cliente declinó tu contraoferta para el flete ${cleanTripId}. El servicio continúa disponible.`,
+            `trip-offer-rejected-${tripId}`,
+            'warning'
+          );
+        }
       } catch (e) {
         console.warn('Could not reject counter offer:', e);
       }
@@ -849,14 +1253,8 @@ export default function App() {
         const { collection, query, where, onSnapshot } = await import('firebase/firestore');
         const { notify } = await import('./services/notificationService');
 
-        let q;
-        if (user.role === 'conductor' || user.role === 'admin') {
-          // Conductors listen to all pending trips or trips accepted by them
-          q = query(collection(db, 'trips')); 
-        } else {
-          // Clients listen to their own trips
-          q = query(collection(db, 'trips'), where('clienteId', '==', user.email));
-        }
+        // Listen to all trips collection in real-time for live sync
+        const q = query(collection(db, 'trips'));
 
         unsubscribe = onSnapshot(
           q, 
@@ -880,9 +1278,10 @@ export default function App() {
                 if (!isInitial) {
                   // NOTIFICATIONS FOR REAL-TIME UPDATES
 
-                  // 1. Client creates trip -> Conductors get notified
+                  // 1. Client creates trip -> Active Conductors get notified
                   if (change.type === 'added' && tripData.status === 'PENDIENTE') {
-                    if ((user.role === 'conductor' || user.role === 'admin') && tripData.clienteId !== user.email) {
+                    const isConductorAvailable = user.isAvailable ?? true;
+                    if ((user.role === 'conductor' || user.role === 'admin') && tripData.clienteId !== user.email && isConductorAvailable) {
                       notify({
                         title: '📦 ¡Nuevo Flete Disponible!',
                         body: `${tripData.clienteName || 'Un cliente'} solicita flete (${tripData.vehicleType}): ${tripData.origin} → ${tripData.destination} por $${tripData.price.toLocaleString('es-CO')} COP`,
@@ -891,6 +1290,42 @@ export default function App() {
                         sound: localStorage.getItem('cf_notif_sound') !== 'false'
                           ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
                           : undefined,
+                      });
+                    }
+                  }
+
+                  // 5. Conductor recibe calificación en tiempo real de Cliente
+                  if (user.role === 'conductor' && tripData.conductorId === user.email && tripData.ratedByCliente && tripData.clienteRating) {
+                    const modalKey = `driver-received-${tripData.id}`;
+                    if (!shownRatingModalRef.current.has(modalKey)) {
+                      shownRatingModalRef.current.add(modalKey);
+                      setGamificationModal({
+                        isOpen: true,
+                        title: '¡NUEVA CALIFICACIÓN RECIBIDA!',
+                        stars: tripData.clienteRating.stars || 5,
+                        rewardText: `¡El cliente (${tripData.clienteName || 'Cliente'}) te ha calificado con ${tripData.clienteRating.stars || 5} estrellas!`,
+                        badgeName: 'Conductor 5 Estrellas',
+                        senderName: tripData.clienteName || 'Cliente CargoFlow',
+                        role: 'conductor',
+                        isSenderFeedback: false,
+                      });
+                    }
+                  }
+
+                  // 6. Cliente recibe calificación en tiempo real de Conductor
+                  if (user.role === 'cliente' && tripData.clienteId === user.email && tripData.ratedByConductor && tripData.conductorRating) {
+                    const modalKey = `client-received-${tripData.id}`;
+                    if (!shownRatingModalRef.current.has(modalKey)) {
+                      shownRatingModalRef.current.add(modalKey);
+                      setGamificationModal({
+                        isOpen: true,
+                        title: '¡NUEVA CALIFICACIÓN RECIBIDA!',
+                        stars: tripData.conductorRating.stars || 5,
+                        rewardText: `¡El conductor (${tripData.conductorName || 'Conductor'}) te ha calificado con ${tripData.conductorRating.stars || 5} estrellas!`,
+                        badgeName: 'Cliente VIP',
+                        senderName: tripData.conductorName || 'Conductor CargoFlow',
+                        role: 'cliente',
+                        isSenderFeedback: false,
                       });
                     }
                   }
@@ -916,6 +1351,19 @@ export default function App() {
                       title: '🏷️ ¡Nueva Oferta de Conductor!',
                       body: `${tripData.counterOffer.conductorName} propone realizar tu viaje por $${tripData.counterOffer.price.toLocaleString('es-CO')} COP.`,
                       tag: `trip-offer-${tripData.id}`,
+                      url: '/activity',
+                      sound: localStorage.getItem('cf_notif_sound') !== 'false'
+                        ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
+                        : undefined,
+                    });
+                  }
+
+                  // 4. Conductor requests completion -> Client gets notified
+                  if (tripData.completionRequestedBy && tripData.completionRequestedBy === tripData.conductorId && user.email === tripData.clienteId) {
+                    notify({
+                      title: '🏁 Confirmación de Entrega Requerida',
+                      body: `${tripData.conductorName || 'El conductor'} reporta que ha entregado tu flete (${tripData.origin} → ${tripData.destination}). Por favor confirma la entrega.`,
+                      tag: `trip-completion-req-${tripData.id}`,
                       url: '/activity',
                       sound: localStorage.getItem('cf_notif_sound') !== 'false'
                         ? `/sounds/${localStorage.getItem('cf_notif_tone_file') || 'notification.mp3'}`
@@ -960,15 +1408,11 @@ export default function App() {
       const { auth, db } = await import('./config/firebase');
       const { doc, updateDoc } = await import('firebase/firestore');
       if (auth.currentUser && user.role) {
-        // Try updating both possible role documents to ensure we catch the correct one
-        // especially for admin users who might be using either a conductor or cliente doc
-        const possibleRoles = ['conductor', 'cliente'];
-        for (const r of possibleRoles) {
-          try {
-            const docRef = doc(db, 'users', `${auth.currentUser.uid}_${r}`);
-            await updateDoc(docRef, updates);
-          } catch(e) {}
-        }
+        // Update only the current active role document to prevent cross-role field pollution
+        const targetRole = user.role;
+        const docRef = doc(db, 'users', `${auth.currentUser.uid}_${targetRole}`);
+        const sanitizedUpdates = { ...updates, role: targetRole };
+        await updateDoc(docRef, sanitizedUpdates);
       }
     } catch (e) {
       console.error('Error updating profile in DB:', e);
@@ -981,17 +1425,23 @@ export default function App() {
   };
 
   // Linked accounts list (Instagram style quick account switcher)
-  const [linkedAccounts, setLinkedAccounts] = useState<UserProfile[]>([
-    {
-      name: 'Luis Fernando (Cliente)',
-      email: 'lfalzatel29@gmail.com',
-      phone: '+57 300 123 4567',
-      role: 'cliente',
-      isVerified: true,
-      rating: 5.0,
-      balance: 1500000,
-    }
-  ]);
+  const [linkedAccounts, setLinkedAccounts] = useState<UserProfile[]>(() => {
+    try {
+      const saved = localStorage.getItem('cf_linked_accounts');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (_) {}
+    return [];
+  });
+
+  // Sync linkedAccounts to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('cf_linked_accounts', JSON.stringify(linkedAccounts));
+    } catch (_) {}
+  }, [linkedAccounts]);
 
   // Switch account helper (Instagram style)
   const handleSwitchAccount = (targetAccount: UserProfile) => {
@@ -1001,6 +1451,8 @@ export default function App() {
       getSysTone('login'), 
       2600, 
       () => {
+        localStorage.setItem('cf_last_role', targetAccount.role);
+        localStorage.setItem('cf_user_profile', JSON.stringify(targetAccount));
         setLinkedAccounts(prev => {
           const filtered = prev.filter(acc => !(acc.email === targetAccount.email && acc.role === targetAccount.role));
           const exists = prev.some(acc => acc.email === user.email && acc.role === user.role);
@@ -1020,7 +1472,9 @@ export default function App() {
     try {
       const { loginWithGoogle } = await import('./services/authService');
       const targetRole = user.role === 'conductor' ? 'cliente' : 'conductor';
+      localStorage.setItem('cf_last_role', targetRole);
       const newProfile = await loginWithGoogle(targetRole);
+      localStorage.setItem('cf_user_profile', JSON.stringify(newProfile));
       
       triggerSplash(
         'Conectando nueva cuenta...', 
@@ -1058,6 +1512,7 @@ export default function App() {
         } catch (e) {
           console.warn('Logout error:', e);
         }
+        localStorage.removeItem('cf_user_profile');
         setView('login');
       }
     );
@@ -1113,14 +1568,38 @@ export default function App() {
             ['home', 'settings'].includes(view)
               ? 'flex-1 overflow-hidden'
               : ['activity', 'chat', 'dashboard', 'profile'].includes(view)
-              ? 'flex-1 overflow-y-auto pb-28'
+              ? 'flex-1 overflow-y-auto pb-5'
               : 'min-h-screen'
           }`}
         >
+          {view === 'landing' && (
+            <Landing 
+              onGetStarted={(role) => {
+                if (role) {
+                  setSelectedRole(role);
+                  localStorage.setItem('cf_last_role', role);
+                }
+                setView('login');
+              }}
+            />
+          )}
+
           {view === 'login' && (
             <Login 
               currentRole={selectedRole}
-              onLoginSuccess={handleLoginSuccess} 
+              onLoginSuccess={handleLoginSuccess}
+              onOpenAdminLogin={() => setView('admin_login')}
+              onBack={() => setView('landing')}
+            />
+          )}
+
+          {view === 'admin_login' && (
+            <AdminLogin
+              onAdminLoginSuccess={(adminProfile) => {
+                setUser(adminProfile);
+                setView('dashboard');
+              }}
+              onBackToNormalLogin={() => setView('login')}
             />
           )}
 
@@ -1137,13 +1616,23 @@ export default function App() {
               user={user} 
               trips={trips}
               usersList={usersList}
-              pendingTrip={trips.find(t => t.status === 'PENDIENTE')}
+              pendingTrip={
+                (user.role === 'conductor' && user.isAvailable === false)
+                  ? undefined
+                  : trips.find(t => t.status === 'PENDIENTE' && t.clienteId !== user.email)
+              }
               editingTrip={editingTrip}
               onCloseEditing={() => setEditingTrip(null)}
               onCreateShipment={handleCreateShipment} 
               onEditShipment={handleEditTrip}
               onAcceptTrip={handleAcceptTrip}
               onCounterOfferTrip={handleCounterOffer}
+              onDriverArrivedAtOrigin={handleDriverArrivedAtOrigin}
+              onClientConfirmArrivalAtOrigin={handleClientConfirmArrivalAtOrigin}
+              onStartTrip={handleStartTrip}
+              onRequestCompletion={handleRequestCompletion}
+              onConfirmCompletion={handleConfirmCompletion}
+              onRejectCompletion={handleRejectCompletion}
               onNavigateToView={handleViewChange}
               onUpdateProfile={handleUpdateProfile}
               onLogout={handleLogout}
@@ -1166,6 +1655,11 @@ export default function App() {
               }}
               onResolveCounterOffer={handleResolveCounterOffer}
               onCompleteTrip={handleCompleteTrip}
+              onDriverArrivedAtOrigin={handleDriverArrivedAtOrigin}
+              onClientConfirmArrivalAtOrigin={handleClientConfirmArrivalAtOrigin}
+              onRequestCompletion={handleRequestCompletion}
+              onConfirmCompletion={handleConfirmCompletion}
+              onRejectCompletion={handleRejectCompletion}
               onOpenRating={(trip) => setRatingTrip(trip)}
             />
           )}
@@ -1188,6 +1682,33 @@ export default function App() {
               />
             );
           })()}
+
+          {/* Gamification 3D Reward & Feedback Unlock Modal */}
+          {gamificationModal?.isOpen && (
+            <GamificationUnlockModal
+              isOpen={gamificationModal.isOpen}
+              onClose={() => setGamificationModal(null)}
+              title={gamificationModal.title}
+              stars={gamificationModal.stars}
+              rewardText={gamificationModal.rewardText}
+              badgeName={gamificationModal.badgeName}
+              senderName={gamificationModal.senderName}
+              role={gamificationModal.role}
+              isSenderFeedback={gamificationModal.isSenderFeedback}
+            />
+          )}
+
+          {/* Confetti Rain & Toggle Status Change Overlay */}
+          {confettiOverlay?.isOpen && (
+            <ToggleConfettiOverlay
+              isOpen={confettiOverlay.isOpen}
+              onClose={() => setConfettiOverlay(null)}
+              title={confettiOverlay.title}
+              subtitle={confettiOverlay.subtitle}
+              statusText={confettiOverlay.statusText}
+              activated={confettiOverlay.activated}
+            />
+          )}
 
           {view === 'chat' && (
             <Chat 
@@ -1239,6 +1760,31 @@ export default function App() {
                     }).catch(() => {});
                  }
               }}
+              onTestGamificationModal={(type) => {
+                if (type === 'receiver') {
+                  setGamificationModal({
+                    isOpen: true,
+                    title: '¡NUEVA CALIFICACIÓN RECIBIDA!',
+                    stars: 5,
+                    rewardText: '¡Has recibido 5 estrellas por tu excelente servicio!',
+                    badgeName: user.role === 'conductor' ? 'Conductor 5 Estrellas' : 'Cliente VIP',
+                    senderName: user.role === 'conductor' ? 'Cliente Solicitante' : 'Conductor Asignado',
+                    role: user.role,
+                    isSenderFeedback: false,
+                  });
+                } else {
+                  setGamificationModal({
+                    isOpen: true,
+                    title: '¡CALIFICACIÓN ENVIADA!',
+                    stars: 5,
+                    rewardText: '¡Has calificado la experiencia con 5 estrellas!',
+                    badgeName: user.role === 'conductor' ? 'Conductor Top' : 'Cliente Excelente',
+                    senderName: user.role === 'conductor' ? 'Cliente Solicitante' : 'Conductor Asignado',
+                    role: user.role,
+                    isSenderFeedback: true,
+                  });
+                }
+              }}
             />
           )}
         </motion.div>
@@ -1266,43 +1812,58 @@ export default function App() {
               }
               setActiveToast(null);
             }}
-            className="fixed top-16 left-4 right-4 z-50 bg-slate-900/95 text-white p-3.5 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700 flex items-center justify-between cursor-pointer active:scale-98 transition-all"
+            className="fixed top-18 left-4 right-4 z-50 bg-surface/95 text-on-surface p-3.5 rounded-2xl shadow-xl backdrop-blur-md border border-surface-container flex flex-col gap-2 cursor-pointer active:scale-98 transition-all overflow-hidden"
           >
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl flex-shrink-0">
-                💬
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary-container flex items-center justify-center text-lg flex-shrink-0 border border-surface-container">
+                  {activeToast.title.includes('Finalizado') ? '🎉' : activeToast.title.includes('Mensaje') ? '💬' : '📦'}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-black text-on-surface truncate">{activeToast.title}</p>
+                  <p className="text-xs font-semibold text-on-surface-variant truncate">{activeToast.message}</p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-black text-emerald-400 truncate">{activeToast.title}</p>
-                <p className="text-xs font-bold text-slate-100 truncate">{activeToast.message}</p>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="bg-primary-container text-white font-extrabold text-[11px] px-3 py-1.5 rounded-xl shadow-xs transition-colors">
+                  Responder
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveToast(null);
+                  }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors"
+                >
+                  ✕
+                </button>
               </div>
             </div>
-            <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-              <span className="bg-emerald-500 text-slate-950 font-extrabold text-[11px] px-3 py-1.5 rounded-xl shadow-xs">
-                Responder
-              </span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveToast(null);
-                }}
-                className="text-slate-400 hover:text-white p-1"
-              >
-                ✕
-              </button>
-            </div>
+            {/* Auto-dismiss countdown bar */}
+            <motion.div
+              initial={{ scaleX: 1 }}
+              animate={{ scaleX: 0 }}
+              transition={{ duration: 5, ease: 'linear' }}
+              className="h-1 bg-primary-container rounded-full origin-left -mx-3.5 -mb-3.5 mt-1"
+            />
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* App Global Alert Modal */}
+      <AppAlertModal />
+
       {/* Render Bottom navigation on main dashboards */}
       {['home', 'activity', 'chat', 'dashboard', 'profile', 'settings'].includes(view) && (
-        <BottomNav 
-          currentView={view as any} 
-          onViewChange={handleViewChange} 
-          unreadChatCount={unreadChatCount}
-          userRole={user.role}
-        />
+        <>
+          <NotificationPromptModal />
+          <BottomNav 
+            currentView={view as any} 
+            onViewChange={handleViewChange} 
+            unreadChatCount={unreadChatCount}
+            userRole={user.role}
+          />
+        </>
       )}
     </div>
     </>

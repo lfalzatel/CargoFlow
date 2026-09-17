@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Edit2, Star, Plus, CreditCard, HelpCircle, Settings, LogOut, 
   Check, X, Truck, FileText, Camera, Calendar, AlertCircle, 
-  Trash2, CheckCircle2, Eye, Image, UserCheck 
+  Trash2, CheckCircle2, Eye, Image, UserCheck, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, Vehicle, Trip } from '../types';
+import { ConfirmModal } from './ConfirmModal';
+import RatingBurstAnimation from './RatingBurstAnimation';
+import { showAlert } from './AppAlertModal';
 
 interface ProfileProps {
   user: UserProfile;
@@ -326,12 +329,52 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
     setShowAddVehicleModal(false);
   };
 
-  return (
+  // Custom confirm modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    confirmLabel: string;
+    variant: 'danger' | 'success' | 'warning' | 'info';
+    onConfirm: () => void;
+  }>({
+    open: false, title: '', message: '', confirmLabel: '', variant: 'info',
+    onConfirm: () => {},
+  });
+  const closeConfirm = () => setConfirmModal(m => ({ ...m, open: false }));
+
+  // Test Rating Animation State (for admin testing)
+  const [showTestRatingAnimation, setShowTestRatingAnimation] = useState(false);
+  const [testRatingStars, setTestRatingStars] = useState(5);
+  const [profileCapsuleCoords, setProfileCapsuleCoords] = useState<{ x: number; y: number } | null>(null);
+  const profileCapsuleRef = useRef<HTMLDivElement>(null);
+
+  // Handle test rating animation click
+  const handleTestRatingClick = (stars: number) => {
+    if (profileCapsuleRef.current) {
+      const rect = profileCapsuleRef.current.getBoundingClientRect();
+      const capsuleX = rect.left + rect.width / 2;
+      const capsuleY = rect.top + rect.height / 2;
+      setProfileCapsuleCoords({ x: capsuleX, y: capsuleY });
+    }
+    setTestRatingStars(stars);
+    setShowTestRatingAnimation(true);
+  };
+
+  // Handle test rating animation completion
+  const handleTestRatingComplete = () => {
+    setShowTestRatingAnimation(false);
+    // Increment rating by 0.1
+    const newRating = Math.min(5, parseFloat((user.rating + 0.1).toFixed(1)));
+    onUpdateProfile({ rating: newRating });
+  };
+
+  return (<>
     <div className="bg-background min-h-screen pt-20 font-sans antialiased">
       <main className="px-6 max-w-lg mx-auto flex flex-col gap-6">
         
         {/* Profile Header Section */}
-        <section className="flex flex-col items-center justify-center pt-6 pb-4">
+        <section ref={profileCapsuleRef} className="flex flex-col items-center justify-center pt-6 pb-4">
           <div className="relative">
             {user.photoURL && !photoError ? (
               <img
@@ -401,20 +444,20 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
         </section>
 
         {/* DOCUMENTACIÓN PERSONAL SECTION (Cédula & Licencia) */}
-        <section className="bg-white rounded-2xl p-5 border border-surface-container shadow-[0px_4px_20px_rgba(0,0,0,0.02)] flex flex-col gap-4">
-          <h3 className="text-xs font-bold text-outline uppercase tracking-wider">Documentación Personal</h3>
+        <section className="bg-surface-container-low rounded-2xl p-5 border border-surface-container shadow-xs flex flex-col gap-4">
+          <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Documentación Personal</h3>
           
           <div className="flex flex-col gap-3">
             {/* 1. Cédula Card */}
-            <div className="flex flex-col gap-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+            <div className="flex flex-col gap-3 p-4 bg-surface-container rounded-xl border border-surface-container-high">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                  <div className="bg-[#0b224d]/10 text-[#0b224d] p-2 rounded-lg">
+                  <div className="bg-blue-500/15 text-blue-400 p-2 rounded-lg">
                     <UserCheck size={20} />
                   </div>
                   <div>
                     <p className="text-sm font-extrabold text-on-surface">Cédula de Ciudadanía</p>
-                    <p className="text-[11px] text-outline font-bold">
+                    <p className="text-[11px] text-on-surface-variant font-bold">
                       {user.cedulaNumber ? `C.C. ${user.cedulaNumber}` : 'Sin registrar número'}
                     </p>
                   </div>
@@ -423,25 +466,25 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                 {/* State Tag */}
                 <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${
                   user.cedulaNumber && user.cedulaPhoto
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                    : 'bg-red-50 text-red-700 border-red-100'
+                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                    : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
                 }`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${
-                    user.cedulaNumber && user.cedulaPhoto ? 'bg-emerald-500' : 'bg-red-500'
+                    user.cedulaNumber && user.cedulaPhoto ? 'bg-emerald-500' : 'bg-rose-500'
                   }`}></span>
                   {user.cedulaNumber && user.cedulaPhoto ? 'Registrada' : 'Pendiente'}
                 </span>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 mt-1.5 pt-2 border-t border-slate-200/50">
+              <div className="flex gap-2 mt-1.5 pt-2 border-t border-surface-container-high">
                 {user.cedulaPhoto && (
                   <button
                     onClick={() => {
                       setViewDocPhoto(user.cedulaPhoto!);
                       setViewDocTitle('Cédula de Ciudadanía');
                     }}
-                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200/50"
+                    className="flex-1 py-2 bg-surface-container-high hover:bg-surface-container text-on-surface rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-surface-container-highest"
                   >
                     <Eye size={14} />
                     Ver Cédula
@@ -463,15 +506,15 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
 
             {/* 2. Licencia Card (Only for Conductores) */}
             {user.role === 'conductor' && (
-              <div className="flex flex-col gap-3 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+              <div className="flex flex-col gap-3 p-4 bg-surface-container rounded-xl border border-surface-container-high">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                    <div className="bg-[#0b224d]/10 text-[#0b224d] p-2 rounded-lg">
+                    <div className="bg-blue-500/15 text-blue-400 p-2 rounded-lg">
                       <FileText size={20} />
                     </div>
                     <div>
                       <p className="text-sm font-extrabold text-on-surface">Licencia de Conducción</p>
-                      <p className="text-[11px] text-outline">
+                      <p className="text-[11px] text-on-surface-variant">
                         {user.licenseExpiry ? `Vence: ${user.licenseExpiry}` : 'Sin registrar fecha'}
                       </p>
                     </div>
@@ -490,14 +533,14 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 mt-1.5 pt-2 border-t border-slate-200/50">
+                <div className="flex gap-2 mt-1.5 pt-2 border-t border-surface-container-high">
                   {user.licensePhoto && (
                     <button
                       onClick={() => {
                         setViewDocPhoto(user.licensePhoto!);
                         setViewDocTitle('Licencia de Conducir');
                       }}
-                      className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200/50"
+                      className="flex-1 py-2 bg-surface-container-high hover:bg-surface-container text-on-surface rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-surface-container-highest"
                     >
                       <Eye size={14} />
                       Ver Pase
@@ -522,12 +565,12 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
 
         {/* MIS VEHÍCULOS SECTION (SOAT, Tecno, Tarjeta Propiedad) */}
         {user.role === 'conductor' && (
-          <section className="bg-white rounded-2xl p-5 border border-surface-container shadow-[0px_4px_20px_rgba(0,0,0,0.02)] flex flex-col gap-4">
+          <section className="bg-surface-container-low rounded-2xl p-5 border border-surface-container shadow-xs flex flex-col gap-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-outline uppercase tracking-wider">Mis Vehículos (Flota)</h3>
+              <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Mis Vehículos (Flota)</h3>
               <button
                 onClick={() => setShowAddVehicleModal(true)}
-                className="text-xs font-black text-[#1E5EFF] hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-xs font-black text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <Plus size={14} strokeWidth={3} />
                 Agregar Vehículo
@@ -535,10 +578,10 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
             </div>
 
             {(!user.vehicles || user.vehicles.length === 0) ? (
-              <div className="text-center py-8 border border-dashed border-slate-200 rounded-xl bg-slate-50/50 flex flex-col items-center justify-center">
-                <Truck className="text-slate-300 mb-2" size={32} />
-                <p className="text-xs font-bold text-slate-400">Ningún vehículo registrado</p>
-                <p className="text-[10px] text-slate-400 mt-1 max-w-[200px] leading-relaxed">
+              <div className="text-center py-8 border border-dashed border-surface-container-high rounded-xl bg-surface-container flex flex-col items-center justify-center">
+                <Truck className="text-on-surface-variant/50 mb-2" size={32} />
+                <p className="text-xs font-bold text-on-surface-variant">Ningún vehículo registrado</p>
+                <p className="text-[10px] text-on-surface-variant/70 mt-1 max-w-[200px] leading-relaxed">
                   Registra tu primer camión o furgoneta para poder aceptar fletes.
                 </p>
               </div>
@@ -552,31 +595,31 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                   return (
                     <div 
                       key={vh.id} 
-                      className={`p-4 bg-slate-50/40 rounded-xl border flex flex-col gap-3 relative transition-all ${
+                      className={`p-4 bg-surface-container rounded-xl border flex flex-col gap-3 relative transition-all ${
                         isDefault 
-                          ? 'border-[#0b224d] shadow-[0px_4px_12px_rgba(11,34,77,0.06)] bg-white' 
-                          : 'border-slate-100'
+                          ? 'border-emerald-500 shadow-md bg-surface-container-low' 
+                          : 'border-surface-container-high'
                       }`}
                     >
                       
                       {/* Details & Actions */}
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-2.5">
-                          <div className={`p-2 rounded-lg ${isDefault ? 'bg-[#0b224d] text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <div className={`p-2 rounded-lg ${isDefault ? 'bg-primary-container text-white' : 'bg-surface-container text-on-surface-variant'}`}>
                             <Truck size={18} />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-extrabold text-on-surface">{vh.type}</span>
-                              {vh.model && <span className="text-[10px] text-slate-400 font-bold">Mod. {vh.model}</span>}
+                              {vh.model && <span className="text-[10px] text-on-surface-variant font-bold">Mod. {vh.model}</span>}
                             </div>
-                            <span className="text-xs font-black text-[#0b224d] tracking-wider uppercase">{vh.plate}</span>
+                            <span className="text-xs font-black text-primary-container tracking-wider uppercase">{vh.plate}</span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2">
                           {isDefault ? (
-                            <span className="text-[9px] font-black bg-[#0b224d]/10 text-[#0b224d] px-2 py-0.5 rounded-full border border-[#0b224d]/20 flex items-center gap-1">
+                            <span className="text-[9px] font-black bg-primary/20 text-primary-container px-2 py-0.5 rounded-full border border-primary/30 flex items-center gap-1">
                               <UserCheck size={10} strokeWidth={3} />
                               Principal
                             </span>
@@ -588,7 +631,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                                   vehicleType: vh.type
                                 });
                               }}
-                              className="text-[9px] font-black bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200 transition-colors cursor-pointer"
+                              className="text-[9px] font-black bg-surface-container hover:bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full border border-surface-container-highest transition-colors cursor-pointer"
                             >
                               Fijar Principal
                             </button>
@@ -596,17 +639,25 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
 
                           <button
                             onClick={() => {
-                              if (confirm(`¿Estás seguro de eliminar el vehículo ${vh.plate}?`)) {
-                                const remaining = user.vehicles?.filter(v => v.id !== vh.id) || [];
-                                const wasDefault = user.plateNumber === vh.plate;
-                                onUpdateProfile({
-                                  vehicles: remaining,
-                                  plateNumber: wasDefault ? (remaining[0]?.plate || '') : user.plateNumber,
-                                  vehicleType: wasDefault ? (remaining[0]?.type || '') : user.vehicleType
-                                });
-                              }
+                              setConfirmModal({
+                                open: true,
+                                title: 'Eliminar vehículo',
+                                message: `¿Estás seguro de eliminar el vehículo ${vh.plate}? Esta acción no se puede deshacer.`,
+                                confirmLabel: 'Sí, eliminar',
+                                variant: 'danger',
+                                onConfirm: () => {
+                                  const remaining = user.vehicles?.filter(v => v.id !== vh.id) || [];
+                                  const wasDefault = user.plateNumber === vh.plate;
+                                  onUpdateProfile({
+                                    vehicles: remaining,
+                                    plateNumber: wasDefault ? (remaining[0]?.plate || '') : user.plateNumber,
+                                    vehicleType: wasDefault ? (remaining[0]?.type || '') : user.vehicleType
+                                  });
+                                  closeConfirm();
+                                },
+                              });
                             }}
-                            className="p-1 hover:bg-red-50 hover:text-red-600 rounded-lg text-slate-400 transition-colors cursor-pointer"
+                            className="p-1 hover:bg-red-500/10 hover:text-red-400 rounded-lg text-on-surface-variant transition-colors cursor-pointer"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -614,12 +665,12 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                       </div>
 
                       {/* Documents Grid (SOAT, Tecno, Tarjeta Propiedad) */}
-                      <div className="flex flex-col gap-2 bg-white p-3 rounded-lg border border-slate-100/80">
+                      <div className="flex flex-col gap-2 bg-surface-container-low p-3 rounded-lg border border-surface-container-high">
                         {/* Headers */}
-                        <div className="grid grid-cols-3 text-[9px] font-black text-slate-400 uppercase tracking-wider pb-1.5 border-b border-slate-100">
+                        <div className="grid grid-cols-3 text-[9px] font-black text-on-surface-variant uppercase tracking-wider pb-1.5 border-b border-surface-container-high">
                           <span>SOAT</span>
-                          <span className="border-l border-slate-100 pl-2">Tecno</span>
-                          <span className="border-l border-slate-100 pl-2">Propiedad</span>
+                          <span className="border-l border-surface-container-high pl-2">Tecno</span>
+                          <span className="border-l border-surface-container-high pl-2">Propiedad</span>
                         </div>
 
                         {/* Contents */}
@@ -645,7 +696,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                           </div>
 
                           {/* Tecno */}
-                          <div className="flex flex-col gap-1 border-l border-slate-100 pl-2 pr-1">
+                          <div className="flex flex-col gap-1 border-l border-surface-container-high pl-2 pr-1">
                             <div className="flex items-center justify-between">
                               <span className="truncate">{vh.tecnomecanicaExpiry ? vh.tecnomecanicaExpiry : 'Sin fecha'}</span>
                               <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ml-1 ${tecnoVal.dotColor}`} title={tecnoVal.label}></span>
@@ -665,9 +716,9 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                           </div>
 
                           {/* Tarjeta Propiedad */}
-                          <div className="flex flex-col gap-1 border-l border-slate-100 pl-2">
+                          <div className="flex flex-col gap-1 border-l border-surface-container-high pl-2">
                             <div className="flex items-center justify-between">
-                              <span className="truncate text-slate-500">
+                              <span className="truncate text-on-surface-variant">
                                 {vh.propiedadNumber ? `N° ${vh.propiedadNumber}` : 'Propiedad'}
                               </span>
                               <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ml-1 ${
@@ -702,8 +753,8 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
         <section className="flex flex-col gap-2">
           {/* Payment Methods */}
           <button 
-            onClick={() => alert('Métodos de Pago: Visa **** 5678, Bancolombia, Efectivo.')}
-            className="flex items-center justify-between w-full p-4 bg-white rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.02)] border border-surface-container hover:bg-surface-container-low transition-colors group cursor-pointer"
+            onClick={() => showAlert('Métodos de Pago registrados: Visa **** 5678, Bancolombia, Efectivo.', { title: 'Métodos de Pago', variant: 'info' })}
+            className="flex items-center justify-between w-full p-4 bg-surface-container-low rounded-2xl shadow-xs border border-surface-container hover:bg-surface-container transition-colors group cursor-pointer"
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-white transition-colors">
@@ -716,8 +767,8 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
 
           {/* Help Center */}
           <button 
-            onClick={() => alert('Centro de Ayuda CargoFlow. Soporte 24/7 vía Chat.')}
-            className="flex items-center justify-between w-full p-4 bg-white rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.02)] border border-surface-container hover:bg-surface-container-low transition-colors group cursor-pointer"
+            onClick={() => showAlert('Centro de Ayuda CargoFlow. Soporte activo 24/7 vía Chat y teléfono.', { title: 'Centro de Ayuda', variant: 'info' })}
+            className="flex items-center justify-between w-full p-4 bg-surface-container-low rounded-2xl shadow-xs border border-surface-container hover:bg-surface-container transition-colors group cursor-pointer"
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-white transition-colors">
@@ -731,7 +782,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
           {/* Settings */}
           <button 
             onClick={onNavigateToSettings}
-            className="flex items-center justify-between w-full p-4 bg-white rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.02)] border border-surface-container hover:bg-surface-container-low transition-colors group cursor-pointer"
+            className="flex items-center justify-between w-full p-4 bg-surface-container-low rounded-2xl shadow-xs border border-surface-container hover:bg-surface-container transition-colors group cursor-pointer"
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-white transition-colors">
@@ -745,16 +796,43 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
           {/* Logout */}
           <button 
             onClick={onLogout}
-            className="flex items-center justify-between w-full p-4 bg-white rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.02)] border border-surface-container hover:bg-red-50 text-red-600 hover:border-red-200 transition-colors group cursor-pointer"
+            className="flex items-center justify-between w-full p-4 bg-surface-container-low rounded-2xl shadow-xs border border-surface-container hover:bg-red-500/10 text-red-500 hover:border-red-500/30 transition-colors group cursor-pointer"
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-red-500 group-hover:bg-red-600 group-hover:text-white transition-colors">
                 <LogOut size={18} />
               </div>
-              <span className="text-sm font-extrabold text-red-600">Cerrar Sesión</span>
+              <span className="text-sm font-extrabold text-red-500">Cerrar Sesión</span>
             </div>
           </button>
         </section>
+
+        {/* TEST RATING ANIMATION SECTION (Admin Only) */}
+        {user.role === 'admin' && (
+          <section className="bg-purple-500/10 rounded-2xl p-5 border-2 border-dashed border-purple-500/30 shadow-xs flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Sparkles size={18} className="text-purple-400" />
+              <h3 className="text-xs font-black text-purple-400 uppercase tracking-wider">Prueba de Animaciones</h3>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <p className="text-xs text-purple-300 font-semibold">Prueba la animación de ganancia de puntos:</p>
+              
+              <div className="flex gap-2 flex-wrap">
+                {[1, 2, 3, 4, 5].map((stars) => (
+                  <button
+                    key={stars}
+                    onClick={() => handleTestRatingClick(stars)}
+                    className="px-3 py-1.5 bg-surface-container hover:bg-purple-600 text-purple-400 hover:text-white rounded-lg text-xs font-black transition-all active:scale-95 border border-purple-500/30 hover:border-purple-600 cursor-pointer flex items-center gap-1"
+                  >
+                    {stars}
+                    <Star size={12} className="text-amber-500" fill="currentColor" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         <div className="h-1" aria-hidden="true" />
 
@@ -768,21 +846,21 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl overflow-hidden max-w-sm w-full border border-slate-200 flex flex-col shadow-2xl"
+              className="bg-surface rounded-3xl overflow-hidden max-w-sm w-full border border-surface-container flex flex-col shadow-2xl text-on-surface"
             >
-              <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100 bg-slate-50">
+              <div className="flex justify-between items-center px-5 py-4 border-b border-surface-container bg-surface-container-low">
                 <h3 className="text-sm font-black text-on-surface flex items-center gap-1.5">
                   <FileText size={16} />
                   {viewDocTitle}
                 </h3>
                 <button 
                   onClick={() => setViewDocPhoto(null)} 
-                  className="p-1 hover:bg-slate-200 rounded-full text-slate-500 transition-colors cursor-pointer"
+                  className="p-1 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors cursor-pointer"
                 >
                   <X size={18} />
                 </button>
               </div>
-              <div className="p-4 bg-slate-900 flex items-center justify-center min-h-[250px]">
+              <div className="p-4 bg-surface-container-highest flex items-center justify-center min-h-[250px]">
                 <img 
                   src={viewDocPhoto} 
                   alt={viewDocTitle} 
@@ -792,7 +870,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
               <div className="p-4 text-center">
                 <button
                   onClick={() => setViewDocPhoto(null)}
-                  className="w-full py-2.5 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition-all cursor-pointer"
+                  className="w-full py-2.5 bg-primary-container text-white font-bold rounded-xl text-xs hover:opacity-90 transition-all cursor-pointer"
                 >
                   Cerrar Vista
                 </button>
@@ -810,7 +888,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-surface-container"
+              className="bg-surface rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-surface-container text-on-surface"
             >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-base font-black text-on-surface">Subir Cédula de Ciudadanía</h3>
@@ -836,28 +914,28 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                   <label className="text-xs font-bold text-outline uppercase tracking-wider">Foto de la Cédula</label>
                   
                   {cedulaPhoto ? (
-                    <div className="relative border border-slate-200 rounded-xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between">
+                    <div className="relative border border-surface-container rounded-xl overflow-hidden bg-surface-container-low p-2 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-md">
+                        <div className="p-1.5 bg-emerald-500/15 text-emerald-400 rounded-md">
                           <CheckCircle2 size={16} />
                         </div>
-                        <span className="text-[10px] font-bold text-slate-500">Cédula cargada</span>
+                        <span className="text-[10px] font-bold text-on-surface-variant">Cédula cargada</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => setCedulaPhoto(null)}
-                        className="text-[10px] font-black text-red-500 hover:underline cursor-pointer"
+                        className="text-[10px] font-black text-red-400 hover:underline cursor-pointer"
                       >
                         Eliminar
                       </button>
                     </div>
                   ) : (
-                    <label className="border-2 border-dashed border-slate-200 hover:border-primary/50 transition-colors rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-slate-50/50">
-                      <Camera className="text-slate-400" size={24} />
-                      <span className="text-xs font-bold text-slate-500">
+                    <label className="border-2 border-dashed border-surface-container-high hover:border-primary-container transition-colors rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-surface-container-low">
+                      <Camera className="text-on-surface-variant" size={24} />
+                      <span className="text-xs font-bold text-on-surface-variant">
                         {uploadingCedula ? 'Procesando imagen...' : 'Tomar Foto / Seleccionar'}
                       </span>
-                      <span className="text-[9px] text-slate-400">Compresión automática de costo cero</span>
+                      <span className="text-[9px] text-on-surface-variant/70">Compresión automática de costo cero</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -873,7 +951,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                 <button
                   type="submit"
                   disabled={uploadingCedula}
-                  className="w-full h-11 bg-[#1E5EFF] text-white font-bold rounded-xl mt-2 flex items-center justify-center shadow-md hover:bg-primary transition-all cursor-pointer disabled:opacity-50"
+                  className="w-full h-11 bg-primary-container text-white font-bold rounded-xl mt-2 flex items-center justify-center shadow-md hover:bg-primary transition-all cursor-pointer disabled:opacity-50"
                 >
                   Guardar Cédula
                 </button>
@@ -891,7 +969,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-surface-container"
+              className="bg-surface rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-surface-container text-on-surface"
             >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-base font-black text-on-surface">Subir Licencia de Conducir</h3>
@@ -916,28 +994,28 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                   <label className="text-xs font-bold text-outline uppercase tracking-wider">Foto del Documento</label>
                   
                   {licensePhoto ? (
-                    <div className="relative border border-slate-200 rounded-xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between">
+                    <div className="relative border border-surface-container rounded-xl overflow-hidden bg-surface-container-low p-2 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-md">
+                        <div className="p-1.5 bg-emerald-500/15 text-emerald-400 rounded-md">
                           <CheckCircle2 size={16} />
                         </div>
-                        <span className="text-[10px] font-bold text-slate-500">Foto cargada correctamente</span>
+                        <span className="text-[10px] font-bold text-on-surface-variant">Foto cargada correctamente</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => setLicensePhoto(null)}
-                        className="text-[10px] font-black text-red-500 hover:underline cursor-pointer"
+                        className="text-[10px] font-black text-red-400 hover:underline cursor-pointer"
                       >
                         Eliminar
                       </button>
                     </div>
                   ) : (
-                    <label className="border-2 border-dashed border-slate-200 hover:border-primary/50 transition-colors rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-slate-50/50">
-                      <Camera className="text-slate-400" size={24} />
-                      <span className="text-xs font-bold text-slate-500">
+                    <label className="border-2 border-dashed border-surface-container-high hover:border-primary-container transition-colors rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-surface-container-low">
+                      <Camera className="text-on-surface-variant" size={24} />
+                      <span className="text-xs font-bold text-on-surface-variant">
                         {uploadingLicense ? 'Procesando imagen...' : 'Tomar Foto / Seleccionar'}
                       </span>
-                      <span className="text-[9px] text-slate-400">Compresión automática inteligente</span>
+                      <span className="text-[9px] text-on-surface-variant/70">Compresión automática inteligente</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -953,7 +1031,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                 <button
                   type="submit"
                   disabled={uploadingLicense}
-                  className="w-full h-11 bg-[#1E5EFF] text-white font-bold rounded-xl mt-2 flex items-center justify-center shadow-md hover:bg-primary transition-all cursor-pointer disabled:opacity-50"
+                  className="w-full h-11 bg-primary-container text-white font-bold rounded-xl mt-2 flex items-center justify-center shadow-md hover:bg-primary transition-all cursor-pointer disabled:opacity-50"
                 >
                   Guardar Licencia
                 </button>
@@ -971,7 +1049,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-surface-container flex flex-col max-h-[90vh] overflow-y-auto"
+              className="bg-surface rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-surface-container text-on-surface flex flex-col max-h-[90vh] overflow-y-auto"
             >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-base font-black text-on-surface">Agregar Nuevo Vehículo</h3>
@@ -1025,8 +1103,8 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                 </div>
 
                 {/* Tarjeta Propiedad Details */}
-                <div className="border-t border-slate-100 pt-3 flex flex-col gap-3">
-                  <h4 className="text-xs font-bold text-[#0b224d]">Tarjeta de Propiedad</h4>
+                <div className="border-t border-surface-container pt-3 flex flex-col gap-3">
+                  <h4 className="text-xs font-bold text-on-surface">Tarjeta de Propiedad</h4>
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-bold text-outline uppercase">Número de Tarjeta (Opcional)</label>
                     <input
@@ -1040,14 +1118,14 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-bold text-outline uppercase">Foto Tarjeta de Propiedad</label>
                     {newPropiedadPhoto ? (
-                      <div className="relative border border-slate-200 rounded-xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between">
-                        <span className="text-[9px] text-slate-500 font-bold">Tarjeta de Propiedad cargada</span>
-                        <button type="button" onClick={() => setNewPropiedadPhoto(null)} className="text-[9px] font-black text-red-500 hover:underline">Eliminar</button>
+                      <div className="relative border border-surface-container rounded-xl overflow-hidden bg-surface-container-low p-2 flex items-center justify-between">
+                        <span className="text-[9px] text-on-surface-variant font-bold">Tarjeta de Propiedad cargada</span>
+                        <button type="button" onClick={() => setNewPropiedadPhoto(null)} className="text-[9px] font-black text-red-400 hover:underline">Eliminar</button>
                       </div>
                     ) : (
-                      <label className="border border-dashed border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer bg-slate-50/50">
-                        <Camera className="text-slate-400" size={18} />
-                        <span className="text-[10px] text-slate-500 font-bold mt-1">
+                      <label className="border border-dashed border-surface-container-high rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer bg-surface-container-low">
+                        <Camera className="text-on-surface-variant" size={18} />
+                        <span className="text-[10px] text-on-surface-variant font-bold mt-1">
                           {uploadingPropiedad ? 'Procesando...' : 'Tomar Foto Propiedad'}
                         </span>
                         <input type="file" accept="image/*" onChange={handlePropiedadPhotoChange} className="hidden" disabled={uploadingPropiedad} />
@@ -1057,8 +1135,8 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                 </div>
 
                 {/* SOAT details */}
-                <div className="border-t border-slate-100 pt-3 flex flex-col gap-3">
-                  <h4 className="text-xs font-bold text-[#0b224d]">Seguro SOAT Obligatorio</h4>
+                <div className="border-t border-surface-container pt-3 flex flex-col gap-3">
+                  <h4 className="text-xs font-bold text-on-surface">Seguro SOAT Obligatorio</h4>
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-bold text-outline uppercase">Vencimiento SOAT</label>
                     <input
@@ -1071,14 +1149,14 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-bold text-outline uppercase">Foto del SOAT</label>
                     {newSoatPhoto ? (
-                      <div className="relative border border-slate-200 rounded-xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between">
-                        <span className="text-[9px] text-slate-500 font-bold">SOAT cargado</span>
-                        <button type="button" onClick={() => setNewSoatPhoto(null)} className="text-[9px] font-black text-red-500 hover:underline">Eliminar</button>
+                      <div className="relative border border-surface-container rounded-xl overflow-hidden bg-surface-container-low p-2 flex items-center justify-between">
+                        <span className="text-[9px] text-on-surface-variant font-bold">SOAT cargado</span>
+                        <button type="button" onClick={() => setNewSoatPhoto(null)} className="text-[9px] font-black text-red-400 hover:underline">Eliminar</button>
                       </div>
                     ) : (
-                      <label className="border border-dashed border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer bg-slate-50/50">
-                        <Camera className="text-slate-400" size={18} />
-                        <span className="text-[10px] text-slate-500 font-bold mt-1">
+                      <label className="border border-dashed border-surface-container-high rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer bg-surface-container-low">
+                        <Camera className="text-on-surface-variant" size={18} />
+                        <span className="text-[10px] text-on-surface-variant font-bold mt-1">
                           {uploadingSoat ? 'Procesando...' : 'Tomar Foto SOAT'}
                         </span>
                         <input type="file" accept="image/*" onChange={handleSoatPhotoChange} className="hidden" disabled={uploadingSoat} />
@@ -1088,8 +1166,8 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                 </div>
 
                 {/* Tecnicomecanica details */}
-                <div className="border-t border-slate-100 pt-3 flex flex-col gap-3">
-                  <h4 className="text-xs font-bold text-[#0b224d]">Revisión Tecnicomecánica</h4>
+                <div className="border-t border-surface-container pt-3 flex flex-col gap-3">
+                  <h4 className="text-xs font-bold text-on-surface">Revisión Tecnicomecánica</h4>
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-bold text-outline uppercase">Vencimiento Tecnicomecánica</label>
                     <input
@@ -1102,14 +1180,14 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-bold text-outline uppercase">Foto Tecnicomecánica</label>
                     {newTecnoPhoto ? (
-                      <div className="relative border border-slate-200 rounded-xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between">
-                        <span className="text-[9px] text-slate-500 font-bold">Tecno cargado</span>
-                        <button type="button" onClick={() => setNewTecnoPhoto(null)} className="text-[9px] font-black text-red-500 hover:underline">Eliminar</button>
+                      <div className="relative border border-surface-container rounded-xl overflow-hidden bg-surface-container-low p-2 flex items-center justify-between">
+                        <span className="text-[9px] text-on-surface-variant font-bold">Tecno cargado</span>
+                        <button type="button" onClick={() => setNewTecnoPhoto(null)} className="text-[9px] font-black text-red-400 hover:underline">Eliminar</button>
                       </div>
                     ) : (
-                      <label className="border border-dashed border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer bg-slate-50/50">
-                        <Camera className="text-slate-400" size={18} />
-                        <span className="text-[10px] text-slate-500 font-bold mt-1">
+                      <label className="border border-dashed border-surface-container-high rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer bg-surface-container-low">
+                        <Camera className="text-on-surface-variant" size={18} />
+                        <span className="text-[10px] text-on-surface-variant font-bold mt-1">
                           {uploadingTecno ? 'Procesando...' : 'Tomar Foto Tecno'}
                         </span>
                         <input type="file" accept="image/*" onChange={handleTecnoPhotoChange} className="hidden" disabled={uploadingTecno} />
@@ -1121,7 +1199,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                 <button
                   type="submit"
                   disabled={uploadingSoat || uploadingTecno || uploadingPropiedad}
-                  className="w-full h-11 bg-[#1E5EFF] text-white font-bold rounded-xl mt-3 flex items-center justify-center shadow-md hover:bg-primary transition-all cursor-pointer disabled:opacity-50"
+                  className="w-full h-11 bg-primary-container text-white font-bold rounded-xl mt-3 flex items-center justify-center shadow-md hover:bg-primary transition-all cursor-pointer disabled:opacity-50"
                 >
                   Agregar Vehículo
                 </button>
@@ -1139,7 +1217,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-surface-container"
+              className="bg-surface rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-surface-container text-on-surface"
             >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-base font-black text-on-surface">Recargar Billetera</h3>
@@ -1155,7 +1233,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                     type="number"
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
-                    className="w-full h-11 px-3 bg-surface rounded-xl border border-outline-variant text-sm font-extrabold focus:outline-none focus:border-primary-container"
+                    className="w-full h-11 px-3 bg-surface rounded-xl border border-outline-variant text-sm font-extrabold focus:outline-none focus:border-primary-container text-on-surface"
                     placeholder="200000"
                     min="10000"
                     required
@@ -1167,7 +1245,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                       key={val}
                       type="button"
                       onClick={() => setDepositAmount(val)}
-                      className="py-1.5 px-3 bg-surface border border-outline-variant hover:border-primary-container rounded-lg text-xs font-bold text-on-surface transition-colors"
+                      className="py-1.5 px-3 bg-surface border border-outline-variant hover:border-primary-container rounded-lg text-xs font-bold text-on-surface transition-colors cursor-pointer"
                     >
                       +${parseFloat(val).toLocaleString('es-CO')}
                     </button>
@@ -1175,7 +1253,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                 </div>
                 <button
                   type="submit"
-                  className="w-full h-11 bg-[#1E5EFF] text-white font-bold rounded-xl mt-2 flex items-center justify-center shadow-md hover:bg-primary transition-all cursor-pointer"
+                  className="w-full h-11 bg-primary-container text-white font-bold rounded-xl mt-2 flex items-center justify-center shadow-md hover:bg-primary transition-all cursor-pointer"
                 >
                   Confirmar Recarga
                 </button>
@@ -1193,7 +1271,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-surface-container"
+              className="bg-surface rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-surface-container text-on-surface"
             >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-base font-black text-on-surface">Editar Perfil</h3>
@@ -1209,7 +1287,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full h-11 px-3 bg-surface rounded-xl border border-outline-variant text-sm font-semibold focus:outline-none focus:border-primary-container"
+                    className="w-full h-11 px-3 bg-surface rounded-xl border border-outline-variant text-sm font-semibold focus:outline-none focus:border-primary-container text-on-surface"
                     required
                   />
                 </div>
@@ -1220,7 +1298,7 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                     type="tel"
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
-                    className="w-full h-11 px-3 bg-surface rounded-xl border border-outline-variant text-sm font-semibold focus:outline-none focus:border-primary-container"
+                    className="w-full h-11 px-3 bg-surface rounded-xl border border-outline-variant text-sm font-semibold focus:outline-none focus:border-primary-container text-on-surface"
                     placeholder="+57 300 000 0000"
                   />
                 </div>
@@ -1231,14 +1309,14 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
                     type="text"
                     value={editCedula}
                     onChange={(e) => setEditCedula(e.target.value)}
-                    className="w-full h-11 px-3 bg-surface rounded-xl border border-outline-variant text-sm font-semibold focus:outline-none focus:border-primary-container"
+                    className="w-full h-11 px-3 bg-surface rounded-xl border border-outline-variant text-sm font-semibold focus:outline-none focus:border-primary-container text-on-surface"
                     placeholder="Ej: 1020456789"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full h-11 bg-[#1E5EFF] text-white font-bold rounded-xl mt-2 flex items-center justify-center shadow-md hover:bg-primary transition-all cursor-pointer"
+                  className="w-full h-11 bg-primary-container text-white font-bold rounded-xl mt-2 flex items-center justify-center shadow-md hover:bg-primary transition-all cursor-pointer"
                 >
                   Guardar Cambios
                 </button>
@@ -1248,5 +1326,25 @@ export default function Profile({ user, trips, onUpdateProfile, onDeposit, onLog
         )}
       </AnimatePresence>
     </div>
-  );
+
+    <ConfirmModal
+      isOpen={confirmModal.open}
+      title={confirmModal.title}
+      message={confirmModal.message}
+      confirmLabel={confirmModal.confirmLabel}
+      variant={confirmModal.variant}
+      onConfirm={confirmModal.onConfirm}
+      onCancel={closeConfirm}
+    />
+
+    {/* Test Rating Burst Animation (Admin Only) */}
+    {showTestRatingAnimation && profileCapsuleCoords && (
+      <RatingBurstAnimation 
+        stars={testRatingStars} 
+        onComplete={handleTestRatingComplete}
+        targetX={profileCapsuleCoords.x}
+        targetY={profileCapsuleCoords.y}
+      />
+    )}
+  </>);
 }

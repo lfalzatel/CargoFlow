@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, Trip } from '../types';
 import CargoFlowLogo from './CargoFlowLogo';
 import { notify, scheduleNotification } from '../services/notificationService';
+import { showAlert } from './AppAlertModal';
 
 interface HeaderProps {
   user: UserProfile;
@@ -51,9 +52,24 @@ export default function Header({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showSplashModal, setShowSplashModal] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [activeTheme, setActiveTheme] = useState<string>('dia');
-  const [quickThemes, setQuickThemes] = useState<string[]>(['dia', 'cyber', 'kilo']);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    // Read persisted preference; default to true
+    try { return localStorage.getItem('cf_notif_enabled') !== 'false'; } catch { return true; }
+  });
+  const [activeTheme, setActiveTheme] = useState<string>(() => {
+    try { return localStorage.getItem('cf_theme') || 'original'; } catch { return 'original'; }
+  });
+  const [quickThemes, setQuickThemes] = useState<string[]>(['dia', 'noche', 'original']);
+  
+  const handleThemeSelect = (themeId: string) => {
+    setActiveTheme(themeId);
+    try {
+      localStorage.setItem('cf_theme', themeId);
+      document.documentElement.setAttribute('data-theme', themeId);
+      window.dispatchEvent(new CustomEvent('cargoflow:theme-changed', { detail: { theme: themeId } }));
+      window.dispatchEvent(new StorageEvent('storage', { key: 'cf_theme', newValue: themeId }));
+    } catch (_) {}
+  };
   // Local state for immediate UI feedback on availability toggle
   const [isAvailable, setIsAvailable] = useState(user.isAvailable ?? true);
 
@@ -101,11 +117,30 @@ export default function Header({
         if (stored) {
           setQuickThemes(JSON.parse(stored));
         }
+        setNotificationsEnabled(localStorage.getItem('cf_notif_enabled') !== 'false');
       } catch (e) {}
     };
+
+    const handleNotifEvent = (e: any) => {
+      if (e?.detail?.key === 'cf_notif_enabled') {
+        setNotificationsEnabled(Boolean(e.detail.value));
+      } else if (e?.detail?.target === 'notification' && typeof e?.detail?.activated === 'boolean') {
+        setNotificationsEnabled(e.detail.activated);
+      } else {
+        try {
+          setNotificationsEnabled(localStorage.getItem('cf_notif_enabled') !== 'false');
+        } catch (_) {}
+      }
+    };
+
     handleStorage();
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    window.addEventListener('cargoflow:notif-settings-changed', handleNotifEvent);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('cargoflow:notif-settings-changed', handleNotifEvent);
+    };
   }, []);
   const [pwaInstallPrompt, setPwaInstallPrompt] = useState<any>(null);
   const [installSuccess, setInstallSuccess] = useState(false);
@@ -172,7 +207,7 @@ export default function Header({
       }
     } else {
       await navigator.clipboard.writeText(shareUrl);
-      alert(`¡Enlace copiado al portapapeles!\n${shareUrl}`);
+      showAlert(`¡Enlace copiado al portapapeles!\n${shareUrl}`, { title: 'Compartir App', variant: 'success' });
     }
   };
 
@@ -186,7 +221,7 @@ export default function Header({
         setPwaInstallPrompt(null);
       }
     } else {
-      alert('Instrucciones para instalar CargoFlow:\n\n1. Presiona el botón Compartir o Menú en tu navegador\n2. Selecciona "Agregar a la pantalla de inicio"');
+      showAlert('Instrucciones para instalar CargoFlow:\n\n1. Presiona el botón Compartir o Menú en tu navegador\n2. Selecciona "Agregar a la pantalla de inicio"', { title: 'Instalar CargoFlow', variant: 'info' });
     }
   };
 
@@ -350,14 +385,14 @@ export default function Header({
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-surface-container flex flex-col max-h-[85vh]"
+              className="w-full max-w-sm bg-surface rounded-2xl shadow-2xl overflow-hidden border border-surface-container flex flex-col max-h-[85vh] text-on-surface"
             >
-              <div className="p-4 border-b border-surface-container flex items-center justify-between bg-surface-container-lowest flex-shrink-0">
+              <div className="p-4 border-b border-surface-container flex items-center justify-between bg-surface-container-low flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <Bell size={18} className="text-primary-container" />
                   <h3 className="font-bold text-sm text-on-surface">Notificaciones</h3>
                 </div>
-                <span className="text-[11px] font-bold bg-blue-50 text-primary-container px-2 py-0.5 rounded-full">
+                <span className="text-[11px] font-bold bg-primary/15 text-primary-container px-2 py-0.5 rounded-full">
                   {localUnreadCount} Nuevas
                 </span>
               </div>
@@ -366,15 +401,31 @@ export default function Header({
                 {notifications.map((n) => (
                   <div 
                     key={n.id} 
-                    className={`p-3.5 hover:bg-surface-container-low transition-colors cursor-pointer flex gap-3 ${
-                      n.unread ? 'bg-blue-50/30' : ''
+                    onClick={async () => {
+                      setIsNotificationsOpen(false);
+                      try {
+                        const { db } = await import('../config/firebase');
+                        const { doc, updateDoc } = await import('firebase/firestore');
+                        await updateDoc(doc(db, 'notifications', n.id), { read: true });
+                      } catch (_) {}
+
+                      const tLower = (n.title || '').toLowerCase();
+                      const dLower = (n.desc || '').toLowerCase();
+                      if (tLower.includes('mensaje') || dLower.includes('chat')) {
+                        onNavigateToView('chat');
+                      } else {
+                        onNavigateToView('activity');
+                      }
+                    }}
+                    className={`p-3.5 hover:bg-surface-container-high transition-colors cursor-pointer flex gap-3 ${
+                      n.unread ? 'bg-primary/10' : ''
                     }`}
                   >
                     <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${n.unread ? 'bg-primary-container' : 'bg-outline-variant'}`} />
                     <div className="flex-1">
                       <h4 className="text-xs font-bold text-on-surface leading-snug">{n.title}</h4>
                       <p className="text-[12px] text-on-surface-variant mt-0.5 leading-relaxed">{n.desc}</p>
-                      <span className="text-[10px] text-outline font-medium mt-1 block">{n.time}</span>
+                      <span className="text-[10px] text-on-surface-variant/70 font-medium mt-1 block">{n.time}</span>
                     </div>
                   </div>
                 ))}
@@ -386,7 +437,7 @@ export default function Header({
                     setIsNotificationsOpen(false);
                     onNavigateToView('activity');
                   }} 
-                  className="text-xs font-bold text-primary hover:underline"
+                  className="text-xs font-bold text-primary-container hover:underline"
                 >
                   Ver todas las actividades
                 </button>
@@ -396,7 +447,7 @@ export default function Header({
         )}
       </AnimatePresence>
 
-      <header className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-surface-container h-16 px-2.5 sm:px-4 md:px-8 flex items-center justify-between shadow-sm transition-all">
+      <header data-top-header="true" className="fixed top-0 left-0 right-0 z-[100] backdrop-blur-md border-b border-[var(--glass-border)] h-16 px-2.5 sm:px-4 md:px-8 flex items-center justify-between shadow-sm transition-all duration-300">
         {/* Left: Animated Circular Logo Icon (Triggers Fullscreen Splash Modal on Click) */}
         <div 
           onClick={() => setShowSplashModal(true)} 
@@ -406,7 +457,7 @@ export default function Header({
           <div className="group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
             <CargoFlowLogo size="sm" />
           </div>
-          <span className="font-headline-md text-base font-extrabold text-primary-container tracking-tight">CargoFlow</span>
+          <span className="font-headline-md text-base font-extrabold text-[var(--color-on-surface)] tracking-tight">CargoFlow</span>
         </div>
 
         {/* Right Actions: WhatsApp Support, Notifications, Profile Capsule */}
@@ -416,7 +467,7 @@ export default function Header({
             href="https://wa.me/573000000000?text=Hola,%20necesito%20soporte%20en%20CargoFlow"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 flex items-center justify-center transition-all active:scale-95 shadow-xs flex-shrink-0"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[var(--glass-strong)] text-emerald-500 border border-[var(--glass-border)] hover:bg-[var(--glass)] flex items-center justify-center transition-all active:scale-95 shadow-xs flex-shrink-0"
             title="Soporte WhatsApp"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5 fill-current" viewBox="0 0 24 24">
@@ -463,7 +514,7 @@ export default function Header({
                   })();
                 }
               }}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-all relative active:scale-95"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[var(--glass-strong)] hover:bg-[var(--glass)] text-[var(--color-on-surface)] border border-[var(--glass-border)] flex items-center justify-center transition-all relative active:scale-95"
               title="Notificaciones"
             >
               <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -474,7 +525,7 @@ export default function Header({
           </div>
 
           {/* Profile Capsule Button (Google Avatar + Name + Role Badge + Chevron) */}
-          <div className="relative min-w-0" ref={menuRef}>
+          <div className="relative min-w-0" ref={menuRef} data-points-capsule="true">
             <motion.button
               animate={{ scale: capsuleScale }}
               transition={{ type: 'spring', stiffness: 350, damping: 12 }}
@@ -484,8 +535,8 @@ export default function Header({
               }}
               className={`flex items-center gap-1 sm:gap-2 p-1 pl-1.5 pr-2 rounded-full border transition-all duration-200 active:scale-95 ${
                 isMenuOpen 
-                  ? 'bg-blue-50 border-primary-container/40 shadow-sm' 
-                  : 'bg-surface-container-low border-surface-container hover:bg-surface-container'
+                  ? 'bg-[var(--glass-strong)] border-[var(--accent)] shadow-sm' 
+                  : 'bg-[var(--glass-strong)] border-[var(--glass-border)] hover:bg-[var(--glass)]'
               }`}
             >
               {/* User Profile Avatar from Google/Registration */}
@@ -493,24 +544,24 @@ export default function Header({
 
               {/* Name & Role Badge (Optimized responsive text) */}
               <div className="flex flex-col text-left min-w-0 max-w-[70px] sm:max-w-[110px]">
-                <span className="text-[11px] sm:text-xs font-bold text-on-surface leading-tight truncate">
+                <span className="text-[11px] sm:text-xs font-bold text-[var(--color-on-surface)] leading-tight truncate">
                   {getFirstName(user.name)}
                 </span>
-                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-tight text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded-full w-fit truncate">
+                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-tight text-emerald-600 bg-emerald-500/15 border border-emerald-500/30 px-1 py-0.2 rounded-full w-fit truncate">
                   {user.role.toUpperCase()}
                 </span>
               </div>
 
               {/* Stars Badge stacked vertically above Chevron */}
-              <div className="flex flex-col items-center justify-center pl-1.5 border-l border-slate-200/60 ml-0.5 min-w-[28px] select-none">
+              <div className="flex flex-col items-center justify-center pl-1.5 border-l border-[var(--glass-border)] ml-0.5 min-w-[28px] select-none">
                 <div className="flex items-center gap-0.5 px-1 py-0.2 bg-amber-500 text-amber-950 font-black text-[9px] rounded-full border border-amber-400 leading-none shadow-sm mb-0.5">
                   <Star size={8} fill="currentColor" className="text-amber-950" />
                   <span className="text-[8px] leading-none">{displayStarsVal}</span>
                 </div>
                 {isMenuOpen ? (
-                  <ChevronUp size={10} className="text-primary-container leading-none" />
+                  <ChevronUp size={10} className="text-[var(--accent)] leading-none" />
                 ) : (
-                  <ChevronDown size={10} className="text-outline leading-none" />
+                  <ChevronDown size={10} className="text-[var(--color-outline)] leading-none" />
                 )}
               </div>
             </motion.button>
@@ -526,8 +577,8 @@ export default function Header({
                     {renderAvatar(user.photoURL, user.name, "w-full h-full text-sm")}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate text-slate-800">{user.name || 'Usuario CargoFlow'}</p>
-                    <p className="text-xs truncate text-slate-500">{user.email || 'usuario@cargoflow.co'}</p>
+                    <p className="text-sm font-semibold truncate text-[var(--text-primary)]">{user.name || 'Usuario CargoFlow'}</p>
+                    <p className="text-xs truncate text-[var(--text-secondary)]">{user.email || 'usuario@cargoflow.co'}</p>
                     <span className="inline-block mt-1 text-[9px] px-2 py-0.5 uppercase tracking-widest font-bold rounded-full bg-[var(--accent-glow)] border border-[var(--accent)] text-[var(--accent)]">
                       {user.role.toUpperCase()}
                     </span>
@@ -538,25 +589,26 @@ export default function Header({
                 <div className="p-1.5 border-b border-surface-container">
                   <div className="flex items-center justify-between gap-1 p-1 bg-[var(--glass)] border border-[var(--glass-border)] rounded-xl">
                     {quickThemes.map(themeId => {
-                      let Icon = Sun;
+                      let iconEl = <Sun size={16} className="mb-1" />;
                       let label = 'Día';
-                      if (themeId === 'original') { Icon = Moon; label = 'Noche'; }
-                      if (themeId === 'glass') { Icon = Layers; label = 'Glass'; }
-                      if (themeId === 'cyber') { Icon = Terminal; label = 'Cyber'; }
-                      if (themeId === 'kilo') { Icon = Zap; label = 'Kilo'; }
+                      if (themeId === 'noche') { iconEl = <Moon size={16} className="mb-1" />; label = 'Noche'; }
+                      if (themeId === 'original') { iconEl = <span className="text-sm mb-0.5">🍄</span>; label = 'Gamer'; }
+                      if (themeId === 'glass') { iconEl = <Layers size={16} className="mb-1" />; label = 'Glass'; }
+                      if (themeId === 'cyber') { iconEl = <Terminal size={16} className="mb-1" />; label = 'Cyber'; }
+                      if (themeId === 'kilo') { iconEl = <Zap size={16} className="mb-1" />; label = 'Kilo'; }
 
                       return (
                         <button
                           key={themeId}
-                          onClick={() => setActiveTheme(themeId)}
+                          onClick={() => handleThemeSelect(themeId)}
                           className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg transition-all font-bold ${
                             activeTheme === themeId
-                              ? 'bg-[var(--accent)] text-black shadow-sm'
-                              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)]'
+                              ? 'bg-emerald-600 text-white shadow-sm'
+                              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-strong)]'
                           }`}
                         >
-                          <Icon size={16} className="mb-1" />
-                          <span className="text-[9px] font-semibold">{label}</span>
+                          {iconEl}
+                          <span className="text-[9px] font-bold">{label}</span>
                         </button>
                       );
                     })}
@@ -570,11 +622,20 @@ export default function Header({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          setIsMenuOpen(false);
                           const newStatus = !isAvailable;
                           setIsAvailable(newStatus);
                           if (onUpdateProfile) {
                             onUpdateProfile({ isAvailable: newStatus });
                           }
+                          window.dispatchEvent(new CustomEvent('cargoflow:toggle-confetti', {
+                            detail: {
+                              title: 'Actualización exitosa.',
+                              subtitle: newStatus ? 'Has activado el modo Disponible para recibir fletes' : 'Modo Inactivo activado',
+                              statusText: newStatus ? '🟢 Modo Conectado / Disponible' : '⚪ Modo Inactivo',
+                              activated: newStatus,
+                            }
+                          }));
                         }}
                         className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)] transition-colors"
                       >
@@ -611,9 +672,22 @@ export default function Header({
                   <div>
                     <button
                       onClick={(e) => {
-                        // Don't close the menu, just toggle
                         e.stopPropagation();
-                        setNotificationsEnabled(!notificationsEnabled);
+                        setIsMenuOpen(false);
+                        const next = !notificationsEnabled;
+                        setNotificationsEnabled(next);
+                        try { localStorage.setItem('cf_notif_enabled', String(next)); } catch { }
+                        // Dispatch a storage event so App.tsx reacts immediately
+                        window.dispatchEvent(new StorageEvent('storage', { key: 'cf_notif_enabled', newValue: String(next) }));
+                        window.dispatchEvent(new CustomEvent('cargoflow:toggle-confetti', {
+                          detail: {
+                            target: 'notification',
+                            title: 'Actualización exitosa.',
+                            subtitle: next ? 'Notificaciones activadas' : 'Notificaciones desactivadas',
+                            statusText: next ? '🔔 Notificaciones Activadas' : '🔕 Notificaciones Desactivadas',
+                            activated: next,
+                          }
+                        }));
                       }}
                       className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass)] transition-colors"
                     >
@@ -685,53 +759,40 @@ export default function Header({
                       Otras Cuentas
                     </p>
                     
-                    {/* Dynamic List of Linked Accounts */}
-                    {linkedAccounts.length > 0 ? (
-                      linkedAccounts.map((acc, idx) => (
-                        <button
-                          key={acc.email + idx}
-                          onClick={() => {
-                            setIsMenuOpen(false);
-                            if (onSwitchAccount) onSwitchAccount(acc);
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/60 transition-colors text-left group"
-                        >
-                          <div className="relative w-7 h-7 overflow-hidden rounded-full ring-1 ring-slate-200">
-                            {renderAvatar(acc.photoURL, acc.name, "w-full h-full text-[10px] grayscale group-hover:grayscale-0 transition-all")}
-                          </div>
-                          <div className="flex-1 min-w-0 flex items-center justify-between">
-                            <div>
-                              <p className="text-xs truncate text-slate-800 font-medium group-hover:text-emerald-700">{acc.name}</p>
-                              <p className="text-[10px] truncate text-slate-500">{acc.email}</p>
+                    {/* Dynamic List of Linked Accounts (filtering out current active account) */}
+                    {(() => {
+                      const otherAccounts = linkedAccounts.filter(acc => !(acc.email === user.email && acc.role === user.role));
+                      if (otherAccounts.length > 0) {
+                        return otherAccounts.map((acc, idx) => (
+                          <button
+                            key={acc.email + '_' + acc.role + '_' + idx}
+                            onClick={() => {
+                              setIsMenuOpen(false);
+                              if (onSwitchAccount) onSwitchAccount(acc);
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/60 transition-colors text-left group"
+                          >
+                            <div className="relative w-7 h-7 overflow-hidden rounded-full ring-1 ring-slate-200">
+                              {renderAvatar(acc.photoURL, acc.name, "w-full h-full text-[10px] grayscale group-hover:grayscale-0 transition-all")}
                             </div>
-                            <span className="text-[9px] font-black uppercase tracking-tight text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full ml-2">
-                              {acc.role.toUpperCase()}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    ) : (
-                      <button 
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          if (onAddAccount) onAddAccount();
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/60 transition-colors text-left group opacity-60 hover:opacity-100"
-                      >
-                        <div className="relative w-7 h-7 overflow-hidden rounded-full ring-1 ring-slate-200">
-                          {renderAvatar(undefined, "Luis Fernando", "w-full h-full text-[10px] grayscale group-hover:grayscale-0 transition-all")}
-                        </div>
-                        <div className="flex-1 min-w-0 flex items-center justify-between">
-                          <div>
-                            <p className="text-xs truncate text-slate-800 font-medium group-hover:text-emerald-700">Luis Fernando</p>
-                            <p className="text-[10px] truncate text-slate-500">lfalzatel29@gmail.com</p>
-                          </div>
-                          <span className="text-[9px] font-black uppercase tracking-tight text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full ml-2">
-                            CLIENTE
-                          </span>
-                        </div>
-                      </button>
-                    )}
+                            <div className="flex-1 min-w-0 flex items-center justify-between">
+                              <div>
+                                <p className="text-xs truncate text-slate-800 font-medium group-hover:text-emerald-700">{acc.name}</p>
+                                <p className="text-[10px] truncate text-slate-500">{acc.email}</p>
+                              </div>
+                              <span className="text-[9px] font-black uppercase tracking-tight text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full ml-2">
+                                {acc.role.toUpperCase()}
+                              </span>
+                            </div>
+                          </button>
+                        ));
+                      }
+                      return (
+                        <p className="px-3 py-1.5 text-xs text-slate-400 font-medium italic">
+                          No hay otras cuentas vinculadas
+                        </p>
+                      );
+                    })()}
                   </div>
                   
                   <button
@@ -744,7 +805,7 @@ export default function Header({
                     <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
                       <span className="text-lg leading-none font-bold">+</span>
                     </div>
-                    <span className="text-sm font-semibold">Añadir Cuenta</span>
+                    <span className="text-sm font-semibold">Añadir / Cambiar Cuenta</span>
                   </button>
                 </div>
 
