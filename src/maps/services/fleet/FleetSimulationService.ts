@@ -127,12 +127,12 @@ class FleetSimulationService {
   private movementTimer: ReturnType<typeof setInterval> | null = null;
   private lifecycleTimer: ReturnType<typeof setInterval> | null = null;
   private isRunning: boolean = false;
+  private isViewActive: boolean = false;
   private userLocation: LatLng = { lat: 6.2442, lng: -75.5812 }; // Default Medellín center
   private unsubscribeGps: (() => void) | null = null;
 
   public async start(): Promise<void> {
-    if (this.isRunning) return;
-    this.isRunning = true;
+    this.isViewActive = true;
 
     // Subscribe to live user GPS location
     if (!this.unsubscribeGps) {
@@ -143,42 +143,53 @@ class FleetSimulationService {
       });
     }
 
-    // If trucks already exist in memory from previous navigation, restore them to mapService seamlessly
-    if (this.trucks.size > 0) {
-      for (const truck of this.trucks.values()) {
-        try {
-          const currentPos = truck.points[truck.currentIndex] || truck.points[0];
-          mapService.addMarker({
-            id: truck.id,
-            position: currentPos,
-            title: `${truck.driverName} (${truck.plate})`,
-            subtitle: `${truck.vehicle} • ${truck.currentStepStatus || truck.status}`,
-            type: 'driver',
-            vehicleType: truck.vehicle,
-          });
-        } catch (e) {
-          console.warn('start: error restoring truck marker', truck.id, e);
-        }
-      }
-    } else {
-      // First time initialization: spawn 11-12 trucks nationally (including at least 3-4 local to user)
+    // Ensure background movement & lifecycle timers are running
+    this.ensureTimersRunning();
+
+    // First time initialization: spawn 11-12 trucks nationally (including at least 3-4 local to user)
+    if (this.trucks.size === 0) {
       for (let i = 0; i < 11; i++) {
         await this.spawnTruck(i < 4); // First 4 are local to user's location
       }
     }
 
-    // Movement ticker: Step every 1.8 seconds (gives ultra smooth gliding)
+    // Immediately sync up-to-date real-time vehicle positions on map view
+    this.syncAllMarkersToMap();
+  }
+
+  private ensureTimersRunning(): void {
+    if (!this.isRunning) {
+      this.isRunning = true;
+    }
+
     if (!this.movementTimer) {
       this.movementTimer = setInterval(() => {
         this.stepFleet();
       }, 1800);
     }
 
-    // Lifecycle manager ticker: check local/national count every 25 seconds
     if (!this.lifecycleTimer) {
       this.lifecycleTimer = setInterval(() => {
         this.manageLifecycle();
       }, 25000);
+    }
+  }
+
+  private syncAllMarkersToMap(): void {
+    for (const truck of this.trucks.values()) {
+      try {
+        const currentPos = truck.points[truck.currentIndex] || truck.points[0];
+        mapService.addMarker({
+          id: truck.id,
+          position: currentPos,
+          title: `${truck.driverName} (${truck.plate})`,
+          subtitle: `${truck.vehicle} • ${truck.currentStepStatus || truck.status}`,
+          type: 'driver',
+          vehicleType: truck.vehicle,
+        });
+      } catch (e) {
+        // ignore if map container temporarily mounting
+      }
     }
   }
 
@@ -193,30 +204,28 @@ class FleetSimulationService {
 
     // Determine if this truck is assigned to a 10+ minute extended urban delivery route
     const currentLongTrips = Array.from(this.trucks.values()).filter(t => t.isLongTrip).length;
-    const isLongTrip = forceLocal && currentLongTrips === 0; // At least 1 local vehicle takes long route
+    const isLongTrip = forceLocal && currentLongTrips === 0;
 
     let origin: LatLng;
     let destination: LatLng;
     let cityName = driverSpec.city;
 
     if (forceLocal) {
-      // Generate origin & destination in user's municipality (radius of 2km to 10km)
       cityName = 'Zona Local';
       const angle1 = Math.random() * Math.PI * 2;
-      const dist1 = 0.01 + Math.random() * 0.03; // ~1-4km
+      const dist1 = 0.01 + Math.random() * 0.03;
       origin = {
         lat: this.userLocation.lat + Math.sin(angle1) * dist1,
         lng: this.userLocation.lng + Math.cos(angle1) * dist1,
       };
 
       const angle2 = angle1 + Math.PI * 0.7 + Math.random() * 0.6;
-      const dist2 = 0.02 + Math.random() * 0.05; // ~2-6km
+      const dist2 = 0.02 + Math.random() * 0.05;
       destination = {
         lat: this.userLocation.lat + Math.sin(angle2) * dist2,
         lng: this.userLocation.lng + Math.cos(angle2) * dist2,
       };
     } else {
-      // Pick from national logistics places catalog
       const place1 = COLOMBIA_LOGISTICS_PLACES[Math.floor(Math.random() * COLOMBIA_LOGISTICS_PLACES.length)];
       let place2 = COLOMBIA_LOGISTICS_PLACES[Math.floor(Math.random() * COLOMBIA_LOGISTICS_PLACES.length)];
       while (place2.id === place1.id) {
@@ -250,24 +259,32 @@ class FleetSimulationService {
 
     this.trucks.set(id, truck);
 
-    mapService.addMarker({
-      id: truck.id,
-      position: truck.points[0],
-      title: `${truck.driverName} (${truck.plate})`,
-      subtitle: `${truck.vehicle} • ${truck.city} (${truck.status})`,
-      type: 'driver',
-      vehicleType: truck.vehicle,
-    });
+    if (this.isViewActive) {
+      try {
+        mapService.addMarker({
+          id: truck.id,
+          position: truck.points[0],
+          title: `${truck.driverName} (${truck.plate})`,
+          subtitle: `${truck.vehicle} • ${truck.city} (${truck.status})`,
+          type: 'driver',
+          vehicleType: truck.vehicle,
+        });
+      } catch (e) {
+        // ignore
+      }
+    }
   }
 
   private despawnTruck(id: string): void {
     const truck = this.trucks.get(id);
     if (!truck) return;
 
-    try {
-      mapService.removeMarker(id);
-    } catch (e) {
-      console.warn('despawnTruck error:', e);
+    if (this.isViewActive) {
+      try {
+        mapService.removeMarker(id);
+      } catch (e) {
+        console.warn('despawnTruck error:', e);
+      }
     }
     this.trucks.delete(id);
   }
@@ -279,18 +296,19 @@ class FleetSimulationService {
       // Handle semáforo / cargo loading pauses for long-trip vehicle to pace it to +10 minutes
       if (truck.pauseRemainingTicks > 0) {
         truck.pauseRemainingTicks -= 1;
-        // Still update subtitle status during pause so map reflects state
-        try {
-          mapService.addMarker({
-            id: truck.id,
-            position: truck.points[truck.currentIndex],
-            title: `${truck.driverName} (${truck.plate})`,
-            subtitle: `${truck.vehicle} • ${truck.currentStepStatus}`,
-            type: 'driver',
-            vehicleType: truck.vehicle,
-          });
-        } catch (e) {
-          // ignore
+        if (this.isViewActive) {
+          try {
+            mapService.addMarker({
+              id: truck.id,
+              position: truck.points[truck.currentIndex],
+              title: `${truck.driverName} (${truck.plate})`,
+              subtitle: `${truck.vehicle} • ${truck.currentStepStatus}`,
+              type: 'driver',
+              vehicleType: truck.vehicle,
+            });
+          } catch (e) {
+            // ignore
+          }
         }
         continue;
       }
@@ -327,17 +345,19 @@ class FleetSimulationService {
       truck.currentIndex = nextIndex;
       const currentPos = truck.points[nextIndex];
 
-      try {
-        mapService.addMarker({
-          id: truck.id,
-          position: currentPos,
-          title: `${truck.driverName} (${truck.plate})`,
-          subtitle: `${truck.vehicle} • ${truck.currentStepStatus}`,
-          type: 'driver',
-          vehicleType: truck.vehicle,
-        });
-      } catch (e) {
-        console.warn('stepFleet marker update error:', e);
+      if (this.isViewActive) {
+        try {
+          mapService.addMarker({
+            id: truck.id,
+            position: currentPos,
+            title: `${truck.driverName} (${truck.plate})`,
+            subtitle: `${truck.vehicle} • ${truck.currentStepStatus}`,
+            type: 'driver',
+            vehicleType: truck.vehicle,
+          });
+        } catch (e) {
+          // ignore
+        }
       }
     }
   }
@@ -346,17 +366,14 @@ class FleetSimulationService {
     const localTrucksCount = Array.from(this.trucks.values()).filter(t => t.isLocal).length;
     const totalTrucksCount = this.trucks.size;
 
-    // 1. Maintain at least 3-4 local vehicles in user's municipality
     if (localTrucksCount < 4) {
       this.spawnTruck(true);
     }
 
-    // 2. Maintain at least 11-12 vehicles nationwide
     if (totalTrucksCount < 11) {
       this.spawnTruck(false);
     }
 
-    // 3. Cycle non-local vehicles that completed round trips
     for (const [id, truck] of Array.from(this.trucks.entries())) {
       if (!truck.isLocal && truck.completedCycles >= 1 && totalTrucksCount > 10) {
         this.despawnTruck(id);
@@ -366,6 +383,14 @@ class FleetSimulationService {
   }
 
   public stop(): void {
+    this.isViewActive = false;
+    // NOTE: Timers continue stepping in the background so vehicles advance along their routes
+    // in real time even while the user is viewing other screens.
+  }
+
+  public destroy(): void {
+    this.isViewActive = false;
+    this.isRunning = false;
     if (this.movementTimer) {
       clearInterval(this.movementTimer);
       this.movementTimer = null;
@@ -374,13 +399,6 @@ class FleetSimulationService {
       clearInterval(this.lifecycleTimer);
       this.lifecycleTimer = null;
     }
-    this.isRunning = false;
-    // NOTE: We keep this.trucks intact in memory so when the user navigates back to 'Home',
-    // the exact same trucks continue seamlessly from their current positions along their routes.
-  }
-
-  public destroy(): void {
-    this.stop();
     if (this.unsubscribeGps) {
       this.unsubscribeGps();
       this.unsubscribeGps = null;
