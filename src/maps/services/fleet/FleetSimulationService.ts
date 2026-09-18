@@ -135,26 +135,51 @@ class FleetSimulationService {
     this.isRunning = true;
 
     // Subscribe to live user GPS location
-    this.unsubscribeGps = gpsService.subscribe((loc) => {
-      if (loc && loc.lat && loc.lng) {
-        this.userLocation = loc;
-      }
-    });
+    if (!this.unsubscribeGps) {
+      this.unsubscribeGps = gpsService.subscribe((loc) => {
+        if (loc && loc.lat && loc.lng) {
+          this.userLocation = loc;
+        }
+      });
+    }
 
-    // Initial population: spawn 11-12 trucks nationally (including at least 3-4 local to user)
-    for (let i = 0; i < 11; i++) {
-      await this.spawnTruck(i < 4); // First 4 are local to user's location
+    // If trucks already exist in memory from previous navigation, restore them to mapService seamlessly
+    if (this.trucks.size > 0) {
+      for (const truck of this.trucks.values()) {
+        try {
+          const currentPos = truck.points[truck.currentIndex] || truck.points[0];
+          mapService.addMarker({
+            id: truck.id,
+            position: currentPos,
+            title: `${truck.driverName} (${truck.plate})`,
+            subtitle: `${truck.vehicle} • ${truck.currentStepStatus || truck.status}`,
+            type: 'driver',
+            vehicleType: truck.vehicle,
+          });
+        } catch (e) {
+          console.warn('start: error restoring truck marker', truck.id, e);
+        }
+      }
+    } else {
+      // First time initialization: spawn 11-12 trucks nationally (including at least 3-4 local to user)
+      for (let i = 0; i < 11; i++) {
+        await this.spawnTruck(i < 4); // First 4 are local to user's location
+      }
     }
 
     // Movement ticker: Step every 1.8 seconds (gives ultra smooth gliding)
-    this.movementTimer = setInterval(() => {
-      this.stepFleet();
-    }, 1800);
+    if (!this.movementTimer) {
+      this.movementTimer = setInterval(() => {
+        this.stepFleet();
+      }, 1800);
+    }
 
     // Lifecycle manager ticker: check local/national count every 25 seconds
-    this.lifecycleTimer = setInterval(() => {
-      this.manageLifecycle();
-    }, 25000);
+    if (!this.lifecycleTimer) {
+      this.lifecycleTimer = setInterval(() => {
+        this.manageLifecycle();
+      }, 25000);
+    }
   }
 
   private async spawnTruck(forceLocal: boolean = false): Promise<void> {
@@ -349,20 +374,25 @@ class FleetSimulationService {
       clearInterval(this.lifecycleTimer);
       this.lifecycleTimer = null;
     }
+    this.isRunning = false;
+    // NOTE: We keep this.trucks intact in memory so when the user navigates back to 'Home',
+    // the exact same trucks continue seamlessly from their current positions along their routes.
+  }
+
+  public destroy(): void {
+    this.stop();
     if (this.unsubscribeGps) {
       this.unsubscribeGps();
       this.unsubscribeGps = null;
     }
-
     for (const id of this.trucks.keys()) {
       try {
         mapService.removeMarker(id);
       } catch (e) {
-        console.warn('stop error:', e);
+        // ignore
       }
     }
     this.trucks.clear();
-    this.isRunning = false;
   }
 }
 

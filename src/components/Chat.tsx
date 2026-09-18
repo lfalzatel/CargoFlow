@@ -146,7 +146,7 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
     const loadChat = async () => {
       try {
         const { db } = await import('../config/firebase');
-        const { collection, query, orderBy, onSnapshot, limit } = await import('firebase/firestore');
+        const { collection, query, orderBy, onSnapshot, limit, doc, updateDoc } = await import('firebase/firestore');
         
         const q = query(
           collection(db, chatCollectionPath),
@@ -156,17 +156,25 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
         
         unsubscribe = onSnapshot(q, (snapshot) => {
           const loadedMessages: ChatMessage[] = [];
-          snapshot.forEach((doc) => {
-            const data = doc.data();
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const isSenderMe = data.senderEmail === user.email;
+            
+            // Mark incoming unread messages as read in Firestore when the recipient views the chat
+            if (!isSenderMe && data.senderEmail !== 'system@cargoflow.com' && data.isRead !== true) {
+              updateDoc(doc(db, chatCollectionPath, docSnap.id), { isRead: true })
+                .catch(err => console.warn('Error marking message read:', err));
+            }
+
             loadedMessages.push({
-              id: doc.id,
-              sender: data.senderEmail === user.email ? 'user' : 'driver',
+              id: docSnap.id,
+              sender: isSenderMe ? 'user' : 'driver',
               senderName: data.senderName || undefined,
               senderPhotoURL: data.senderPhotoURL || undefined,
               text: data.text,
               attachmentUrl: data.attachmentUrl || undefined,
               timestamp: data.timestamp || new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
-              isRead: true,
+              isRead: data.isRead ?? false,
             });
           });
           
@@ -202,6 +210,7 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
         text: textToSend || (attachmentToSend ? '📷 [Imagen adjunta]' : ''),
         attachmentUrl: attachmentToSend || null,
         timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
+        isRead: false,
         createdAt: serverTimestamp()
       });
 
@@ -231,6 +240,7 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
         text: textToSend,
         attachmentUrl: attachmentToSend || undefined,
         timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
+        isRead: false,
       }]);
     }
   };
@@ -460,7 +470,11 @@ export default function Chat({ user, activeTrip, trips = [], usersList = [], ini
                 <div className="flex items-center gap-1 px-1">
                   <span className="text-[10px] text-on-surface-variant font-semibold">{msg.timestamp}</span>
                   {isUser && (
-                    <CheckCheck size={14} className="text-primary-container" />
+                    msg.isRead ? (
+                      <CheckCheck size={14} className="text-sky-400 font-extrabold" title="Leído" />
+                    ) : (
+                      <CheckCheck size={14} className="text-on-surface-variant/40" title="Enviado" />
+                    )
                   )}
                 </div>
               </div>

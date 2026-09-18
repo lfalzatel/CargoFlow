@@ -544,6 +544,7 @@ export default function App() {
         senderName: 'CargoFlow System',
         text: '✅ Servicio Completado con Éxito. ¡Gracias por usar CargoFlow!',
         timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }),
+        isRead: true,
         createdAt: serverTimestamp()
       });
 
